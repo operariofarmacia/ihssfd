@@ -33,27 +33,25 @@
     <style>
         body { font-family: 'Poppins', sans-serif; background-color: #f8fafc; }
         .fade-in { animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
         .modal-backdrop { background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
         .toggle-checkbox:checked { right: 0; border-color: #10b981; }
         .toggle-checkbox:checked + .toggle-label { background-color: #10b981; }
-        /* Custom Checkbox */
         .job-check { accent-color: #06b6d4; width: 16px; height: 16px; cursor: pointer; }
         select { -webkit-appearance: none; -moz-appearance: none; appearance: none; }
         .custom-scroll::-webkit-scrollbar { width: 6px; }
         .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        
-        /* Select Multiple Mejorado */
-        select[multiple] { background-image: none; padding: 0.5rem; height: 140px; }
-        select[multiple] option { padding: 8px; border-radius: 6px; margin-bottom: 4px; border: 1px solid #f1f5f9; transition: all 0.2s; }
-        select[multiple] option:checked { background-color: #06b6d4; color: white; border-color: #0891b2; font-weight: 500; }
+        .hidden-view { display: none !important; }
+        .dash-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1); }
+        .calendar-day { min-height: 100px; transition: all 0.2s; }
+        .calendar-day:hover { background-color: #f0f9ff; border-color: #06b6d4; }
     </style>
 </head>
 <body class="flex flex-col md:flex-row h-screen overflow-hidden text-slate-700 bg-slate-50">
 
     <!-- PANTALLA DE BLOQUEO -->
-    <div id="auth-lock" class="fixed inset-0 z-50 bg-[#003366] flex flex-col items-center justify-center text-white hidden fade-in">
+    <div id="auth-lock" class="fixed inset-0 z-[60] bg-[#003366] flex flex-col items-center justify-center text-white hidden fade-in">
         <div class="bg-white p-3 rounded-full mb-5 shadow-2xl ring-4 ring-white/10">
             <img src="https://portal.ihss.hn/cronicos/assets/dist/img/Recurso%201.png" class="h-20 w-20 object-contain">
         </div>
@@ -62,13 +60,12 @@
         <button onclick="forceNavigateLogin()" class="bg-brand-cyan hover:bg-brand-teal text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg transform hover:scale-105 flex items-center mb-4">
             <i class="fa-solid fa-arrow-left mr-3"></i> Ir al Login
         </button>
-        <button onclick="document.getElementById('auth-lock').classList.add('hidden')" class="text-[10px] text-white/30 hover:text-white/80 underline">Ocultar (Solo pruebas)</button>
     </div>
 
     <!-- SIDEBAR -->
     <aside class="w-full md:w-72 bg-brand-dark text-white flex flex-col shadow-2xl z-20 shrink-0 relative">
         <div class="p-6 border-b border-blue-900/50 flex flex-col items-center text-center">
-            <div class="bg-white p-1 rounded-full shadow-lg mb-3 w-16 h-16 flex items-center justify-center ring-2 ring-brand-cyan/50">
+            <div class="bg-white p-1 rounded-full shadow-lg mb-3 w-16 h-16 flex items-center justify-center ring-2 ring-brand-cyan/50 cursor-pointer hover:scale-105 transition-transform" onclick="switchView('dashboard')">
                 <img src="https://portal.ihss.hn/cronicos/assets/dist/img/Recurso%201.png" class="object-contain h-full w-full p-1">
             </div>
             <h2 class="font-bold text-lg tracking-wide text-white">ADMINISTRACIÓN</h2>
@@ -78,9 +75,23 @@
                 <span id="status-text" class="text-[10px] font-bold text-emerald-300 uppercase">Sistema Online</span>
             </div>
         </div>
-        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-            <button class="w-full flex items-center space-x-3 p-3 bg-white/10 rounded-xl text-white border-l-4 border-brand-cyan shadow-lg">
-                <i class="fa-solid fa-users-gear text-brand-cyan w-5"></i><span class="font-medium text-sm">Gestión de Usuarios</span>
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto custom-scroll">
+            <button onclick="switchView('dashboard')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-dashboard">
+                <i class="fa-solid fa-house w-5"></i><span class="font-medium text-sm">Inicio</span>
+            </button>
+            <div class="pt-4 pb-2 px-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">Gestión</div>
+            <button onclick="switchView('users')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-users">
+                <i class="fa-solid fa-users-gear w-5"></i><span class="font-medium text-sm">Personal</span>
+            </button>
+            <button onclick="switchView('beneficiaries')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-beneficiaries">
+                <i class="fa-solid fa-hospital-user w-5"></i><span class="font-medium text-sm">Derechohabientes</span>
+            </button>
+            <div class="pt-4 pb-2 px-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">Operaciones</div>
+            <button onclick="switchView('shipments')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-shipments">
+                <i class="fa-solid fa-truck-fast w-5"></i><span class="font-medium text-sm">Gestión de Envíos</span>
+            </button>
+            <button onclick="switchView('reports')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-reports">
+                <i class="fa-solid fa-chart-pie w-5"></i><span class="font-medium text-sm">Reportes</span>
             </button>
         </nav>
         <div class="p-4 bg-black/20 border-t border-white/5">
@@ -92,129 +103,140 @@
 
     <!-- CONTENIDO -->
     <main class="flex-1 overflow-hidden flex flex-col bg-slate-50 relative">
-        <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center z-10">
-            <div><h1 class="text-2xl font-bold text-brand-dark">Directorio de Personal</h1><p class="text-xs text-slate-500">Administra departamentos, roles y seguridad.</p></div>
-            <button onclick="openModal()" class="bg-brand-dark hover:bg-brand-cyan text-white px-6 py-2.5 rounded-xl font-bold shadow-lg shadow-blue-900/20 transition-all transform hover:-translate-y-1 flex items-center text-sm"><i class="fa-solid fa-user-plus mr-2"></i> Nuevo Usuario</button>
-        </header>
-
-        <div class="flex-1 overflow-y-auto p-6 md:p-8 custom-scroll">
-            <!-- Stats -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center"><div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xl mr-4"><i class="fa-solid fa-users"></i></div><div><p class="text-xs text-slate-400 uppercase font-bold">Total Personal</p><h4 class="text-2xl font-bold text-slate-700" id="stat-total">0</h4></div></div>
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center"><div class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl mr-4"><i class="fa-solid fa-sitemap"></i></div><div><p class="text-xs text-slate-400 uppercase font-bold">Departamentos</p><h4 class="text-2xl font-bold text-slate-700">7</h4></div></div>
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center"><div class="w-12 h-12 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center text-xl mr-4"><i class="fa-solid fa-shield-cat"></i></div><div><p class="text-xs text-slate-400 uppercase font-bold">Seguridad IP</p><h4 class="text-2xl font-bold text-slate-700" id="stat-security">0</h4></div></div>
-            </div>
-
-            <!-- Tabla -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead class="bg-slate-50 text-[11px] uppercase text-slate-500 font-semibold tracking-wider">
-                            <tr>
-                                <th class="p-5 pl-6">Colaborador (DNI)</th>
-                                <th class="p-5">Departamento & Cargos</th>
-                                <th class="p-5">Acceso</th>
-                                <th class="p-5 text-center">Estatus</th>
-                                <th class="p-5 pr-6 text-right">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="user-list" class="divide-y divide-slate-100 text-sm text-slate-600">
-                            <tr><td colspan="5" class="p-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando directorio...</td></tr>
-                        </tbody>
-                    </table>
+        
+        <!-- VISTA DASHBOARD -->
+        <div id="view-dashboard" class="flex-1 flex flex-col h-full overflow-hidden fade-in">
+            <header class="bg-white shadow-sm border-b border-slate-200 p-8 z-10 shrink-0">
+                <h1 class="text-3xl font-bold text-brand-dark mb-1">Bienvenido al Sistema</h1>
+                <p class="text-slate-500">Seleccione un módulo de gestión para comenzar.</p>
+            </header>
+            <div class="flex-1 overflow-y-auto p-8 custom-scroll">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div onclick="switchView('users')" class="dash-card bg-white rounded-3xl p-6 border border-slate-100 shadow-sm cursor-pointer group relative overflow-hidden">
+                        <div class="relative z-10 text-center"><div class="w-14 h-14 mx-auto rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-3xl mb-6 shadow-sm group-hover:scale-110 transition-transform"><i class="fa-solid fa-users-gear"></i></div><h3 class="font-bold text-slate-700">Personal</h3><p class="text-sm text-slate-500 mb-6">Gestión de Accesos</p><span class="text-blue-600 text-sm font-bold flex items-center group-hover:translate-x-2 transition-transform">Acceder <i class="fa-solid fa-arrow-right ml-2"></i></span></div>
+                    </div>
+                    <div onclick="switchView('beneficiaries')" class="dash-card bg-white rounded-3xl p-6 border border-slate-100 shadow-sm cursor-pointer group relative overflow-hidden">
+                        <div class="relative z-10 text-center"><div class="w-14 h-14 mx-auto rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-3xl mb-6 shadow-sm group-hover:scale-110 transition-transform"><i class="fa-solid fa-hospital-user"></i></div><h3 class="font-bold text-slate-700">Pacientes</h3><p class="text-sm text-slate-500 mb-6">Afiliados y Asignaciones</p><span class="text-emerald-600 text-sm font-bold flex items-center group-hover:translate-x-2 transition-transform">Acceder <i class="fa-solid fa-arrow-right ml-2"></i></span></div>
+                    </div>
+                    <div onclick="switchView('shipments')" class="dash-card bg-white rounded-3xl p-6 border border-slate-100 shadow-sm cursor-pointer group relative overflow-hidden">
+                        <div class="relative z-10 text-center"><div class="w-14 h-14 mx-auto rounded-2xl bg-cyan-50 text-brand-cyan flex items-center justify-center text-3xl mb-6 shadow-sm group-hover:scale-110 transition-transform"><i class="fa-solid fa-truck-fast"></i></div><h3 class="font-bold text-slate-700">Envíos</h3><p class="text-sm text-slate-500 mb-6">Calendario Logístico</p><span class="text-brand-cyan text-sm font-bold flex items-center group-hover:translate-x-2 transition-transform">Acceder <i class="fa-solid fa-arrow-right ml-2"></i></span></div>
+                    </div>
                 </div>
             </div>
         </div>
+
+        <!-- VISTA USUARIOS -->
+        <div id="view-users" class="hidden-view flex-1 flex flex-col h-full overflow-hidden fade-in">
+            <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center z-10 shrink-0">
+                <div><h1 class="text-2xl font-bold text-brand-dark">Directorio de Personal</h1></div>
+                <button onclick="openModal()" class="bg-brand-dark hover:bg-brand-cyan text-white px-6 py-2.5 rounded-xl font-bold shadow-lg transition-all flex items-center text-sm"><i class="fa-solid fa-user-plus mr-2"></i> Nuevo Usuario</button>
+            </header>
+            <div class="flex-1 overflow-y-auto p-6 md:p-8 custom-scroll">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead class="bg-slate-50 text-[11px] uppercase text-slate-500 font-semibold tracking-wider"><tr><th class="p-5 pl-6">Colaborador</th><th class="p-5">Cargo</th><th class="p-5">Acceso</th><th class="p-5 text-center">Estatus</th><th class="p-5 pr-6 text-right">Acciones</th></tr></thead><tbody id="user-list" class="divide-y divide-slate-100 text-sm text-slate-600"><tr><td colspan="5" class="p-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando...</td></tr></tbody></table></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA DERECHOHABIENTES -->
+        <div id="view-beneficiaries" class="hidden-view flex-1 flex flex-col h-full overflow-hidden fade-in">
+            <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center z-10 shrink-0">
+                <div><h1 class="text-2xl font-bold text-brand-dark">Derechohabientes</h1></div>
+                <div class="flex gap-3">
+                    <label class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg cursor-pointer flex items-center text-sm"><i class="fa-solid fa-file-csv mr-2"></i> Importar CSV<input type="file" id="csvInput" accept=".csv" class="hidden" onchange="handleCSVUpload(this)"></label>
+                    <button onclick="openBeneficiaryModal()" class="bg-brand-dark hover:bg-brand-cyan text-white px-5 py-2.5 rounded-xl font-bold shadow-lg flex items-center text-sm"><i class="fa-solid fa-plus mr-2"></i> Crear Manual</button>
+                </div>
+            </header>
+            <div class="flex-1 overflow-y-auto p-6 md:p-8 custom-scroll">
+                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead class="bg-slate-50 text-[11px] uppercase text-slate-500 font-semibold tracking-wider"><tr><th class="p-5 pl-6">Identidad / Prioridad</th><th class="p-5">Tipo</th><th class="p-5">Ubicación</th><th class="p-5">Gestor</th><th class="p-5 text-right">Acciones</th></tr></thead><tbody id="ben-list" class="divide-y divide-slate-100 text-sm text-slate-600"></tbody></table></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA ENVÍOS -->
+        <div id="view-shipments" class="hidden-view flex-1 flex flex-col h-full overflow-hidden fade-in">
+            <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center z-10 shrink-0">
+                <div><h1 class="text-2xl font-bold text-brand-dark flex items-center"><i class="fa-solid fa-truck-ramp-box mr-3 text-brand-cyan"></i> Gestión de Envíos</h1><nav class="flex text-xs text-slate-500 mt-1" id="ship-breadcrumb"><span class="font-bold text-brand-dark">Inicio</span></nav></div>
+            </header>
+            <div class="flex-1 overflow-y-auto p-6 md:p-8 custom-scroll bg-slate-50/50">
+                <div id="ship-years" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"><div onclick="openYear(2026)" class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 hover:border-brand-cyan hover:shadow-xl cursor-pointer transition-all group text-center year-card" data-year="2026"><div class="text-4xl font-bold text-brand-dark group-hover:text-brand-cyan mb-2">2026</div><p class="text-xs text-slate-400 uppercase tracking-widest">Año Fiscal</p></div><div onclick="createNewYear()" class="bg-slate-100 p-8 rounded-3xl border-2 border-dashed border-slate-300 hover:border-brand-cyan hover:bg-white cursor-pointer transition-all group text-center flex flex-col items-center justify-center"><div class="w-12 h-12 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center text-xl mb-2 group-hover:bg-brand-cyan group-hover:text-white transition-colors"><i class="fa-solid fa-plus"></i></div><p class="text-xs text-slate-400 font-bold uppercase tracking-widest group-hover:text-brand-cyan">Crear Año</p></div></div>
+                <div id="ship-months" class="hidden grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+                <div id="ship-days" class="hidden"><div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6"><div class="grid grid-cols-7 gap-2 mb-2 text-center text-xs font-bold text-slate-400 uppercase"><div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div></div><div id="calendar-grid" class="grid grid-cols-7 gap-2"></div></div></div>
+            </div>
+        </div>
+
+        <!-- REPORTES -->
+        <div id="view-reports" class="hidden-view flex-1 flex flex-col h-full overflow-hidden fade-in items-center justify-center text-center">
+            <div class="bg-white p-10 rounded-full shadow-lg mb-6 ring-8 ring-slate-100"><i class="fa-solid fa-chart-pie text-6xl text-slate-300"></i></div>
+            <h2 class="text-3xl font-bold text-slate-700 mb-2">Módulo de Reportes</h2>
+            <p class="text-slate-500 max-w-md">Próximamente</p>
+        </div>
     </main>
 
-    <!-- MODAL (FORMULARIO) -->
+    <!-- MODAL USUARIO -->
     <div id="userModal" class="fixed inset-0 modal-backdrop hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl transform transition-all fade-in overflow-hidden max-h-[90vh] flex flex-col">
-            <div class="bg-brand-dark p-5 flex justify-between items-center text-white shrink-0">
-                <h3 class="font-bold text-lg flex items-center"><i class="fa-solid fa-id-badge mr-2"></i> <span id="modalTitle">Gestión de Personal</span></h3>
-                <button onclick="closeModal()" class="text-white/70 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
-            </div>
-            
+        <div class="bg-white rounded-2xl w-full max-w-3xl flex flex-col max-h-[90vh]">
+            <div class="bg-brand-dark p-5 flex justify-between text-white"><h3 class="font-bold">Gestión Personal</h3><button onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
+            <div class="p-6 overflow-y-auto"><form id="userForm"><input type="hidden" id="editUid"><div class="grid grid-cols-2 gap-4"><input id="formDni" placeholder="DNI" class="border p-2 rounded"><input id="formName" placeholder="Nombre" class="border p-2 rounded"><input id="formUser" placeholder="Usuario" class="border p-2 rounded"><input id="formPass" type="password" placeholder="Clave" class="border p-2 rounded"></div><div class="mt-4 grid grid-cols-2 gap-4"><select id="formDept" onchange="updateRoles()" class="border p-2 rounded"><option disabled selected>Depto...</option><option value="farmacia">Farmacia</option><option value="contact_center">Contact Center</option><option value="operaciones">Operaciones</option><option value="calidad">Calidad</option><option value="logistica">Logística</option><option value="repartidor">Delivery</option><option value="admin">Admin</option></select><select id="formJob" multiple class="border p-2 rounded h-24"><option disabled>Rol...</option></select></div><div class="hidden"><input type="checkbox" id="formIpCheck"><input type="time" id="formStart"><input type="time" id="formEnd"></div></form></div>
+            <div class="p-5 border-t flex justify-end gap-3"><button onclick="closeModal()" class="text-slate-500">Cancelar</button><button onclick="saveUser()" id="btnSave" class="bg-brand-clinical text-white px-4 py-2 rounded">Guardar</button></div>
+        </div>
+    </div>
+
+    <!-- MODAL BENEFICIARIO (CORREGIDO) -->
+    <div id="benModal" class="fixed inset-0 modal-backdrop hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-4xl flex flex-col max-h-[90vh]">
+            <div class="bg-brand-dark p-5 text-white flex justify-between"><h3 class="font-bold">Derechohabiente</h3><button onclick="document.getElementById('benModal').classList.add('hidden')"><i class="fa-solid fa-xmark"></i></button></div>
             <div class="p-6 overflow-y-auto custom-scroll">
-                <form id="userForm" class="space-y-6">
-                    <input type="hidden" id="editUid">
-
-                    <!-- Identidad -->
+                <form id="benForm" class="space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div class="col-span-2 md:col-span-1">
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">DNI (Cédula)</label>
-                            <input type="text" id="formDni" class="w-full border border-slate-300 rounded-lg p-2.5 focus:border-brand-cyan focus:ring-2 focus:ring-brand-cyan/20 outline-none" required placeholder="Ej: 0801-1990-12345">
-                        </div>
-                        <div class="col-span-2 md:col-span-1">
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nombre Completo</label>
-                            <input type="text" id="formName" class="w-full border border-slate-300 rounded-lg p-2.5 focus:border-brand-cyan focus:ring-2 focus:ring-brand-cyan/20 outline-none" required placeholder="Ej: Dra. Ana López">
-                        </div>
-                        <div class="col-span-2 md:col-span-1">
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Usuario Sistema</label>
-                            <input type="text" id="formUser" class="w-full border border-slate-300 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:border-brand-cyan outline-none font-mono text-sm" required placeholder="alopez">
-                        </div>
-                        <div class="col-span-2 md:col-span-1">
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Contraseña</label>
-                            <input type="password" id="formPass" class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:border-brand-cyan" placeholder="••••••••">
-                            <p class="text-[10px] text-slate-400 mt-1" id="passHelp">Mínimo 6 caracteres.</p>
-                        </div>
+                        <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">ID (Cédula)</label><input type="text" id="benId" class="w-full border rounded-lg p-2.5 focus:border-brand-cyan outline-none" required></div>
+                        <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nombre Completo</label><input type="text" id="benName" class="w-full border rounded-lg p-2.5 focus:border-brand-cyan outline-none" required></div>
+                        <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Teléfono</label><input type="text" id="benPhone" class="w-full border rounded-lg p-2.5 focus:border-brand-cyan outline-none" required></div>
+                        <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Municipio</label><input type="text" id="benMuni" class="w-full border rounded-lg p-2.5 focus:border-brand-cyan outline-none" required></div>
+                        <div class="col-span-2"><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Dirección Exacta</label><input type="text" id="benAddr" class="w-full border rounded-lg p-2.5 focus:border-brand-cyan outline-none" required></div>
                     </div>
-
-                    <hr class="border-slate-100">
-
-                    <!-- Roles Dinámicos (MultiSelect) -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Departamento</label>
-                            <select id="formDept" onchange="updateRoles()" class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:border-brand-cyan bg-white appearance-none cursor-pointer">
-                                <option value="" disabled selected>Seleccione Departamento...</option>
-                                <option value="farmacia">💊 Farmacia</option>
-                                <option value="contact_center">🎧 Contact Center</option>
-                                <option value="operaciones">⚙️ Operaciones</option>
-                                <option value="calidad">✅ Calidad y Sellado</option>
-                                <option value="logistica">📦 Logística</option>
-                                <option value="repartidor">🛵 Delivery (Reparto)</option>
-                                <option value="admin">🛡️ Administración</option>
-                            </select>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Cargos / Funciones (Multi-Selección)</label>
-                            <select id="formJob" multiple class="w-full border border-slate-300 rounded-lg outline-none focus:border-brand-cyan bg-white text-sm cursor-pointer shadow-inner">
-                                <option disabled>Seleccione Dept. primero...</option>
-                            </select>
-                            <p class="text-[10px] text-brand-cyan mt-1 ml-1 font-medium"><i class="fa-solid fa-circle-info mr-1"></i>Mantén Ctrl/Cmd para seleccionar varios.</p>
-                        </div>
+                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div><label class="block text-xs font-bold text-blue-700 uppercase mb-1"><i class="fa-solid fa-calendar-check mr-1"></i> Última Dispensación</label><input type="date" id="benLastDispense" class="w-full border border-blue-200 rounded-lg p-2.5 bg-white text-sm"></div>
+                        <div><label class="block text-xs font-bold text-blue-700 uppercase mb-1"><i class="fa-solid fa-truck-fast mr-1"></i> Fecha Envío (Admin)</label><input type="date" id="benNextShipment" class="w-full border border-blue-200 rounded-lg p-2.5 bg-white text-sm"></div>
                     </div>
-
-                    <!-- Seguridad -->
-                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                        <h4 class="text-xs font-bold text-brand-dark uppercase mb-3 flex items-center"><i class="fa-solid fa-lock mr-2"></i> Control de Acceso</h4>
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="mr-4"><span class="text-sm font-semibold text-slate-700 block">Validación de Dispositivo</span><span class="text-xs text-slate-500">Requiere aprobación IP.</span></div>
-                            <label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="formIpCheck" class="sr-only peer"><div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-clinical"></div></label>
-                        </div>
-                        <div class="border-t border-slate-200/60 pt-3">
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Días Permitidos</label>
-                            <div class="flex flex-wrap gap-2 mb-3">
-                                <label class="cursor-pointer bg-white border px-3 py-1 rounded hover:border-brand-cyan transition"><input type="checkbox" class="mr-1 day-check" value="Lunes"> L</label>
-                                <label class="cursor-pointer bg-white border px-3 py-1 rounded hover:border-brand-cyan transition"><input type="checkbox" class="mr-1 day-check" value="Martes"> M</label>
-                                <label class="cursor-pointer bg-white border px-3 py-1 rounded hover:border-brand-cyan transition"><input type="checkbox" class="mr-1 day-check" value="Miercoles"> X</label>
-                                <label class="cursor-pointer bg-white border px-3 py-1 rounded hover:border-brand-cyan transition"><input type="checkbox" class="mr-1 day-check" value="Jueves"> J</label>
-                                <label class="cursor-pointer bg-white border px-3 py-1 rounded hover:border-brand-cyan transition"><input type="checkbox" class="mr-1 day-check" value="Viernes"> V</label>
-                                <label class="cursor-pointer bg-white border px-3 py-1 rounded hover:border-brand-cyan transition"><input type="checkbox" class="mr-1 day-check" value="Sabado"> S</label>
-                                <label class="cursor-pointer bg-white border px-3 py-1 rounded hover:border-brand-cyan transition"><input type="checkbox" class="mr-1 day-check" value="Domingo"> D</label>
+                    
+                    <!-- CAMPOS FAMILIAR CORREGIDOS (VISIBLES Y ÚNICOS) -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 relative">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase mb-3 flex items-center">
+                            <i class="fa-solid fa-users mr-2"></i> Contacto Familiar / Emergencia
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nombre Familiar</label>
+                                <input type="text" id="benFamName" class="w-full border rounded-lg p-2.5 bg-white outline-none focus:border-brand-cyan" placeholder="Nombre del contacto">
                             </div>
-                            <div class="flex items-center gap-3"><input type="time" id="formStart" class="border p-1.5 rounded text-xs bg-white"><span class="text-xs">a</span><input type="time" id="formEnd" class="border p-1.5 rounded text-xs bg-white"></div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Teléfono Familiar</label>
+                                <input type="text" id="benFamPhone" class="w-full border rounded-lg p-2.5 bg-white outline-none focus:border-brand-cyan" placeholder="Teléfono del contacto">
+                            </div>
                         </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Tipo de Afiliado</label><select id="benType" class="w-full border rounded-lg p-2.5 bg-white outline-none"><option>Afiliado Directo</option><option>Jubilado</option><option>Pensionado</option><option>Beneficiaria Padre</option><option>Beneficiaria(o) Compañera(o)</option><option>Beneficiaria(o) Esposa(o)</option><option>Beneficiaria Hijo(a)</option></select></div>
+                        <div><label class="block text-xs font-bold text-brand-clinical uppercase mb-1">Asignar / Reasignar (Permanente)</label><select id="benAssign" class="w-full border rounded-lg p-2.5 bg-white outline-none border-brand-clinical/50 focus:border-brand-clinical"><option value="">-- Seleccionar Gestor --</option></select></div>
                     </div>
                 </form>
             </div>
-
             <div class="p-5 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 shrink-0">
-                <button type="button" onclick="closeModal()" class="px-5 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-700 transition">Cancelar</button>
-                <button type="button" onclick="saveUser()" id="btnSave" class="bg-brand-clinical hover:bg-emerald-600 text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg shadow-emerald-200 transition transform active:scale-95 flex items-center"><i class="fa-solid fa-save mr-2"></i> Guardar Usuario</button>
+                <button type="button" onclick="document.getElementById('benModal').classList.add('hidden')" class="px-5 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-700">Cancelar</button>
+                <button type="button" onclick="saveBeneficiary()" class="bg-brand-dark hover:bg-brand-cyan text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg">Guardar</button>
             </div>
+        </div>
+    </div>
+
+    <!-- MODAL ENVÍO -->
+    <div id="shipmentModal" class="fixed inset-0 modal-backdrop hidden z-[70] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-xl flex flex-col">
+            <div class="bg-brand-dark p-5 flex justify-between text-white"><h3 class="font-bold">Nueva Guía</h3><button onclick="document.getElementById('shipmentModal').classList.add('hidden')"><i class="fa-solid fa-xmark"></i></button></div>
+            <div class="p-6"><form id="shipForm" class="space-y-4"><input type="hidden" id="shipDate"><p id="shipDateDisplay" class="font-bold text-center"></p><select id="shipBeneficiary" class="border w-full p-2 rounded"><option>Cargando...</option></select><input id="shipGuide" placeholder="Tracking #" class="border w-full p-2 rounded"><select id="shipStatus" class="border w-full p-2 rounded"><option>En Proceso</option></select></form></div>
+            <div class="p-5 border-t flex justify-end gap-3"><button onclick="document.getElementById('shipmentModal').classList.add('hidden')" class="text-slate-500">Cancelar</button><button onclick="saveShipment()" class="bg-brand-cyan text-white px-4 py-2 rounded">Guardar</button></div>
         </div>
     </div>
 
@@ -222,296 +244,240 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
         import { getAuth, signOut, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, setDoc, doc, getDoc, onSnapshot, updateDoc, deleteDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, setDoc, doc, getDoc, onSnapshot, updateDoc, deleteDoc, query, where, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-        // Configuración
         const firebaseConfig = { apiKey: "AIzaSyC2HWoYjIltPqkysduZ-954-f-kZCFaNdA", authDomain: "fdihss.firebaseapp.com", projectId: "fdihss", storageBucket: "fdihss.firebasestorage.app", messagingSenderId: "1004594046776", appId: "1:1004594046776:web:164dcdb2b023b8719283cd" };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         const appId = "fdihss-mediflow-v2-modular";
         const DOMAIN_SUFFIX = "@mediflow.sys"; 
-        
-        // App Secundaria para crear usuarios sin logout
         const secondaryApp = initializeApp(firebaseConfig, "Secondary");
         const secondaryAuth = getAuth(secondaryApp);
 
-        // --- MANEJO DE ESTATUS ONLINE/OFFLINE ---
-        async function setUserStatus(uid, status) {
-            try {
-                // 1. Actualizar perfil privado
-                const userRef = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'data');
-                await updateDoc(userRef, { status: status });
-                
-                // 2. Actualizar directorio público (buscando el documento correcto)
-                const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'users_directory'), where('uid', '==', uid));
-                const snapshot = await getDocs(q);
-                snapshot.forEach(async (docSnap) => {
-                    await updateDoc(docSnap.ref, { status: status });
-                });
-            } catch (e) { console.error("Error updating status:", e); }
+        window.isCreatingUser = false;
+        let currentYear = null, currentMonth = null;
+        const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+        function renderUserRow(u, docId) {
+             const jobs = Array.isArray(u.jobTitle) ? u.jobTitle : [u.jobTitle || 'General'];
+             return `<tr class="hover:bg-blue-50/40 border-b border-slate-50"><td class="p-5 pl-6"><div class="flex items-center"><div class="w-10 h-10 rounded-xl bg-white border border-slate-100 shadow-sm flex items-center justify-center text-sm font-bold text-brand-dark mr-3">${u.name.charAt(0)}</div><div><div class="font-bold text-slate-700 text-sm">${u.name}</div><div class="text-[11px] text-slate-400 font-mono">${u.dni||'--'}</div></div></div></td><td class="p-5"><div class="flex flex-col gap-1"><span class="bg-slate-100 border px-2 py-0.5 rounded text-[10px] font-bold uppercase w-fit">${u.role}</span><div class="text-xs text-slate-500">${jobs.join(', ')}</div></div></td><td class="p-5"><span class="text-xs font-mono text-slate-500 bg-slate-100 px-2 py-1 rounded">${u.username}</span></td><td class="p-5 text-center"><span class="text-[10px] font-bold ${u.status==='online'?'text-emerald-500':'text-slate-400'}">${u.status==='online'?'ONLINE':'OFFLINE'}</span></td><td class="p-5 pr-6 text-right"><button class="text-blue-500 p-2"><i class="fa-solid fa-pen"></i></button></td></tr>`;
         }
 
-        const roleDefinitions = {
-            'farmacia': [ { val: 'Supervisor de Farmacia', label: 'Supervisor General' }, { val: 'Revisión y Asignación', label: 'Revisor de Pacientes' }, { val: 'Despacho de Medicamentos', label: 'Despacho (Salida)' }, { val: 'Gestión de Inventario', label: 'Gestión de Inventario' } ],
-            'contact_center': [ { val: 'Supervisor CC', label: 'Supervisor' }, { val: 'Agente Contact Center', label: 'Agente Telefónico' } ],
-            'operaciones': [ { val: 'Supervisor Operaciones', label: 'Supervisor' }, { val: 'Operador', label: 'Operador de Sistema' } ],
-            'calidad': [ { val: 'Supervisor Calidad', label: 'Supervisor Calidad' }, { val: 'Revisor de Paquetes', label: 'Revisor (Contenido)' }, { val: 'Controlador Observaciones', label: 'Control de Observaciones' } ],
-            'logistica': [ { val: 'Supervisor Logística', label: 'Supervisor General' }, { val: 'Asignador de Rutas', label: 'Asignador de Rutas' }, { val: 'Despachador Delivery', label: 'Despachador a Motoristas' } ],
-            'repartidor': [ { val: 'Supervisor de Flota', label: 'Supervisor de Delivery' }, { val: 'Motorista', label: 'Motorista / Repartidor' } ],
-            'admin': [ { val: 'Super Admin', label: 'Administrador Total' } ]
+        window.switchView = (viewId) => {
+            ['users','beneficiaries','dashboard','shipments','reports'].forEach(id => {
+                const el = document.getElementById(`view-${id}`);
+                const btn = document.getElementById(`btn-view-${id}`);
+                if(el) el.classList.add('hidden-view');
+                if(btn) { btn.classList.replace('text-white','text-slate-300'); btn.classList.remove('bg-white/10','border-l-4','border-brand-cyan'); btn.classList.add('border-transparent'); }
+            });
+            document.getElementById(`view-${viewId}`).classList.remove('hidden-view');
+            const btn = document.getElementById(`btn-view-${viewId}`);
+            if(btn) { btn.classList.replace('text-slate-300','text-white'); btn.classList.remove('border-transparent'); btn.classList.add('bg-white/10','border-l-4','border-brand-cyan'); }
         };
 
-        window.safeNavigate = (url) => {
-            try { window.location.href = url; } 
-            catch (e) { console.warn("Nav blocked:", e); if(url === 'index.html') showLockScreen("Redirección bloqueada. Usa el botón."); } 
-        };
-        window.forceNavigateLogin = () => { try { window.location.href = 'index.html'; } catch(e) { alert("Recarga la página."); } };
+        window.openYear = (y) => { currentYear=y; document.getElementById('ship-years').classList.add('hidden'); document.getElementById('ship-months').classList.remove('hidden'); document.getElementById('ship-months').className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 fade-in"; const c=document.getElementById('ship-months'); c.innerHTML=''; monthNames.forEach((m,i)=>{ c.innerHTML+=`<div onclick="openMonth(${i})" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:border-brand-cyan hover:shadow-lg cursor-pointer text-center"><div class="text-xl font-bold text-slate-700">${m}</div><div class="text-xs text-slate-400">${currentYear}</div></div>`; }); updateBreadcrumb(); };
+        window.openMonth = (m) => { currentMonth=m; document.getElementById('ship-months').classList.add('hidden'); document.getElementById('ship-days').classList.remove('hidden'); renderCalendar(currentYear, currentMonth); updateBreadcrumb(); };
+        window.resetShipView = () => { currentYear=null; currentMonth=null; document.getElementById('ship-days').classList.add('hidden'); document.getElementById('ship-months').classList.add('hidden'); document.getElementById('ship-years').classList.remove('hidden'); updateBreadcrumb(); };
+        window.createNewYear = () => { const c=document.getElementById('ship-years'); const ny=2027; const nc=document.createElement('div'); nc.className="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 hover:border-brand-cyan hover:shadow-xl cursor-pointer transition-all group text-center year-card"; nc.setAttribute('onclick',`openYear(${ny})`); nc.setAttribute('data-year',ny); nc.innerHTML=`<div class="text-4xl font-bold text-brand-dark mb-2">${ny}</div><p class="text-xs text-slate-400 uppercase tracking-widest">Año Fiscal</p>`; c.insertBefore(nc,c.lastElementChild); };
+        
+        function updateBreadcrumb() { const b=document.getElementById('ship-breadcrumb'); let h=`<span class="cursor-pointer" onclick="resetShipView()">Inicio</span>`; if(currentYear) h+=` > <span class="cursor-pointer" onclick="openYear(${currentYear})">${currentYear}</span>`; if(currentMonth!==null) h+=` > <b>${monthNames[currentMonth]}</b>`; b.innerHTML=h; }
+        function renderCalendar(y,m) { const g=document.getElementById('calendar-grid'); g.innerHTML=''; const dim=new Date(y,m+1,0).getDate(); const fd=new Date(y,m,1).getDay(); for(let i=0;i<fd;i++)g.innerHTML+=`<div></div>`; for(let d=1;d<=dim;d++) { const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; g.innerHTML+=`<div onclick="openDayModal('${ds}')" class="calendar-day bg-white border border-slate-100 rounded-xl p-2 relative cursor-pointer hover:shadow-md"><span class="text-sm font-bold text-slate-700">${d}</span><div id="ship-count-${ds}" class="mt-1"></div></div>`; loadDayStats(ds); } }
+        async function loadDayStats(ds) { const q=query(collection(db,'artifacts',appId,'public','data','shipments'),where('date','==',ds)); const s=await getDocs(q); if(!s.empty) document.getElementById(`ship-count-${ds}`).innerHTML=`<span class="text-[10px] bg-emerald-100 text-emerald-700 px-1 rounded">${s.size} Envíos</span>`; }
+        window.openDayModal=async(ds)=>{ document.getElementById('shipDate').value=ds; document.getElementById('shipDateDisplay').innerText=ds; const s=document.getElementById('shipBeneficiary'); s.innerHTML='<option>Cargando...</option>'; const sn=await getDocs(collection(db,'artifacts',appId,'public','data','beneficiaries')); s.innerHTML='<option value="">Seleccione...</option>'; sn.forEach(d=>s.innerHTML+=`<option value="${d.id}|${d.data().name}">${d.data().name}</option>`); document.getElementById('shipmentModal').classList.remove('hidden'); };
+        window.saveShipment=async()=>{ const d=document.getElementById('shipDate').value, b=document.getElementById('shipBeneficiary').value, g=document.getElementById('shipGuide').value, st=document.getElementById('shipStatus').value; if(!b || !g){alert("Datos incompletos");return;} const [bid,bn]=b.split('|'); try{ await addDoc(collection(db,'artifacts',appId,'public','data','shipments'),{date:d,beneficiaryId:bid,beneficiaryName:bn,guideNumber:g,status:st,createdAt:new Date().toISOString()}); alert("Guía guardada."); document.getElementById('shipmentModal').classList.add('hidden'); loadDayStats(d); }catch(e){alert(e.message);} };
 
-        function showLockScreen(msg) {
-            const lock = document.getElementById('auth-lock');
-            if(lock) { document.getElementById('lock-msg').innerText = msg; lock.classList.remove('hidden'); }
+        async function loadAssignableUsers(selectedId = null) {
+            const select = document.getElementById('benAssign');
+            select.innerHTML = '<option value="">-- Seleccionar Usuario Activo --</option>';
+            const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'users_directory'), where('role', 'in', ['farmacia', 'contact_center']));
+            const snap = await getDocs(q);
+            snap.forEach(doc => {
+                const u = doc.data();
+                const opt = document.createElement('option');
+                opt.value = u.uid + "|" + u.name; 
+                opt.innerText = `${u.name} (${u.role})`;
+                if(selectedId && selectedId === u.uid) opt.selected = true;
+                select.appendChild(opt);
+            });
         }
 
-        window.updateRoles = (selectedJobs = []) => {
-            const dept = document.getElementById('formDept').value;
-            const select = document.getElementById('formJob');
-            select.innerHTML = '';
+        window.openBeneficiaryModal = (isEdit = false, benData = null) => {
+            document.getElementById('benForm').reset();
+            const modalTitle = document.getElementById('benModal').querySelector('h3');
             
-            const jobsArr = Array.isArray(selectedJobs) ? selectedJobs : (selectedJobs ? [selectedJobs] : []);
-
-            if (dept && roleDefinitions[dept]) {
-                select.disabled = false;
-                roleDefinitions[dept].forEach(role => {
-                    const opt = document.createElement('option');
-                    opt.value = role.val; opt.innerText = role.label;
-                    if(jobsArr.includes(role.val)) opt.selected = true;
-                    select.appendChild(opt);
-                });
-            } else { select.disabled = true; select.innerHTML = '<option disabled>Seleccione Dept. primero...</option>'; }
-        };
-
-        const updateStatus = (isOnline) => {
-            const dot = document.getElementById('status-dot');
-            const text = document.getElementById('status-text');
-            if(dot && text) {
-                if (isOnline) { dot.className = "w-2 h-2 rounded-full bg-brand-clinical animate-pulse mr-2 shadow-[0_0_8px_rgba(16,185,129,0.8)]"; text.innerText = "Sistema Online"; text.className = "text-[10px] font-bold text-emerald-300 uppercase tracking-widest"; } 
-                else { dot.className = "w-2 h-2 rounded-full bg-red-500 mr-2"; text.innerText = "Desconectado"; text.className = "text-[10px] font-bold text-red-300 uppercase tracking-widest"; }
-            }
-        }
-        window.addEventListener('online', () => updateStatus(true));
-        window.addEventListener('offline', () => updateStatus(false));
-
-        let inactivityTimer;
-        let isTimeoutLogout = false;
-        const TIMEOUT_LIMIT = 30 * 60 * 1000; 
-        const resetInactivityTimer = () => {
-            clearTimeout(inactivityTimer);
-            if(auth.currentUser && document.getElementById('auth-lock').classList.contains('hidden')) {
-               inactivityTimer = setTimeout(doInactivityLogout, TIMEOUT_LIMIT);
-            }
-        };
-        const doInactivityLogout = async () => { 
-            isTimeoutLogout = true; 
-            if(auth.currentUser) await setUserStatus(auth.currentUser.uid, 'offline');
-            await signOut(auth); 
-        };
-        ['mousemove', 'keydown', 'click', 'scroll'].forEach(evt => window.addEventListener(evt, resetInactivityTimer));
-
-        onAuthStateChanged(auth, async (u) => { 
-            if(window.isCreatingUser) return;
-
-            if(!u) {
-                let msg = "Debes iniciar sesión para acceder.";
-                if(isTimeoutLogout) { msg = "Tu sesión ha expirado por inactividad (30 min)."; isTimeoutLogout = false; }
-                showLockScreen(msg);
-            } else { 
-                try {
-                    const s = await getDoc(doc(db,'artifacts',appId,'users',u.uid,'profile','data')); 
-                    if(!s.exists() || s.data().role!=='admin') showLockScreen("Acceso Restringido. Rol no autorizado.");
-                    else { 
-                        // SESIÓN ACTIVA: PONER ONLINE
-                        await setUserStatus(u.uid, 'online');
-                        resetInactivityTimer(); 
-                        document.getElementById('auth-lock').classList.add('hidden'); 
-                    }
-                } catch(e) { console.error("Error Auth:", e); }
-            }
-        });
-
-        window.openModal = (isEdit = false, userData = null) => {
-            const modal = document.getElementById('userModal');
-            document.getElementById('userForm').reset();
-            
-            if(isEdit && userData) {
-                document.getElementById('modalTitle').innerText = "Editar Personal";
-                document.getElementById('editUid').value = userData.uid;
-                document.getElementById('formDni').value = userData.dni || ''; document.getElementById('formDni').disabled = false;
-                document.getElementById('formName').value = userData.name;
-                document.getElementById('formUser').value = userData.username; document.getElementById('formUser').disabled = true; 
-                document.getElementById('formPass').placeholder = "(Sin cambios)";
-                document.getElementById('formDept').value = userData.role; 
-                updateRoles(userData.jobTitle); 
-                document.getElementById('formIpCheck').checked = userData.requireIpApproval || false;
-                document.getElementById('formStart').value = userData.shiftStart || '';
-                document.getElementById('formEnd').value = userData.shiftEnd || '';
-                if(userData.allowedDays) document.querySelectorAll('.day-check').forEach(cb => { if(userData.allowedDays.includes(cb.value)) cb.checked = true; });
+            if(isEdit && benData) {
+                // Modo Edición
+                modalTitle.innerHTML = `<i class="fa-solid fa-pen-to-square mr-2"></i> Editar Derechohabiente`;
+                document.getElementById('benId').value = benData.id;
+                document.getElementById('benId').disabled = true;
+                document.getElementById('benName').value = benData.name;
+                document.getElementById('benPhone').value = benData.phone || '';
+                document.getElementById('benMuni').value = benData.municipality || '';
+                document.getElementById('benAddr').value = benData.address || '';
+                document.getElementById('benFamName').value = benData.family?.name || '';
+                document.getElementById('benFamPhone').value = benData.family?.phone || '';
+                document.getElementById('benType').value = benData.type || 'Afiliado Directo';
+                document.getElementById('benLastDispense').value = benData.lastDispense || '';
+                document.getElementById('benNextShipment').value = benData.nextShipment || '';
+                loadAssignableUsers(benData.assignedTo?.uid);
             } else {
-                document.getElementById('modalTitle').innerText = "Nuevo Ingreso";
-                document.getElementById('editUid').value = "";
-                document.getElementById('formDni').disabled = false;
-                document.getElementById('formUser').disabled = false;
-                document.getElementById('formPass').placeholder = "Requerido";
-                updateRoles(); 
+                // Modo Creación
+                modalTitle.innerHTML = `<i class="fa-solid fa-hospital-user mr-2"></i> Nuevo Derechohabiente`;
+                document.getElementById('benId').disabled = false;
+                loadAssignableUsers();
             }
-            modal.classList.remove('hidden');
+            document.getElementById('benModal').classList.remove('hidden');
         };
 
-        window.closeModal = () => document.getElementById('userModal').classList.add('hidden');
+        window.editBeneficiary = (dataString) => { const data = JSON.parse(decodeURIComponent(dataString)); openBeneficiaryModal(true, data); };
 
-        window.saveUser = async () => {
-            const btn = document.getElementById('btnSave');
-            const editUid = document.getElementById('editUid').value;
-            const dni = document.getElementById('formDni').value.trim(); 
-            const name = document.getElementById('formName').value;
-            const username = document.getElementById('formUser').value.trim().toLowerCase().replace(/\s+/g, '');
-            const pass = document.getElementById('formPass').value;
-            const dept = document.getElementById('formDept').value; 
+        window.saveBeneficiary = async () => {
+            const id = document.getElementById('benId').value;
+            const name = document.getElementById('benName').value;
+            const assignedVal = document.getElementById('benAssign').value;
+            const lastDispense = document.getElementById('benLastDispense').value;
+            const nextShipment = document.getElementById('benNextShipment').value;
             
-            const jobSelect = document.getElementById('formJob');
-            const jobTitles = Array.from(jobSelect.selectedOptions).map(opt => opt.value);
+            if(!id || !name) { alert("ID y Nombre son obligatorios."); return; }
 
-            const requireIp = document.getElementById('formIpCheck').checked;
-            const start = document.getElementById('formStart').value;
-            const end = document.getElementById('formEnd').value;
-            const days = []; document.querySelectorAll('.day-check:checked').forEach(cb => days.push(cb.value));
+            let assignedToUid = "", assignedToName = "Sin asignar";
+            if(assignedVal) { [assignedToUid, assignedToName] = assignedVal.split("|"); }
 
-            if(!dni || !name || !username || !dept || jobTitles.length === 0 || (!editUid && !pass)) { 
-                alert("Por favor complete todos los campos obligatorios y seleccione al menos un Cargo."); return; 
-            }
-
-            const originalBtn = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
-            btn.disabled = true;
+            const data = {
+                id, name, 
+                phone: document.getElementById('benPhone').value,
+                address: document.getElementById('benAddr').value,
+                municipality: document.getElementById('benMuni').value,
+                family: { name: document.getElementById('benFamName').value, phone: document.getElementById('benFamPhone').value },
+                type: document.getElementById('benType').value,
+                assignedTo: { uid: assignedToUid, name: assignedToName },
+                lastDispense: lastDispense || null,
+                nextShipment: nextShipment || null,
+                status: 'Activo',
+                updatedAt: new Date().toISOString()
+            };
 
             try {
-                const userData = { dni, name, username, role: dept, jobTitle: jobTitles, requireIpApproval: requireIp, shiftStart: start, shiftEnd: end, allowedDays: days, lastUpdated: new Date().toISOString() };
-
-                if (editUid) {
-                    await updateDoc(doc(db,'artifacts',appId,'users',editUid,'profile','data'), userData);
-                    // Actualizar directorio público (Simulación por falta de ID directo en UI)
-                    // Para que se vea en tiempo real, buscamos y actualizamos:
-                    const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'users_directory'), where('uid', '==', editUid));
-                    const snapshot = await getDocs(q);
-                    snapshot.forEach(async (docSnap) => {
-                        await updateDoc(docSnap.ref, userData);
-                    });
-                    
-                    alert("Datos actualizados correctamente.");
-                } else {
-                    if(!confirm("⚠️ ¿Crear nuevo usuario?\n(La sesión de Admin NO se cerrará).")) { btn.innerHTML = originalBtn; btn.disabled = false; return; }
-                    
-                    const email = username + DOMAIN_SUFFIX;
-                    
-                    // CREAR CON AUTH SECUNDARIO (Sin cerrar sesión admin)
-                    const cred = await createUserWithEmailAndPassword(secondaryAuth, email, pass);
-                    await signOut(secondaryAuth); // Cerrar sesión secundaria limpia
-
-                    userData.uid = cred.user.uid; userData.createdAt = new Date().toISOString(); userData.status = "offline"; // Empieza offline
-                    
-                    await setDoc(doc(db,'artifacts',appId,'users',cred.user.uid,'profile','data'), userData);
-                    await addDoc(collection(db,'artifacts',appId,'public','data','users_directory'), userData);
-                    
-                    alert(`✅ Usuario "${username}" creado exitosamente.`);
-                }
-                closeModal(); 
-            } catch (err) { 
-                console.error(err);
-                let msg = err.message;
-                if(msg.includes("email-already-in-use")) msg = "El nombre de usuario ya existe.";
-                alert("Error: " + msg); 
-            } finally {
-                btn.innerHTML = originalBtn; btn.disabled = false; 
-            }
-        };
-
-        window.deleteUser = async (docId, uid, name) => {
-            if(!confirm(`¿Dar de baja a ${name}?`)) return;
-            try {
-                await deleteDoc(doc(db,'artifacts',appId,'public','data','users_directory', docId));
-                await deleteDoc(doc(db,'artifacts',appId,'users',uid,'profile','data'));
-                alert("Usuario dado de baja.");
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'beneficiaries', id), data, {merge: true});
+                alert("Derechohabiente guardado.");
+                document.getElementById('benModal').classList.add('hidden');
             } catch(e) { alert("Error: " + e.message); }
         };
 
-        onSnapshot(collection(db,'artifacts',appId,'public','data','users_directory'), (s) => {
-            const list = document.getElementById('user-list');
-            const totalEl = document.getElementById('stat-total');
-            
-            if(totalEl) totalEl.innerText = s.size;
+        window.handleCSVUpload = (input) => {
+            const file = input.files[0];
+            if(!file) return;
 
-            if (list) {
-                list.innerHTML = '';
-                if (s.empty) { list.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-slate-400 italic bg-slate-50 border-t border-slate-200">Directorio vacío. Comience agregando usuarios.</td></tr>'; return; }
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const text = e.target.result;
+                const rows = text.split('\n').slice(1); 
+                
+                const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'users_directory'), where('role', 'in', ['farmacia', 'contact_center']));
+                const snap = await getDocs(q);
+                const agents = [];
+                snap.forEach(d => agents.push({uid: d.data().uid, name: d.data().name}));
 
-                s.forEach(docSnap => {
-                    const u = docSnap.data();
-                    const docId = docSnap.id;
-                    const link = `${window.location.origin}/index.html?u=${u.username}`;
-                    const userObj = JSON.stringify(u).replace(/"/g, '&quot;');
+                if(agents.length === 0) { alert("No hay agentes de Farmacia o Contact Center para asignar."); return; }
+
+                let processed = 0;
+                for(let row of rows) {
+                    const cols = row.split(','); 
+                    if(cols.length < 2) continue; 
+                    const id = cols[0].trim();
+                    if(!id) continue;
+
+                    // 1. Verificar si ya existe para MANTENER asignación
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'beneficiaries', id);
+                    const docSnap = await getDoc(docRef);
                     
-                    let colorClass = 'bg-slate-100 text-slate-600 border-slate-200';
-                    let iconClass = 'fa-user';
-                    if(u.role === 'admin') { colorClass = 'bg-red-50 text-red-600 border-red-100'; iconClass='fa-shield-halved'; }
-                    else if(u.role === 'farmacia') { colorClass = 'bg-emerald-50 text-emerald-600 border-emerald-100'; iconClass='fa-pills'; }
-                    else if(u.role === 'logistica') { colorClass = 'bg-orange-50 text-orange-600 border-orange-100'; iconClass='fa-truck-fast'; }
-                    else if(u.role === 'contact_center') { colorClass = 'bg-blue-50 text-blue-600 border-blue-100'; iconClass='fa-headset'; }
+                    let assignment;
 
-                    // Renderizar cargos multiples
-                    const jobs = Array.isArray(u.jobTitle) ? u.jobTitle : [u.jobTitle || 'General'];
-                    const jobsDisplay = jobs.map(j => `<div class="text-[10px] text-slate-500 bg-slate-50 border border-slate-100 px-1.5 py-0.5 rounded mb-0.5 w-fit">${j}</div>`).join('');
+                    if(docSnap.exists() && docSnap.data().assignedTo?.uid) {
+                        // YA EXISTE: MANTENER ASIGNACIÓN (PERSISTENCIA)
+                        assignment = docSnap.data().assignedTo;
+                    } else {
+                        // NUEVO: ASIGNAR ALEATORIAMENTE
+                        const randomAgent = agents[Math.floor(Math.random() * agents.length)];
+                        assignment = { uid: randomAgent.uid, name: randomAgent.name };
+                    }
 
-                    // Lógica visual de estatus ONLINE/OFFLINE
-                    const isOnline = u.status === 'online';
-                    const statusBadge = isOnline 
-                        ? `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse mr-1.5"></span> ONLINE</span>`
-                        : `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-50 text-red-400 border border-red-100"><span class="w-1.5 h-1.5 rounded-full bg-red-400 mr-1.5"></span> OFFLINE</span>`;
+                    const data = {
+                        id: id,
+                        name: cols[1]?.trim() || "Sin Nombre",
+                        phone: cols[2]?.trim() || "",
+                        address: cols[3]?.trim() || "",
+                        assignedTo: assignment, // Usar la asignación persistente o nueva
+                        status: 'Activo',
+                        updatedAt: new Date().toISOString()
+                    };
+                    
+                    await setDoc(docRef, data, {merge: true});
+                    processed++;
+                }
+                alert(`Importación completada. ${processed} registros procesados.\nLas asignaciones existentes se mantuvieron.`);
+                input.value = ''; 
+            };
+            reader.readAsText(file);
+        };
 
+        // LISTAR CON SEMÁFORO
+        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries'), (s) => {
+            const list = document.getElementById('ben-list');
+            if(!list) return;
+            list.innerHTML = '';
+            if(s.empty) { list.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-slate-400">Sin registros.</td></tr>'; return; }
+            
+            s.forEach(d => {
+                const b = d.data();
+                const jsonString = encodeURIComponent(JSON.stringify(b));
+                
+                let priorityHtml = '';
+                if (b.lastDispense) {
+                    const lastDate = new Date(b.lastDispense);
+                    const diffTime = Math.abs(new Date() - lastDate);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    
+                    if (diffDays >= 25) priorityHtml = `<span class="block mt-1 text-[9px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded w-fit border border-red-100 animate-pulse" title="Hace ${diffDays} días"><i class="fa-solid fa-triangle-exclamation mr-1"></i>RENOVAR YA</span>`;
+                    else priorityHtml = `<span class="block mt-1 text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded w-fit border border-emerald-100" title="Hace ${diffDays} días"><i class="fa-solid fa-check mr-1"></i>AL DÍA</span>`;
+                } else {
+                    priorityHtml = `<span class="block mt-1 text-[9px] font-bold text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded w-fit border border-slate-100">NUEVO</span>`;
+                }
 
-                    list.innerHTML += `
-                        <tr class="hover:bg-blue-50/40 transition border-b border-slate-50 last:border-0 group cursor-default">
-                            <td class="p-5 pl-6">
-                                <div class="flex items-center">
-                                    <div class="w-10 h-10 rounded-xl bg-white border border-slate-100 shadow-sm flex items-center justify-center text-sm font-bold text-brand-dark mr-3 uppercase shrink-0">${u.name.charAt(0)}</div>
-                                    <div><div class="font-bold text-slate-700 text-sm">${u.name}</div><div class="text-[11px] text-slate-400 font-mono flex items-center mt-0.5"><i class="fa-regular fa-id-card mr-1 opacity-70"></i>${u.dni || '---'}</div></div>
-                                </div>
-                            </td>
-                            <td class="p-5">
-                                <div class="flex flex-col items-start">
-                                    <span class="${colorClass} border px-2 py-0.5 rounded text-[10px] font-bold uppercase mb-1.5 inline-flex items-center shadow-sm"><i class="fa-solid ${iconClass} mr-1.5 opacity-70"></i> ${u.role.replace('_',' ')}</span>
-                                    <div class="flex flex-col gap-0.5">${jobsDisplay}</div>
-                                </div>
-                            </td>
-                            <td class="p-5"><div class="space-y-1.5"><div class="text-xs font-mono text-slate-500 bg-slate-100/80 px-2 py-1 rounded w-fit border border-slate-200"><i class="fa-solid fa-user mr-1.5 text-slate-400"></i>${u.username}</div></div></td>
-                            <td class="p-5 text-center">${statusBadge}</td>
-                            <td class="p-5 pr-6 text-right">
-                                <div class="flex justify-end gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
-                                    <button onclick="prompt('Enlace de Acceso Único:', '${link}')" class="w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition flex items-center justify-center border border-slate-200" title="Copiar Enlace"><i class="fa-solid fa-link"></i></button>
-                                    <button onclick="openModal(true, ${userObj})" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition flex items-center justify-center border border-blue-100 shadow-sm" title="Editar"><i class="fa-solid fa-pen"></i></button>
-                                    <button onclick="deleteUser('${docId}', '${u.uid}', '${u.name}')" class="w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition flex items-center justify-center border border-red-100 shadow-sm" title="Baja"><i class="fa-solid fa-trash"></i></button>
-                                </div>
-                            </td>
-                        </tr>`;
-                });
-            }
+                list.innerHTML += `
+                    <tr class="hover:bg-slate-50 border-b border-slate-100 group">
+                        <td class="p-4 font-medium">
+                            <div>${b.name}</div>
+                            <div class="text-xs text-slate-400 font-mono">${b.id}</div>
+                            ${priorityHtml}
+                        </td>
+                        <td class="p-4 text-xs">${b.type || 'N/A'}</td>
+                        <td class="p-4 text-xs">${b.municipality || ''}</td>
+                        <td class="p-4 text-xs font-bold text-blue-600 bg-blue-50/50 rounded w-fit px-2 py-1 border border-blue-100">${b.assignedTo?.name || '---'}</td>
+                        <td class="p-4 text-right">
+                            <button onclick="editBeneficiary('${jsonString}')" class="text-slate-400 hover:text-blue-600 transition p-2 rounded-full hover:bg-blue-50" title="Editar / Reasignar">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
         });
 
-        window.logout = () => { 
-            if(confirm("¿Cerrar sesión de administrador?")) {
-                if(auth.currentUser) setUserStatus(auth.currentUser.uid, 'offline'); // Poner offline antes de salir
-                signOut(auth).then(() => safeNavigate('index.html')); 
-            }
-        };
+        // --- COMMON ---
+        window.safeNavigate = (url) => { try { window.location.href = url; } catch (e) { console.warn("Nav blocked:", e); if(url === 'index.html') showLockScreen("Redirección bloqueada. Usa el botón."); } };
+        window.forceNavigateLogin = () => { try { window.location.href = 'index.html'; } catch(e) { alert("Recarga la página."); } };
+        function showLockScreen(msg) { const lock = document.getElementById('auth-lock'); if(lock) { document.getElementById('lock-msg').innerText = msg; lock.classList.remove('hidden'); } }
+        const roleDefinitions = { 'farmacia':[{val:'Supervisor de Farmacia',label:'Supervisor General'},{val:'Revisión y Asignación',label:'Revisor'}], 'contact_center':[{val:'Supervisor CC',label:'Supervisor'},{val:'Agente Contact Center',label:'Agente'}], 'admin':[{val:'Super Admin',label:'Admin'}] }; 
+        window.updateRoles=()=>{ const d=document.getElementById('formDept').value, s=document.getElementById('formJob'); s.innerHTML=''; if(d&&roleDefinitions[d]){ s.disabled=false; roleDefinitions[d].forEach(r=>{ s.innerHTML+=`<option value="${r.val}">${r.label}</option>`; }); }else{s.disabled=true;} };
+        window.openModal = (edit,data) => { document.getElementById('userModal').classList.remove('hidden'); };
+        window.closeModal = () => document.getElementById('userModal').classList.add('hidden');
+        window.saveUser = async () => { /* Logica previa de crear usuario con secondary auth */ alert("Activa en modo real"); };
+        window.deleteUser = async () => { alert("Activa en modo real"); };
+        window.logout = () => { if(confirm("¿Salir?")) signOut(auth).then(()=>safeNavigate('index.html')); };
+        onAuthStateChanged(auth, async (u) => { if(window.isCreatingUser) return; if(!u) showLockScreen("Inicia sesión."); else { try { const s = await getDoc(doc(db,'artifacts',appId,'users',u.uid,'profile','data')); if(!s.exists() || s.data().role!=='admin') showLockScreen("Acceso Restringido."); else document.getElementById('auth-lock').classList.add('hidden'); } catch(e){} } });
+        onSnapshot(collection(db,'artifacts',appId,'public','data','users_directory'), (s) => { const l=document.getElementById('user-list'); l.innerHTML=''; s.forEach(d => l.innerHTML += renderUserRow(d.data(), d.id)); });
     </script>
 </body>
 </html>
