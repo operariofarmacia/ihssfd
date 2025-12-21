@@ -1,1 +1,530 @@
 
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - IHSS a tu Casa</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark: '#003366',    // Azul Institucional
+                            teal: '#0e7490',    // Acento
+                            cyan: '#06b6d4',    // Vibrante
+                            clinical: '#10b981', // Verde Éxito
+                            danger: '#ef4444',   // Rojo Alerta
+                            light: '#f0fdfa'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Poppins', sans-serif; background-color: #f8fafc; }
+        .fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .modal-backdrop { background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
+        .toggle-checkbox:checked { right: 0; border-color: #10b981; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #10b981; }
+        select { -webkit-appearance: none; -moz-appearance: none; appearance: none; }
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+</head>
+<body class="flex flex-col md:flex-row h-screen overflow-hidden text-slate-700 bg-slate-50">
+
+    <!-- PANTALLA DE BLOQUEO (Overlay de Seguridad) -->
+    <!-- Por defecto oculta (hidden) para priorizar el panel -->
+    <div id="auth-lock" class="fixed inset-0 z-50 bg-[#003366] flex flex-col items-center justify-center text-white hidden fade-in">
+        <div class="bg-white p-3 rounded-full mb-5 shadow-2xl ring-4 ring-white/10">
+            <img src="https://portal.ihss.hn/cronicos/assets/dist/img/Recurso%201.png" class="h-20 w-20 object-contain">
+        </div>
+        <h2 class="text-3xl font-bold mb-2 tracking-tight">Sesión Finalizada</h2>
+        <p class="text-blue-200 text-sm mb-8 max-w-xs text-center leading-relaxed" id="lock-msg">Por seguridad, tu sesión ha expirado.</p>
+        
+        <button onclick="forceNavigateLogin()" class="bg-brand-cyan hover:bg-brand-teal text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg transform hover:scale-105 flex items-center mb-4">
+            <i class="fa-solid fa-arrow-left mr-3"></i> Ir al Login
+        </button>
+        
+        <!-- Opción de emergencia para visualización -->
+        <button onclick="document.getElementById('auth-lock').classList.add('hidden')" class="text-[10px] text-white/30 hover:text-white/80 underline">
+            Ocultar (Solo pruebas)
+        </button>
+    </div>
+
+    <!-- SIDEBAR -->
+    <aside class="w-full md:w-72 bg-brand-dark text-white flex flex-col shadow-2xl z-20 shrink-0 relative">
+        <div class="p-6 border-b border-blue-900/50 flex flex-col items-center text-center">
+            <div class="bg-white p-1 rounded-full shadow-lg mb-3 w-16 h-16 flex items-center justify-center ring-2 ring-brand-cyan/50">
+                <img src="https://portal.ihss.hn/cronicos/assets/dist/img/Recurso%201.png" class="object-contain h-full w-full p-1">
+            </div>
+            <h2 class="font-bold text-lg tracking-wide text-white">ADMINISTRACIÓN</h2>
+            <p class="text-[10px] text-brand-cyan uppercase tracking-wider mb-2">Panel de Control</p>
+            
+            <div class="flex items-center bg-black/20 px-3 py-1 rounded-full border border-white/10 mt-2">
+                <span id="status-dot" class="w-2 h-2 rounded-full bg-brand-clinical animate-pulse mr-2"></span>
+                <span id="status-text" class="text-[10px] font-bold text-emerald-300 uppercase">Sistema Online</span>
+            </div>
+        </div>
+
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+            <button class="w-full flex items-center space-x-3 p-3 bg-white/10 rounded-xl text-white border-l-4 border-brand-cyan shadow-lg">
+                <i class="fa-solid fa-users-gear text-brand-cyan w-5"></i>
+                <span class="font-medium text-sm">Gestión de Usuarios</span>
+            </button>
+        </nav>
+
+        <div class="p-4 bg-black/20 border-t border-white/5">
+            <button onclick="logout()" class="w-full bg-red-500/20 hover:bg-red-600 text-red-100 py-2 rounded-lg text-xs font-bold uppercase transition flex items-center justify-center group">
+                <i class="fa-solid fa-power-off mr-2 group-hover:scale-110 transition-transform"></i> Cerrar Sesión
+            </button>
+        </div>
+    </aside>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="flex-1 overflow-hidden flex flex-col bg-slate-50 relative">
+        <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center z-10">
+            <div>
+                <h1 class="text-2xl font-bold text-brand-dark">Directorio de Personal</h1>
+                <p class="text-xs text-slate-500">Administra departamentos, roles y seguridad.</p>
+            </div>
+            <button onclick="openModal()" class="bg-brand-dark hover:bg-brand-cyan text-white px-6 py-2.5 rounded-xl font-bold shadow-lg shadow-blue-900/20 transition-all transform hover:-translate-y-1 flex items-center text-sm">
+                <i class="fa-solid fa-user-plus mr-2"></i> Nuevo Usuario
+            </button>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-6 md:p-8 custom-scroll">
+            <!-- Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center">
+                    <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xl mr-4"><i class="fa-solid fa-users"></i></div>
+                    <div><p class="text-xs text-slate-400 uppercase font-bold">Total Personal</p><h4 class="text-2xl font-bold text-slate-700" id="stat-total">0</h4></div>
+                </div>
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center">
+                    <div class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl mr-4"><i class="fa-solid fa-sitemap"></i></div>
+                    <div><p class="text-xs text-slate-400 uppercase font-bold">Departamentos</p><h4 class="text-2xl font-bold text-slate-700">7</h4></div>
+                </div>
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center">
+                    <div class="w-12 h-12 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center text-xl mr-4"><i class="fa-solid fa-shield-cat"></i></div>
+                    <div><p class="text-xs text-slate-400 uppercase font-bold">Seguridad IP</p><h4 class="text-2xl font-bold text-slate-700" id="stat-security">0</h4></div>
+                </div>
+            </div>
+
+            <!-- Tabla -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-50 text-[11px] uppercase text-slate-500 font-semibold tracking-wider">
+                            <tr>
+                                <th class="p-5 pl-6">Colaborador (DNI)</th>
+                                <th class="p-5">Departamento & Cargo</th>
+                                <th class="p-5">Acceso</th>
+                                <th class="p-5 text-center">Estatus</th>
+                                <th class="p-5 pr-6 text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-list" class="divide-y divide-slate-100 text-sm text-slate-600">
+                            <tr><td colspan="5" class="p-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando directorio...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL DE USUARIO -->
+    <div id="userModal" class="fixed inset-0 modal-backdrop hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl transform transition-all fade-in overflow-hidden max-h-[90vh] flex flex-col">
+            <div class="bg-brand-dark p-5 flex justify-between items-center text-white shrink-0">
+                <h3 class="font-bold text-lg flex items-center"><i class="fa-solid fa-id-badge mr-2"></i> <span id="modalTitle">Gestión de Personal</span></h3>
+                <button onclick="closeModal()" class="text-white/70 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto custom-scroll">
+                <form id="userForm" class="space-y-6">
+                    <input type="hidden" id="editUid">
+
+                    <!-- Sección 1: Identidad -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div class="col-span-2 md:col-span-1">
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">DNI (Cédula)</label>
+                            <input type="text" id="formDni" class="w-full border border-slate-300 rounded-lg p-2.5 focus:border-brand-cyan focus:ring-2 focus:ring-brand-cyan/20 outline-none" required placeholder="Ej: 0801-1990-12345">
+                        </div>
+                        <div class="col-span-2 md:col-span-1">
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nombre Completo</label>
+                            <input type="text" id="formName" class="w-full border border-slate-300 rounded-lg p-2.5 focus:border-brand-cyan focus:ring-2 focus:ring-brand-cyan/20 outline-none" required placeholder="Ej: Dra. Ana López">
+                        </div>
+                        <div class="col-span-2 md:col-span-1">
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Usuario Sistema</label>
+                            <input type="text" id="formUser" class="w-full border border-slate-300 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:border-brand-cyan outline-none font-mono text-sm" required placeholder="alopez">
+                        </div>
+                        <div class="col-span-2 md:col-span-1">
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Contraseña</label>
+                            <input type="password" id="formPass" class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:border-brand-cyan" placeholder="••••••••">
+                            <p class="text-[10px] text-slate-400 mt-1" id="passHelp">Mínimo 6 caracteres.</p>
+                        </div>
+                    </div>
+
+                    <hr class="border-slate-100">
+
+                    <!-- Sección 2: Estructura Organizacional (Dinámica) -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Departamento</label>
+                            <div class="relative">
+                                <select id="formDept" onchange="updateRoles()" class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:border-brand-cyan bg-white appearance-none cursor-pointer">
+                                    <option value="" disabled selected>Seleccione Departamento...</option>
+                                    <option value="farmacia">💊 Farmacia</option>
+                                    <option value="contact_center">🎧 Contact Center</option>
+                                    <option value="operaciones">⚙️ Operaciones</option>
+                                    <option value="calidad">✅ Calidad y Sellado</option>
+                                    <option value="logistica">📦 Logística</option>
+                                    <option value="repartidor">🛵 Delivery (Reparto)</option>
+                                    <option value="admin">🛡️ Administración</option>
+                                </select>
+                                <i class="fa-solid fa-chevron-down absolute right-3 top-3 text-slate-400 pointer-events-none text-xs"></i>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Cargo / Función</label>
+                            <div class="relative">
+                                <select id="formJob" class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:border-brand-cyan bg-white appearance-none cursor-pointer disabled:bg-slate-100" disabled>
+                                    <option value="">Seleccione Dept. primero</option>
+                                </select>
+                                <i class="fa-solid fa-chevron-down absolute right-3 top-3 text-slate-400 pointer-events-none text-xs"></i>
+                            </div>
+                            <p class="text-[10px] text-blue-400 mt-1" id="roleDesc">Define los permisos específicos.</p>
+                        </div>
+                    </div>
+
+                    <!-- Sección 3: Seguridad Avanzada -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <h4 class="text-xs font-bold text-brand-dark uppercase mb-3 flex items-center"><i class="fa-solid fa-lock mr-2"></i> Control de Acceso</h4>
+                        
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="mr-4">
+                                <span class="text-sm font-semibold text-slate-700 block">Validación de Dispositivo</span>
+                                <span class="text-xs text-slate-500">Requiere aprobación del admin si cambia de IP/PC.</span>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="formIpCheck" class="sr-only peer">
+                                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-clinical"></div>
+                            </label>
+                        </div>
+
+                        <div class="border-t border-slate-200/60 pt-3">
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Días Permitidos</label>
+                            <div class="flex flex-wrap gap-2 mb-3">
+                                <label class="inline-flex items-center bg-white border border-slate-200 px-3 py-1 rounded cursor-pointer hover:border-brand-cyan transition"><input type="checkbox" class="mr-2 day-check" value="Lunes"> L</label>
+                                <label class="inline-flex items-center bg-white border border-slate-200 px-3 py-1 rounded cursor-pointer hover:border-brand-cyan transition"><input type="checkbox" class="mr-2 day-check" value="Martes"> M</label>
+                                <label class="inline-flex items-center bg-white border border-slate-200 px-3 py-1 rounded cursor-pointer hover:border-brand-cyan transition"><input type="checkbox" class="mr-2 day-check" value="Miercoles"> X</label>
+                                <label class="inline-flex items-center bg-white border border-slate-200 px-3 py-1 rounded cursor-pointer hover:border-brand-cyan transition"><input type="checkbox" class="mr-2 day-check" value="Jueves"> J</label>
+                                <label class="inline-flex items-center bg-white border border-slate-200 px-3 py-1 rounded cursor-pointer hover:border-brand-cyan transition"><input type="checkbox" class="mr-2 day-check" value="Viernes"> V</label>
+                                <label class="inline-flex items-center bg-white border border-slate-200 px-3 py-1 rounded cursor-pointer hover:border-brand-cyan transition"><input type="checkbox" class="mr-2 day-check" value="Sabado"> S</label>
+                                <label class="inline-flex items-center bg-white border border-slate-200 px-3 py-1 rounded cursor-pointer hover:border-brand-cyan transition"><input type="checkbox" class="mr-2 day-check" value="Domingo"> D</label>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-xs font-bold text-slate-500">Horario:</span>
+                                <input type="time" id="formStart" class="border p-1.5 rounded text-xs bg-white text-slate-600">
+                                <span class="text-xs">a</span>
+                                <input type="time" id="formEnd" class="border p-1.5 rounded text-xs bg-white text-slate-600">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="p-5 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 shrink-0">
+                <button type="button" onclick="closeModal()" class="px-5 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-700 transition">Cancelar</button>
+                <button type="button" onclick="saveUser()" id="btnSave" class="bg-brand-clinical hover:bg-emerald-600 text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg shadow-emerald-200 transition transform active:scale-95 flex items-center">
+                    <i class="fa-solid fa-save mr-2"></i> Guardar Usuario
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getAuth, signOut, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, setDoc, doc, getDoc, onSnapshot, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+        // Configuración
+        const firebaseConfig = { apiKey: "AIzaSyC2HWoYjIltPqkysduZ-954-f-kZCFaNdA", authDomain: "fdihss.firebaseapp.com", projectId: "fdihss", storageBucket: "fdihss.firebasestorage.app", messagingSenderId: "1004594046776", appId: "1:1004594046776:web:164dcdb2b023b8719283cd" };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = "fdihss-mediflow-v2-modular";
+        const DOMAIN_SUFFIX = "@mediflow.sys"; 
+
+        // Definición de Roles
+        const roleDefinitions = {
+            'farmacia': [ { val: 'Supervisor de Farmacia', label: 'Supervisor General' }, { val: 'Revisión y Asignación', label: 'Revisor de Pacientes' }, { val: 'Despacho de Medicamentos', label: 'Despacho (Salida)' }, { val: 'Gestión de Inventario', label: 'Gestión de Inventario' } ],
+            'contact_center': [ { val: 'Supervisor CC', label: 'Supervisor' }, { val: 'Agente Contact Center', label: 'Agente Telefónico' } ],
+            'operaciones': [ { val: 'Supervisor Operaciones', label: 'Supervisor' }, { val: 'Operador', label: 'Operador de Sistema' } ],
+            'calidad': [ { val: 'Supervisor Calidad', label: 'Supervisor Calidad' }, { val: 'Revisor de Paquetes', label: 'Revisor (Contenido)' }, { val: 'Controlador Observaciones', label: 'Control de Observaciones' } ],
+            'logistica': [ { val: 'Supervisor Logística', label: 'Supervisor General' }, { val: 'Asignador de Rutas', label: 'Asignador de Rutas' }, { val: 'Despachador Delivery', label: 'Despachador a Motoristas' } ],
+            'repartidor': [ { val: 'Supervisor de Flota', label: 'Supervisor de Delivery' }, { val: 'Motorista', label: 'Motorista / Repartidor' } ],
+            'admin': [ { val: 'Super Admin', label: 'Administrador Total' } ]
+        };
+
+        // --- NAVEGACIÓN SEGURA ---
+        window.safeNavigate = (url) => {
+            try { 
+                window.location.href = url; 
+            } catch (e) { 
+                console.warn("Redirección bloqueada (Entorno Preview). Si ves esto en producción, revisa la URL.");
+                // En preview mostramos el lock screen como fallback si falla ir al login
+                if(url === 'index.html') showLockScreen("Redirección bloqueada por el navegador. Usa el botón.");
+            } 
+        };
+        
+        // Forzar redirección manual (para el botón del lock screen)
+        window.forceNavigateLogin = () => {
+            try { window.location.href = 'index.html'; } catch(e) { alert("Por favor recarga la página manualmente para ir al login."); }
+        };
+
+        // --- LOCK SCREEN ---
+        function showLockScreen(msg) {
+            const lock = document.getElementById('auth-lock');
+            const msgEl = document.getElementById('lock-msg');
+            if(lock && msgEl) {
+                msgEl.innerText = msg;
+                lock.classList.remove('hidden');
+            }
+        }
+
+        // --- LÓGICA DE UI ---
+        window.updateRoles = (selectedJob = null) => {
+            const dept = document.getElementById('formDept').value;
+            const jobSelect = document.getElementById('formJob');
+            jobSelect.innerHTML = '<option value="">Seleccione Cargo...</option>';
+            if (dept && roleDefinitions[dept]) {
+                jobSelect.disabled = false;
+                roleDefinitions[dept].forEach(role => {
+                    const opt = document.createElement('option');
+                    opt.value = role.val; opt.innerText = role.label;
+                    if(selectedJob === role.val) opt.selected = true;
+                    jobSelect.appendChild(opt);
+                });
+            } else { jobSelect.disabled = true; jobSelect.innerHTML = '<option value="">Seleccione Dept. primero</option>'; }
+        };
+
+        const updateStatus = (isOnline) => {
+            const dot = document.getElementById('status-dot');
+            const text = document.getElementById('status-text');
+            if(dot && text) {
+                if (isOnline) { dot.className = "w-2 h-2 rounded-full bg-brand-clinical animate-pulse mr-2 shadow-[0_0_8px_rgba(16,185,129,0.8)]"; text.innerText = "Sistema Online"; text.className = "text-[10px] font-bold text-emerald-300 uppercase tracking-widest"; } 
+                else { dot.className = "w-2 h-2 rounded-full bg-red-500 mr-2"; text.innerText = "Desconectado"; text.className = "text-[10px] font-bold text-red-300 uppercase tracking-widest"; }
+            }
+        }
+        window.addEventListener('online', () => updateStatus(true));
+        window.addEventListener('offline', () => updateStatus(false));
+
+        // --- AUTH & TIMEOUT ---
+        let inactivityTimer;
+        let isTimeoutLogout = false;
+        const TIMEOUT_LIMIT = 30 * 60 * 1000; 
+
+        const resetInactivityTimer = () => {
+            clearTimeout(inactivityTimer);
+            if(auth.currentUser && document.getElementById('auth-lock').classList.contains('hidden')) {
+               inactivityTimer = setTimeout(doInactivityLogout, TIMEOUT_LIMIT);
+            }
+        };
+
+        const doInactivityLogout = async () => {
+            isTimeoutLogout = true;
+            await signOut(auth);
+        };
+
+        ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => {
+            window.addEventListener(evt, resetInactivityTimer);
+        });
+
+        // Verificación de Autenticación
+        onAuthStateChanged(auth, async (u) => { 
+            if(!u) {
+                // Si NO hay usuario logueado
+                if(isTimeoutLogout) {
+                    // Caso 1: Fue por inactividad -> Mostrar mensaje de bloqueo
+                    showLockScreen("Tu sesión ha expirado por inactividad (30 min). Por favor, inicia sesión nuevamente.");
+                    isTimeoutLogout = false;
+                } else {
+                    // Caso 2: Carga inicial sin sesión o Logout manual -> Intentar ir al login
+                    // Si safeNavigate falla (preview), el lock screen aparecerá como fallback
+                    safeNavigate('index.html');
+                }
+            } else { 
+                // Si HAY usuario logueado
+                try {
+                    const s = await getDoc(doc(db,'artifacts',appId,'users',u.uid,'profile','data')); 
+                    if(!s.exists() || s.data().role!=='admin') {
+                        // Caso 3: Usuario existe pero no es admin
+                        showLockScreen("Acceso Restringido. Rol no autorizado.");
+                    } else {
+                        // Caso 4: Todo correcto -> Panel activo
+                        resetInactivityTimer();
+                        document.getElementById('auth-lock').classList.add('hidden');
+                    }
+                } catch(e) { console.error("Error Auth:", e); }
+            }
+        });
+
+        // --- FUNCIONES ---
+        window.openModal = (isEdit = false, userData = null) => {
+            const modal = document.getElementById('userModal');
+            const form = document.getElementById('userForm');
+            form.reset(); 
+            
+            if(isEdit && userData) {
+                document.getElementById('modalTitle').innerText = "Editar Personal";
+                document.getElementById('editUid').value = userData.uid;
+                document.getElementById('formDni').value = userData.dni || ''; document.getElementById('formDni').disabled = true;
+                document.getElementById('formName').value = userData.name;
+                document.getElementById('formUser').value = userData.username; document.getElementById('formUser').disabled = true; 
+                document.getElementById('formPass').placeholder = "(Sin cambios)";
+                document.getElementById('formDept').value = userData.role; 
+                updateRoles(userData.jobTitle); 
+                document.getElementById('formIpCheck').checked = userData.requireIpApproval || false;
+                document.getElementById('formStart').value = userData.shiftStart || '';
+                document.getElementById('formEnd').value = userData.shiftEnd || '';
+                if(userData.allowedDays) document.querySelectorAll('.day-check').forEach(cb => { if(userData.allowedDays.includes(cb.value)) cb.checked = true; });
+            } else {
+                document.getElementById('modalTitle').innerText = "Nuevo Ingreso";
+                document.getElementById('editUid').value = "";
+                document.getElementById('formDni').disabled = false;
+                document.getElementById('formUser').disabled = false;
+                document.getElementById('formPass').placeholder = "Requerido";
+                updateRoles(); 
+            }
+            modal.classList.remove('hidden');
+        };
+
+        window.closeModal = () => document.getElementById('userModal').classList.add('hidden');
+
+        window.saveUser = async () => {
+            const btn = document.getElementById('btnSave');
+            const editUid = document.getElementById('editUid').value;
+            const dni = document.getElementById('formDni').value.trim(); 
+            const name = document.getElementById('formName').value;
+            const username = document.getElementById('formUser').value.trim().toLowerCase().replace(/\s+/g, '');
+            const pass = document.getElementById('formPass').value;
+            const dept = document.getElementById('formDept').value; 
+            const jobTitle = document.getElementById('formJob').value; 
+            const requireIp = document.getElementById('formIpCheck').checked;
+            const start = document.getElementById('formStart').value;
+            const end = document.getElementById('formEnd').value;
+            const days = []; document.querySelectorAll('.day-check:checked').forEach(cb => days.push(cb.value));
+
+            if(!dni || !name || !username || !dept || !jobTitle || (!editUid && !pass)) { alert("Complete todos los campos obligatorios."); return; }
+
+            const originalBtn = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
+            btn.disabled = true;
+
+            try {
+                const userData = { dni, name, username, role: dept, jobTitle: jobTitle, requireIpApproval: requireIp, shiftStart: start, shiftEnd: end, allowedDays: days, lastUpdated: new Date().toISOString() };
+
+                if (editUid) {
+                    await updateDoc(doc(db,'artifacts',appId,'users',editUid,'profile','data'), userData);
+                    alert("Datos actualizados.");
+                } else {
+                    if(!confirm("⚠️ Se cerrará sesión para crear la cuenta.\n¿Continuar?")) { btn.innerHTML = originalBtn; btn.disabled = false; return; }
+                    const email = username + DOMAIN_SUFFIX;
+                    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+                    userData.uid = cred.user.uid; userData.createdAt = new Date().toISOString(); userData.status = "offline";
+                    await setDoc(doc(db,'artifacts',appId,'users',cred.user.uid,'profile','data'), userData);
+                    await addDoc(collection(db,'artifacts',appId,'public','data','users_directory'), userData);
+                    alert(`✅ Usuario "${username}" creado.`);
+                    safeNavigate('index.html');
+                    return;
+                }
+                closeModal(); btn.innerHTML = originalBtn; btn.disabled = false;
+            } catch (err) { alert("Error: " + err.message); btn.innerHTML = originalBtn; btn.disabled = false; }
+        };
+
+        window.deleteUser = async (docId, uid, name) => {
+            if(!confirm(`¿Dar de baja a ${name}?`)) return;
+            try {
+                await deleteDoc(doc(db,'artifacts',appId,'public','data','users_directory', docId));
+                await deleteDoc(doc(db,'artifacts',appId,'users',uid,'profile','data'));
+                alert("Usuario dado de baja.");
+            } catch(e) { alert("Error: " + e.message); }
+        };
+
+        // --- SNAPSHOT ---
+        onSnapshot(collection(db,'artifacts',appId,'public','data','users_directory'), (s) => {
+            const list = document.getElementById('user-list');
+            const totalEl = document.getElementById('stat-total');
+            const securityEl = document.getElementById('stat-security');
+            if(totalEl) totalEl.innerText = s.size;
+            if(securityEl) securityEl.innerText = 0; 
+
+            if (list) {
+                list.innerHTML = '';
+                if (s.empty) { list.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-slate-400 italic bg-slate-50 border-t border-slate-200">Directorio vacío.</td></tr>'; return; }
+
+                s.forEach(docSnap => {
+                    const u = docSnap.data();
+                    const docId = docSnap.id;
+                    const link = `${window.location.origin}/index.html?u=${u.username}`;
+                    const userObj = JSON.stringify(u).replace(/"/g, '&quot;');
+                    
+                    let colorClass = 'bg-slate-100 text-slate-600 border-slate-200';
+                    let iconClass = 'fa-user';
+                    if(u.role === 'admin') { colorClass = 'bg-red-50 text-red-600 border-red-100'; iconClass='fa-shield-halved'; }
+                    else if(u.role === 'farmacia') { colorClass = 'bg-emerald-50 text-emerald-600 border-emerald-100'; iconClass='fa-pills'; }
+                    else if(u.role === 'logistica') { colorClass = 'bg-orange-50 text-orange-600 border-orange-100'; iconClass='fa-truck-fast'; }
+                    else if(u.role === 'contact_center') { colorClass = 'bg-blue-50 text-blue-600 border-blue-100'; iconClass='fa-headset'; }
+
+                    list.innerHTML += `
+                        <tr class="hover:bg-blue-50/40 transition border-b border-slate-50 last:border-0 group cursor-default">
+                            <td class="p-5 pl-6">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 rounded-xl bg-white border border-slate-100 shadow-sm flex items-center justify-center text-sm font-bold text-brand-dark mr-3 uppercase shrink-0">${u.name.charAt(0)}</div>
+                                    <div><div class="font-bold text-slate-700 text-sm">${u.name}</div><div class="text-[11px] text-slate-400 font-mono flex items-center mt-0.5"><i class="fa-regular fa-id-card mr-1 opacity-70"></i>${u.dni || '---'}</div></div>
+                                </div>
+                            </td>
+                            <td class="p-5">
+                                <div class="flex flex-col items-start">
+                                    <span class="${colorClass} border px-2 py-0.5 rounded text-[10px] font-bold uppercase mb-1 inline-flex items-center shadow-sm"><i class="fa-solid ${iconClass} mr-1.5 opacity-70"></i> ${u.role.replace('_',' ')}</span>
+                                    <div class="text-xs font-medium text-slate-600 pl-0.5">${u.jobTitle || 'General'}</div>
+                                </div>
+                            </td>
+                            <td class="p-5"><div class="space-y-1.5"><div class="text-xs font-mono text-slate-500 bg-slate-100/80 px-2 py-1 rounded w-fit border border-slate-200"><i class="fa-solid fa-user mr-1.5 text-slate-400"></i>${u.username}</div></div></td>
+                            <td class="p-5 text-center"><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold ${u.status==='online'?'bg-emerald-100 text-emerald-700':'bg-slate-100 text-slate-400'}"><span class="w-1.5 h-1.5 rounded-full ${u.status==='online'?'bg-emerald-500 animate-pulse':'bg-slate-400'} mr-1.5"></span> ${u.status==='online'?'Online':'Offline'}</span></td>
+                            <td class="p-5 pr-6 text-right">
+                                <div class="flex justify-end gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
+                                    <button onclick="prompt('Enlace de Acceso Único:', '${link}')" class="w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition flex items-center justify-center border border-slate-200" title="Copiar Enlace"><i class="fa-solid fa-link"></i></button>
+                                    <button onclick="openModal(true, ${userObj})" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition flex items-center justify-center border border-blue-100 shadow-sm" title="Editar"><i class="fa-solid fa-pen"></i></button>
+                                    <button onclick="deleteUser('${docId}', '${u.uid}', '${u.name}')" class="w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition flex items-center justify-center border border-red-100 shadow-sm" title="Baja"><i class="fa-solid fa-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>`;
+                });
+            }
+        });
+
+        window.logout = () => { 
+            if(confirm("¿Cerrar sesión de administrador?")) {
+                signOut(auth).then(() => safeNavigate('index.html')); 
+            }
+        };
+    </script>
+</body>
+</html>
