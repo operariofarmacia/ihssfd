@@ -4,11 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - IHSS a tu Casa</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <script>
@@ -17,12 +14,7 @@
                 extend: {
                     colors: {
                         brand: {
-                            dark: '#003366',    // Azul Institucional
-                            teal: '#0e7490',    // Acento
-                            cyan: '#06b6d4',    // Vibrante
-                            clinical: '#10b981', // Verde Éxito
-                            danger: '#ef4444',   // Rojo Alerta
-                            light: '#f0fdfa'
+                            dark: '#003366', teal: '#0e7490', cyan: '#06b6d4', clinical: '#10b981', danger: '#ef4444', light: '#f0fdfa'
                         }
                     }
                 }
@@ -60,6 +52,7 @@
         <button onclick="forceNavigateLogin()" class="bg-brand-cyan hover:bg-brand-teal text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg transform hover:scale-105 flex items-center mb-4">
             <i class="fa-solid fa-arrow-left mr-3"></i> Ir al Login
         </button>
+        <button onclick="enablePreviewMode()" class="text-[10px] text-white/30 hover:text-white/80 underline cursor-pointer">Ver Diseño (Modo Prueba Visual)</button>
     </div>
 
     <!-- SIDEBAR -->
@@ -79,13 +72,16 @@
             <button onclick="switchView('dashboard')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-dashboard">
                 <i class="fa-solid fa-house w-5"></i><span class="font-medium text-sm">Inicio</span>
             </button>
+            
             <div class="pt-4 pb-2 px-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">Gestión</div>
+            
             <button onclick="switchView('users')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-users">
                 <i class="fa-solid fa-users-gear w-5"></i><span class="font-medium text-sm">Personal</span>
             </button>
             <button onclick="switchView('beneficiaries')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-beneficiaries">
                 <i class="fa-solid fa-hospital-user w-5"></i><span class="font-medium text-sm">Derechohabientes</span>
             </button>
+            
             <div class="pt-4 pb-2 px-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">Operaciones</div>
             <button onclick="switchView('shipments')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-shipments">
                 <i class="fa-solid fa-truck-fast w-5"></i><span class="font-medium text-sm">Gestión de Envíos</span>
@@ -94,7 +90,11 @@
                 <i class="fa-solid fa-chart-pie w-5"></i><span class="font-medium text-sm">Reportes</span>
             </button>
         </nav>
-        <div class="p-4 bg-black/20 border-t border-white/5">
+        <div class="p-4 bg-black/20 border-t border-white/5 space-y-2">
+            <!-- Botón Generar Datos -->
+            <button onclick="generateRealDemoData()" class="w-full bg-emerald-800/50 hover:bg-emerald-700 text-emerald-100 py-2 rounded-lg text-[10px] font-bold uppercase transition flex items-center justify-center border border-emerald-700/50">
+                <i class="fa-solid fa-database mr-2"></i> Crear 1 Dato Prueba (BD)
+            </button>
             <button onclick="logout()" class="w-full bg-red-500/20 hover:bg-red-600 text-red-100 py-2 rounded-lg text-xs font-bold uppercase transition flex items-center justify-center group">
                 <i class="fa-solid fa-power-off mr-2 group-hover:scale-110 transition-transform"></i> Cerrar Sesión
             </button>
@@ -149,7 +149,7 @@
             </header>
             <div class="flex-1 overflow-y-auto p-6 md:p-8 custom-scroll">
                  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead class="bg-slate-50 text-[11px] uppercase text-slate-500 font-semibold tracking-wider"><tr><th class="p-5 pl-6">Identidad / Prioridad</th><th class="p-5">Tipo</th><th class="p-5">Ubicación</th><th class="p-5">Gestor</th><th class="p-5 text-right">Acciones</th></tr></thead><tbody id="ben-list" class="divide-y divide-slate-100 text-sm text-slate-600"></tbody></table></div>
+                    <div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead class="bg-slate-50 text-[11px] uppercase text-slate-500 font-semibold tracking-wider"><tr><th class="p-5 pl-6">Identidad / Prioridad</th><th class="p-5">Tipo</th><th class="p-5">Ubicación</th><th class="p-5">Pareja Responsable (Farmacia / CC)</th><th class="p-5 text-right">Acciones</th></tr></thead><tbody id="ben-list" class="divide-y divide-slate-100 text-sm text-slate-600"></tbody></table></div>
                 </div>
             </div>
         </div>
@@ -183,7 +183,7 @@
         </div>
     </div>
 
-    <!-- MODAL BENEFICIARIO (CORREGIDO) -->
+    <!-- MODAL BENEFICIARIO (DOBLE ASIGNACIÓN) -->
     <div id="benModal" class="fixed inset-0 modal-backdrop hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl w-full max-w-4xl flex flex-col max-h-[90vh]">
             <div class="bg-brand-dark p-5 text-white flex justify-between"><h3 class="font-bold">Derechohabiente</h3><button onclick="document.getElementById('benModal').classList.add('hidden')"><i class="fa-solid fa-xmark"></i></button></div>
@@ -201,26 +201,20 @@
                         <div><label class="block text-xs font-bold text-blue-700 uppercase mb-1"><i class="fa-solid fa-truck-fast mr-1"></i> Fecha Envío (Admin)</label><input type="date" id="benNextShipment" class="w-full border border-blue-200 rounded-lg p-2.5 bg-white text-sm"></div>
                     </div>
                     
-                    <!-- CAMPOS FAMILIAR CORREGIDOS (VISIBLES Y ÚNICOS) -->
+                    <!-- CONTACTO FAMILIAR -->
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 relative">
-                        <h4 class="text-xs font-bold text-slate-400 uppercase mb-3 flex items-center">
-                            <i class="fa-solid fa-users mr-2"></i> Contacto Familiar / Emergencia
-                        </h4>
+                        <h4 class="text-xs font-bold text-slate-400 uppercase mb-3 flex items-center"><i class="fa-solid fa-users mr-2"></i> Contacto Familiar</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nombre Familiar</label>
-                                <input type="text" id="benFamName" class="w-full border rounded-lg p-2.5 bg-white outline-none focus:border-brand-cyan" placeholder="Nombre del contacto">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Teléfono Familiar</label>
-                                <input type="text" id="benFamPhone" class="w-full border rounded-lg p-2.5 bg-white outline-none focus:border-brand-cyan" placeholder="Teléfono del contacto">
-                            </div>
+                            <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nombre Familiar</label><input type="text" id="benFamName" class="w-full border rounded-lg p-2.5 bg-white"></div>
+                            <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Teléfono Familiar</label><input type="text" id="benFamPhone" class="w-full border rounded-lg p-2.5 bg-white"></div>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                         <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Tipo de Afiliado</label><select id="benType" class="w-full border rounded-lg p-2.5 bg-white outline-none"><option>Afiliado Directo</option><option>Jubilado</option><option>Pensionado</option><option>Beneficiaria Padre</option><option>Beneficiaria(o) Compañera(o)</option><option>Beneficiaria(o) Esposa(o)</option><option>Beneficiaria Hijo(a)</option></select></div>
-                        <div><label class="block text-xs font-bold text-brand-clinical uppercase mb-1">Asignar / Reasignar (Permanente)</label><select id="benAssign" class="w-full border rounded-lg p-2.5 bg-white outline-none border-brand-clinical/50 focus:border-brand-clinical"><option value="">-- Seleccionar Gestor --</option></select></div>
+                        <!-- DOBLE ASIGNACIÓN -->
+                        <div><label class="block text-xs font-bold text-emerald-600 uppercase mb-1">Gestor Farmacia (Reasignar)</label><select id="benAssignPharma" class="w-full border rounded-lg p-2.5 bg-white outline-none border-emerald-200 focus:border-emerald-500"><option value="">-- Seleccionar (Solo Admin) --</option></select></div>
+                        <div><label class="block text-xs font-bold text-blue-600 uppercase mb-1">Gestor CC (Reasignar)</label><select id="benAssignCC" class="w-full border rounded-lg p-2.5 bg-white outline-none border-blue-200 focus:border-blue-500"><option value="">-- Seleccionar (Solo Admin) --</option></select></div>
                     </div>
                 </form>
             </div>
@@ -255,9 +249,19 @@
         const secondaryApp = initializeApp(firebaseConfig, "Secondary");
         const secondaryAuth = getAuth(secondaryApp);
 
+        window.isPreviewMode = false;
         window.isCreatingUser = false;
         let currentYear = null, currentMonth = null;
         const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+        window.enablePreviewMode = () => {
+            window.isPreviewMode = true;
+            document.getElementById('auth-lock').classList.add('hidden');
+            const uList = document.getElementById('user-list'); uList.innerHTML = '';
+            const demoU = [ {name:"Juan Demo", role:"farmacia", username:"jdemo", status:"online", dni:"0801-1990-0000", jobTitle:["Supervisor"]} ];
+            demoU.forEach(u => uList.innerHTML += renderUserRow(u));
+            const bList = document.getElementById('ben-list'); bList.innerHTML = `<tr class="hover:bg-slate-50 border-b"><td class="p-4">María Demo<br><span class="text-xs text-slate-400">0801-1950-12345</span><span class="block mt-1 text-[9px] font-bold text-red-600 bg-red-100 px-1.5 py-0.5 rounded w-fit animate-pulse">🔴 PRIORIDAD ALTA</span></td><td class="p-4 text-xs">Jubilado</td><td class="p-4 text-xs">TGU</td><td class="p-4 text-xs font-bold text-blue-600">Juan Demo</td><td class="p-4 text-right"><span class="bg-green-100 text-green-700 px-2 py-1 rounded text-[10px]">ACTIVO</span></td></tr>`;
+        };
 
         function renderUserRow(u, docId) {
              const jobs = Array.isArray(u.jobTitle) ? u.jobTitle : [u.jobTitle || 'General'];
@@ -283,31 +287,31 @@
         
         function updateBreadcrumb() { const b=document.getElementById('ship-breadcrumb'); let h=`<span class="cursor-pointer" onclick="resetShipView()">Inicio</span>`; if(currentYear) h+=` > <span class="cursor-pointer" onclick="openYear(${currentYear})">${currentYear}</span>`; if(currentMonth!==null) h+=` > <b>${monthNames[currentMonth]}</b>`; b.innerHTML=h; }
         function renderCalendar(y,m) { const g=document.getElementById('calendar-grid'); g.innerHTML=''; const dim=new Date(y,m+1,0).getDate(); const fd=new Date(y,m,1).getDay(); for(let i=0;i<fd;i++)g.innerHTML+=`<div></div>`; for(let d=1;d<=dim;d++) { const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; g.innerHTML+=`<div onclick="openDayModal('${ds}')" class="calendar-day bg-white border border-slate-100 rounded-xl p-2 relative cursor-pointer hover:shadow-md"><span class="text-sm font-bold text-slate-700">${d}</span><div id="ship-count-${ds}" class="mt-1"></div></div>`; loadDayStats(ds); } }
-        async function loadDayStats(ds) { const q=query(collection(db,'artifacts',appId,'public','data','shipments'),where('date','==',ds)); const s=await getDocs(q); if(!s.empty) document.getElementById(`ship-count-${ds}`).innerHTML=`<span class="text-[10px] bg-emerald-100 text-emerald-700 px-1 rounded">${s.size} Envíos</span>`; }
-        window.openDayModal=async(ds)=>{ document.getElementById('shipDate').value=ds; document.getElementById('shipDateDisplay').innerText=ds; const s=document.getElementById('shipBeneficiary'); s.innerHTML='<option>Cargando...</option>'; const sn=await getDocs(collection(db,'artifacts',appId,'public','data','beneficiaries')); s.innerHTML='<option value="">Seleccione...</option>'; sn.forEach(d=>s.innerHTML+=`<option value="${d.id}|${d.data().name}">${d.data().name}</option>`); document.getElementById('shipmentModal').classList.remove('hidden'); };
-        window.saveShipment=async()=>{ const d=document.getElementById('shipDate').value, b=document.getElementById('shipBeneficiary').value, g=document.getElementById('shipGuide').value, st=document.getElementById('shipStatus').value; if(!b || !g){alert("Datos incompletos");return;} const [bid,bn]=b.split('|'); try{ await addDoc(collection(db,'artifacts',appId,'public','data','shipments'),{date:d,beneficiaryId:bid,beneficiaryName:bn,guideNumber:g,status:st,createdAt:new Date().toISOString()}); alert("Guía guardada."); document.getElementById('shipmentModal').classList.add('hidden'); loadDayStats(d); }catch(e){alert(e.message);} };
+        async function loadDayStats(ds) { if(window.isPreviewMode) return; const q=query(collection(db,'artifacts',appId,'public','data','shipments'),where('date','==',ds)); const s=await getDocs(q); if(!s.empty) document.getElementById(`ship-count-${ds}`).innerHTML=`<span class="text-[10px] bg-emerald-100 text-emerald-700 px-1 rounded">${s.size} Envíos</span>`; }
+        window.openDayModal=async(ds)=>{ document.getElementById('shipDate').value=ds; document.getElementById('shipDateDisplay').innerText=ds; const s=document.getElementById('shipBeneficiary'); s.innerHTML='<option>Cargando...</option>'; if(!window.isPreviewMode){ const sn=await getDocs(collection(db,'artifacts',appId,'public','data','beneficiaries')); s.innerHTML='<option value="">Seleccione...</option>'; sn.forEach(d=>s.innerHTML+=`<option value="${d.id}|${d.data().name}">${d.data().name}</option>`); } document.getElementById('shipmentModal').classList.remove('hidden'); };
+        window.saveShipment=async()=>{ const d=document.getElementById('shipDate').value, b=document.getElementById('shipBeneficiary').value, g=document.getElementById('shipGuide').value, st=document.getElementById('shipStatus').value; if(!b || !g){alert("Datos incompletos");return;} const [bid,bn]=b.split('|'); try{ if(!window.isPreviewMode) await addDoc(collection(db,'artifacts',appId,'public','data','shipments'),{date:d,beneficiaryId:bid,beneficiaryName:bn,guideNumber:g,status:st,createdAt:new Date().toISOString()}); alert("Guía guardada."); document.getElementById('shipmentModal').classList.add('hidden'); loadDayStats(d); }catch(e){alert(e.message);} };
 
-        async function loadAssignableUsers(selectedId = null) {
-            const select = document.getElementById('benAssign');
-            select.innerHTML = '<option value="">-- Seleccionar Usuario Activo --</option>';
-            const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'users_directory'), where('role', 'in', ['farmacia', 'contact_center']));
+        async function loadAssignableLists(selectedPharma = null, selectedCC = null) {
+            const pharmaSelect = document.getElementById('benAssignPharma');
+            const ccSelect = document.getElementById('benAssignCC');
+            pharmaSelect.innerHTML = '<option value="">-- Seleccionar Farmacia (Solo Admin) --</option>';
+            ccSelect.innerHTML = '<option value="">-- Seleccionar CC (Solo Admin) --</option>';
+            const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'users_directory'));
             const snap = await getDocs(q);
             snap.forEach(doc => {
                 const u = doc.data();
                 const opt = document.createElement('option');
-                opt.value = u.uid + "|" + u.name; 
-                opt.innerText = `${u.name} (${u.role})`;
-                if(selectedId && selectedId === u.uid) opt.selected = true;
-                select.appendChild(opt);
+                opt.value = u.uid + "|" + u.name;
+                opt.innerText = u.name;
+                if(u.role === 'farmacia') { if(selectedPharma === u.uid) opt.selected = true; pharmaSelect.appendChild(opt.cloneNode(true)); }
+                else if(u.role === 'contact_center') { if(selectedCC === u.uid) opt.selected = true; ccSelect.appendChild(opt.cloneNode(true)); }
             });
         }
 
         window.openBeneficiaryModal = (isEdit = false, benData = null) => {
             document.getElementById('benForm').reset();
             const modalTitle = document.getElementById('benModal').querySelector('h3');
-            
             if(isEdit && benData) {
-                // Modo Edición
                 modalTitle.innerHTML = `<i class="fa-solid fa-pen-to-square mr-2"></i> Editar Derechohabiente`;
                 document.getElementById('benId').value = benData.id;
                 document.getElementById('benId').disabled = true;
@@ -320,12 +324,11 @@
                 document.getElementById('benType').value = benData.type || 'Afiliado Directo';
                 document.getElementById('benLastDispense').value = benData.lastDispense || '';
                 document.getElementById('benNextShipment').value = benData.nextShipment || '';
-                loadAssignableUsers(benData.assignedTo?.uid);
+                loadAssignableLists(benData.assignedPharma?.uid, benData.assignedCC?.uid);
             } else {
-                // Modo Creación
                 modalTitle.innerHTML = `<i class="fa-solid fa-hospital-user mr-2"></i> Nuevo Derechohabiente`;
                 document.getElementById('benId').disabled = false;
-                loadAssignableUsers();
+                loadAssignableLists();
             }
             document.getElementById('benModal').classList.remove('hidden');
         };
@@ -335,14 +338,22 @@
         window.saveBeneficiary = async () => {
             const id = document.getElementById('benId').value;
             const name = document.getElementById('benName').value;
-            const assignedVal = document.getElementById('benAssign').value;
-            const lastDispense = document.getElementById('benLastDispense').value;
-            const nextShipment = document.getElementById('benNextShipment').value;
+            const valPharma = document.getElementById('benAssignPharma').value;
+            const valCC = document.getElementById('benAssignCC').value;
             
             if(!id || !name) { alert("ID y Nombre son obligatorios."); return; }
 
-            let assignedToUid = "", assignedToName = "Sin asignar";
-            if(assignedVal) { [assignedToUid, assignedToName] = assignedVal.split("|"); }
+            let pharma = { uid: "", name: "Sin asignar" };
+            let cc = { uid: "", name: "Sin asignar" };
+
+            // Ojo: Si el select está vacío (no tocó el admin), se puede perder la asignación si no lo manejamos.
+            // Pero al editar, loadAssignableLists precarga la selección.
+            // Si el admin no toca nada, valPharma tendrá el valor cargado.
+            // Si no carga nada, se asume "Sin asignar" o "Aleatorio en CSV".
+            // Para la creación manual, si no selecciona, queda sin asignar.
+            
+            if(valPharma) { const [uid, n] = valPharma.split("|"); pharma = { uid, name: n }; }
+            if(valCC) { const [uid, n] = valCC.split("|"); cc = { uid, name: n }; }
 
             const data = {
                 id, name, 
@@ -351,9 +362,10 @@
                 municipality: document.getElementById('benMuni').value,
                 family: { name: document.getElementById('benFamName').value, phone: document.getElementById('benFamPhone').value },
                 type: document.getElementById('benType').value,
-                assignedTo: { uid: assignedToUid, name: assignedToName },
-                lastDispense: lastDispense || null,
-                nextShipment: nextShipment || null,
+                assignedPharma: pharma,
+                assignedCC: cc,
+                lastDispense: document.getElementById('benLastDispense').value || null,
+                nextShipment: document.getElementById('benNextShipment').value || null,
                 status: 'Activo',
                 updatedAt: new Date().toISOString()
             };
@@ -374,12 +386,12 @@
                 const text = e.target.result;
                 const rows = text.split('\n').slice(1); 
                 
-                const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'users_directory'), where('role', 'in', ['farmacia', 'contact_center']));
+                const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'users_directory'));
                 const snap = await getDocs(q);
-                const agents = [];
-                snap.forEach(d => agents.push({uid: d.data().uid, name: d.data().name}));
+                const pharmas = [], ccs = [];
+                snap.forEach(d => { const u = d.data(); if(u.role === 'farmacia') pharmas.push({uid: u.uid, name: u.name}); if(u.role === 'contact_center') ccs.push({uid: u.uid, name: u.name}); });
 
-                if(agents.length === 0) { alert("No hay agentes de Farmacia o Contact Center para asignar."); return; }
+                if(pharmas.length === 0 || ccs.length === 0) { alert("Faltan agentes."); return; }
 
                 let processed = 0;
                 for(let row of rows) {
@@ -388,19 +400,20 @@
                     const id = cols[0].trim();
                     if(!id) continue;
 
-                    // 1. Verificar si ya existe para MANTENER asignación
                     const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'beneficiaries', id);
                     const docSnap = await getDoc(docRef);
                     
-                    let assignment;
-
-                    if(docSnap.exists() && docSnap.data().assignedTo?.uid) {
-                        // YA EXISTE: MANTENER ASIGNACIÓN (PERSISTENCIA)
-                        assignment = docSnap.data().assignedTo;
+                    let aPharma, aCC;
+                    // PERSISTENCIA DE ASIGNACIÓN
+                    if(docSnap.exists() && docSnap.data().assignedPharma?.uid) {
+                        aPharma = docSnap.data().assignedPharma;
+                        aCC = docSnap.data().assignedCC;
                     } else {
-                        // NUEVO: ASIGNAR ALEATORIAMENTE
-                        const randomAgent = agents[Math.floor(Math.random() * agents.length)];
-                        assignment = { uid: randomAgent.uid, name: randomAgent.name };
+                        // NUEVA ASIGNACIÓN ALEATORIA DOBLE
+                        const p = pharmas[Math.floor(Math.random() * pharmas.length)];
+                        const c = ccs[Math.floor(Math.random() * ccs.length)];
+                        aPharma = { uid: p.uid, name: p.name };
+                        aCC = { uid: c.uid, name: c.name };
                     }
 
                     const data = {
@@ -408,7 +421,8 @@
                         name: cols[1]?.trim() || "Sin Nombre",
                         phone: cols[2]?.trim() || "",
                         address: cols[3]?.trim() || "",
-                        assignedTo: assignment, // Usar la asignación persistente o nueva
+                        assignedPharma: aPharma,
+                        assignedCC: aCC,
                         status: 'Activo',
                         updatedAt: new Date().toISOString()
                     };
@@ -416,14 +430,14 @@
                     await setDoc(docRef, data, {merge: true});
                     processed++;
                 }
-                alert(`Importación completada. ${processed} registros procesados.\nLas asignaciones existentes se mantuvieron.`);
+                alert(`Importación completada. ${processed} registros. Asignaciones mantenidas.`);
                 input.value = ''; 
             };
             reader.readAsText(file);
         };
 
-        // LISTAR CON SEMÁFORO
         onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries'), (s) => {
+            if(window.isPreviewMode) return;
             const list = document.getElementById('ben-list');
             if(!list) return;
             list.innerHTML = '';
@@ -438,11 +452,8 @@
                     const lastDate = new Date(b.lastDispense);
                     const diffTime = Math.abs(new Date() - lastDate);
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    
-                    if (diffDays >= 25) priorityHtml = `<span class="block mt-1 text-[9px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded w-fit border border-red-100 animate-pulse" title="Hace ${diffDays} días"><i class="fa-solid fa-triangle-exclamation mr-1"></i>RENOVAR YA</span>`;
-                    else priorityHtml = `<span class="block mt-1 text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded w-fit border border-emerald-100" title="Hace ${diffDays} días"><i class="fa-solid fa-check mr-1"></i>AL DÍA</span>`;
-                } else {
-                    priorityHtml = `<span class="block mt-1 text-[9px] font-bold text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded w-fit border border-slate-100">NUEVO</span>`;
+                    if (diffDays >= 25) priorityHtml = `<span class="block mt-1 text-[9px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded w-fit border border-red-100 animate-pulse">🔴 RENOVAR YA</span>`;
+                    else priorityHtml = `<span class="block mt-1 text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded w-fit border border-emerald-100">🟢 AL DÍA</span>`;
                 }
 
                 list.innerHTML += `
@@ -454,9 +465,14 @@
                         </td>
                         <td class="p-4 text-xs">${b.type || 'N/A'}</td>
                         <td class="p-4 text-xs">${b.municipality || ''}</td>
-                        <td class="p-4 text-xs font-bold text-blue-600 bg-blue-50/50 rounded w-fit px-2 py-1 border border-blue-100">${b.assignedTo?.name || '---'}</td>
+                        <td class="p-4 text-xs">
+                            <div class="flex flex-col gap-1">
+                                <span class="text-emerald-600 font-bold"><i class="fa-solid fa-pills mr-1"></i>${b.assignedPharma?.name || '?'}</span>
+                                <span class="text-blue-600 font-bold"><i class="fa-solid fa-headset mr-1"></i>${b.assignedCC?.name || '?'}</span>
+                            </div>
+                        </td>
                         <td class="p-4 text-right">
-                            <button onclick="editBeneficiary('${jsonString}')" class="text-slate-400 hover:text-blue-600 transition p-2 rounded-full hover:bg-blue-50" title="Editar / Reasignar">
+                            <button onclick="editBeneficiary('${jsonString}')" class="text-slate-400 hover:text-blue-600 transition p-2 rounded-full hover:bg-blue-50" title="Editar">
                                 <i class="fa-solid fa-pen-to-square"></i>
                             </button>
                         </td>
@@ -476,8 +492,10 @@
         window.saveUser = async () => { /* Logica previa de crear usuario con secondary auth */ alert("Activa en modo real"); };
         window.deleteUser = async () => { alert("Activa en modo real"); };
         window.logout = () => { if(confirm("¿Salir?")) signOut(auth).then(()=>safeNavigate('index.html')); };
-        onAuthStateChanged(auth, async (u) => { if(window.isCreatingUser) return; if(!u) showLockScreen("Inicia sesión."); else { try { const s = await getDoc(doc(db,'artifacts',appId,'users',u.uid,'profile','data')); if(!s.exists() || s.data().role!=='admin') showLockScreen("Acceso Restringido."); else document.getElementById('auth-lock').classList.add('hidden'); } catch(e){} } });
-        onSnapshot(collection(db,'artifacts',appId,'public','data','users_directory'), (s) => { const l=document.getElementById('user-list'); l.innerHTML=''; s.forEach(d => l.innerHTML += renderUserRow(d.data(), d.id)); });
+        onAuthStateChanged(auth, async (u) => { if(window.isCreatingUser || window.isPreviewMode) return; if(!u) showLockScreen("Inicia sesión."); else { try { const s = await getDoc(doc(db,'artifacts',appId,'users',u.uid,'profile','data')); if(!s.exists() || s.data().role!=='admin') showLockScreen("Acceso Restringido."); else document.getElementById('auth-lock').classList.add('hidden'); } catch(e){} } });
+        onSnapshot(collection(db,'artifacts',appId,'public','data','users_directory'), (s) => { if(window.isPreviewMode) return; const l=document.getElementById('user-list'); l.innerHTML=''; s.forEach(d => l.innerHTML += renderUserRow(d.data(), d.id)); });
+        window.generateRealDemoData = async () => { await saveUser(); await saveBeneficiary(); alert("Datos generados en BD."); };
+
     </script>
 </body>
 </html>
