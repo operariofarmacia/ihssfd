@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IHSS a tu Casa - Plataforma de Dispensación</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Poppins', sans-serif; background-color: #f3f6f9; }
+        .module-section { display: none; height: 100vh; overflow: hidden; }
+        .module-section.active { display: flex; }
+        
+        /* Personalización de colores basada en los logos (Azul IHSS) */
+        .bg-brand-dark { background-color: #003366; } /* Azul oscuro institucional */
+        .bg-brand-primary { background-color: #0056b3; } /* Azul principal */
+        .text-brand-primary { color: #0056b3; }
+        .border-brand-primary { border-color: #0056b3; }
+        
+        /* Efecto cristal para el login */
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Animación suave */
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <!-- TOAST NOTIFICATIONS (Global) -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 space-y-2"></div>
+
+    <!-- ========================================== -->
+    <!-- MODULO 1: AUTENTICACIÓN (LOGIN)            -->
+    <!-- ========================================== -->
+    <section id="view-login" class="module-section active flex-col items-center justify-center bg-gradient-to-br from-blue-900 via-blue-700 to-cyan-600 text-white relative">
+        
+        <!-- Fondo decorativo -->
+        <div class="absolute inset-0 overflow-hidden opacity-10 pointer-events-none">
+            <i class="fa-solid fa-hospital text-9xl absolute -bottom-10 -left-10"></i>
+            <i class="fa-solid fa-truck-medical text-9xl absolute top-10 right-10"></i>
+        </div>
+
+        <div class="w-full max-w-md p-8 rounded-2xl shadow-2xl glass-effect text-gray-800 relative z-10 fade-in">
+            <div class="text-center mb-6 flex flex-col items-center">
+                <!-- LOGO PRINCIPAL (Redondo) -->
+                <div class="bg-white p-2 rounded-full shadow-md mb-4 w-32 h-32 flex items-center justify-center overflow-hidden border-4 border-blue-50">
+                     <img src="https://pbs.twimg.com/profile_images/1596696639587622912/FFcz1V6k_400x400.jpg" 
+                          onerror="this.src='https://cdn-icons-png.flaticon.com/512/387/387561.png'" 
+                          alt="Logo Institucional" class="object-cover h-full w-full">
+                </div>
+                
+                <!-- TITULO DEL PROYECTO -->
+                <h1 class="text-3xl font-bold text-brand-dark tracking-tight">IHSS a tu Casa</h1>
+                <p class="text-brand-primary font-medium text-sm uppercase tracking-wider mb-2">Plataforma de Dispensación</p>
+                
+                <!-- LOGO SECUNDARIO (Texto) -->
+                <img src="https://www.dropbox.com/scl/fi/w5sba6f0e4u129epwsnvq/ihsstucasa.png?rlkey=fm1sv9ndrewrzoexo5onlpszl&st=v7wmdd09&raw=1" 
+                     alt="IHSS Tu Casa Logo" class="h-10 mt-2 object-contain opacity-90">
+            </div>
+            
+            <form id="login-form" class="space-y-5">
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-500 mb-1 ml-1">Credenciales de Acceso</label>
+                    <div class="relative group">
+                        <i class="fa-solid fa-user-doctor absolute left-3 top-3.5 text-blue-400 group-focus-within:text-blue-600 transition"></i>
+                        <input type="text" id="login-email" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-gray-50 focus:bg-white" placeholder="Usuario Institucional">
+                    </div>
+                </div>
+                <div>
+                    <div class="relative group">
+                        <i class="fa-solid fa-key absolute left-3 top-3.5 text-blue-400 group-focus-within:text-blue-600 transition"></i>
+                        <input type="password" id="login-pass" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-gray-50 focus:bg-white" placeholder="Contraseña">
+                    </div>
+                </div>
+                <div id="login-error" class="text-red-500 text-sm text-center font-medium bg-red-50 p-2 rounded hidden"></div>
+                
+                <button type="submit" class="w-full bg-brand-primary hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl transition shadow-lg transform active:scale-95 flex justify-center items-center">
+                    <span>INGRESAR AL SISTEMA</span>
+                    <i class="fa-solid fa-arrow-right-to-bracket ml-2"></i>
+                </button>
+            </form>
+            
+            <div class="mt-6 text-center">
+                <p class="text-xs text-gray-400">Acceso restringido a personal autorizado</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- MODULO 2: VISTA ADMINISTRADOR              -->
+    <!-- ========================================== -->
+    <section id="view-admin" class="module-section flex-row bg-slate-100">
+        <!-- Sidebar Admin -->
+        <aside class="w-64 bg-brand-dark text-white flex flex-col shadow-xl z-20">
+            <div class="p-6 border-b border-blue-900 bg-blue-950 flex flex-col items-center text-center">
+                <img src="https://pbs.twimg.com/profile_images/1596696639587622912/FFcz1V6k_400x400.jpg" class="h-16 w-16 rounded-full border-2 border-white mb-2 shadow-lg" alt="Logo">
+                <span class="font-bold text-lg tracking-wide">ADMINISTRACIÓN</span>
+                <span class="text-xs text-blue-300">IHSS a tu Casa</span>
+            </div>
+            
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+                <div class="text-xs font-semibold text-blue-400 uppercase tracking-wider mb-2 px-3">Gestión del Sistema</div>
+                <button onclick="adminShow('create-user')" class="w-full flex items-center space-x-3 text-left p-3 hover:bg-white/10 rounded-lg transition text-blue-50">
+                    <i class="fa-solid fa-user-plus w-5"></i><span>Crear Usuarios</span>
+                </button>
+                <button onclick="adminShow('list-users')" class="w-full flex items-center space-x-3 text-left p-3 hover:bg-white/10 rounded-lg transition text-blue-50">
+                    <i class="fa-solid fa-users-gear w-5"></i><span>Directorio Personal</span>
+                </button>
+            </nav>
+            
+            <div class="p-4 bg-blue-950/50">
+                <button onclick="logout()" class="w-full flex items-center justify-center space-x-2 bg-red-600/80 hover:bg-red-600 py-2 rounded-lg transition text-sm font-medium">
+                    <i class="fa-solid fa-power-off"></i><span>Cerrar Sesión</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Content Admin -->
+        <main class="flex-1 p-8 overflow-y-auto relative">
+            <!-- Header simple en Admin -->
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-2xl font-bold text-brand-dark border-b-4 border-brand-primary pb-1 inline-block">Panel de Control</h2>
+                <img src="https://www.dropbox.com/scl/fi/w5sba6f0e4u129epwsnvq/ihsstucasa.png?rlkey=fm1sv9ndrewrzoexo5onlpszl&st=v7wmdd09&raw=1" class="h-10 opacity-70">
+            </div>
+            
+            <!-- Sub-vista: Crear Usuario -->
+            <div id="admin-create-user" class="bg-white p-8 rounded-xl shadow-sm border border-gray-200 max-w-3xl fade-in">
+                <h3 class="text-xl font-bold mb-6 flex items-center text-gray-700">
+                    <span class="bg-blue-100 text-blue-600 p-2 rounded-lg mr-3"><i class="fa-solid fa-id-card"></i></span>
+                    Registrar Nuevo Personal
+                </h3>
+                <form id="create-user-form" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-gray-600">Nombre Completo</label>
+                            <input type="text" id="new-name" required class="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-gray-600">Correo Corporativo</label>
+                            <input type="email" id="new-email" required class="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-gray-600">Contraseña Temporal</label>
+                            <input type="password" id="new-pass" required class="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-gray-600">Rol Asignado</label>
+                            <select id="new-role" class="w-full border border-gray-300 p-2.5 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                                <option value="farmacia">💊 Farmacia</option>
+                                <option value="contact_center">🎧 Contact Center</option>
+                                <option value="operaciones">⚙️ Operaciones</option>
+                                <option value="calidad">✅ Calidad y Sellado</option>
+                                <option value="logistica">📦 Logística</option>
+                                <option value="repartidor">🛵 Repartidor</option>
+                                <option value="admin">🛡️ Administrador</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="pt-4 flex justify-end">
+                        <button type="submit" class="bg-brand-primary hover:bg-blue-700 text-white px-8 py-2.5 rounded-lg font-bold shadow-lg transition flex items-center">
+                            <i class="fa-solid fa-save mr-2"></i> Guardar Usuario
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Sub-vista: Lista Usuarios -->
+            <div id="admin-list-users" class="mt-4 hidden fade-in">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="p-4 border-b bg-gray-50 flex justify-between items-center">
+                        <h3 class="font-bold text-gray-700">Directorio Activo</h3>
+                        <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">Solo Lectura</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-gray-100 text-gray-500 text-xs uppercase">
+                                <tr>
+                                    <th class="p-4 font-semibold">Nombre</th>
+                                    <th class="p-4 font-semibold">Correo</th>
+                                    <th class="p-4 font-semibold">Rol</th>
+                                    <th class="p-4 font-semibold">UID</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-users-table" class="divide-y divide-gray-100">
+                                <!-- JS llenará esto -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- MODULO 3: VISTA FARMACIA / OPERACIONES     -->
+    <!-- ========================================== -->
+    <section id="view-farmacia" class="module-section flex-col bg-gray-50">
+        <!-- Header Unificado -->
+        <header class="bg-white text-gray-800 p-3 px-6 flex justify-between items-center shadow-md border-t-4 border-brand-primary z-20 sticky top-0">
+            <div class="flex items-center space-x-3">
+                <img src="https://pbs.twimg.com/profile_images/1596696639587622912/FFcz1V6k_400x400.jpg" class="h-10 rounded-full" alt="Logo">
+                <div>
+                    <h1 class="font-bold text-lg leading-tight text-brand-dark">Módulo de Farmacia</h1>
+                    <p class="text-xs text-gray-500">IHSS a tu Casa</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="text-right hidden sm:block">
+                    <p id="pharma-user-name" class="text-sm font-semibold text-gray-700">Usuario</p>
+                    <p class="text-xs text-brand-primary">Sesión Activa</p>
+                </div>
+                <button onclick="logout()" class="text-gray-400 hover:text-red-500 transition" title="Salir"><i class="fa-solid fa-right-from-bracket text-xl"></i></button>
+            </div>
+        </header>
+
+        <main class="flex-1 p-6 overflow-y-auto max-w-7xl mx-auto w-full">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Columna: Pedidos Entrantes -->
+                <div class="lg:col-span-2">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-gray-700 font-bold text-lg flex items-center">
+                            <span class="bg-blue-100 p-2 rounded-lg mr-2 text-brand-primary"><i class="fa-solid fa-list-check"></i></span>
+                            Pedidos Pendientes
+                        </h3>
+                        <img src="https://www.dropbox.com/scl/fi/w5sba6f0e4u129epwsnvq/ihsstucasa.png?rlkey=fm1sv9ndrewrzoexo5onlpszl&st=v7wmdd09&raw=1" class="h-6 opacity-50">
+                    </div>
+                    
+                    <div id="pharma-orders-list" class="space-y-4">
+                        <!-- Cards de pedidos -->
+                    </div>
+                </div>
+                
+                <!-- Columna: KPI -->
+                <div>
+                    <div class="bg-brand-primary text-white p-6 rounded-2xl shadow-lg mb-6 relative overflow-hidden">
+                        <i class="fa-solid fa-pills absolute -right-4 -bottom-4 text-8xl text-white opacity-20"></i>
+                        <h4 class="text-blue-100 text-sm font-medium uppercase tracking-wider mb-1">En Cola de Preparación</h4>
+                        <p id="pharma-count" class="text-5xl font-bold">0</p>
+                        <p class="text-xs mt-2 text-blue-200">Actualizado en tiempo real</p>
+                    </div>
+                    
+                    <div class="bg-white p-5 rounded-xl border border-blue-100 shadow-sm">
+                        <h5 class="font-bold text-gray-700 mb-2 text-sm">Protocolo Rápido</h5>
+                        <ul class="text-xs text-gray-500 space-y-2 list-disc pl-4">
+                            <li>Verificar receta contra sistema.</li>
+                            <li>Revisar fecha de caducidad.</li>
+                            <li>Etiquetar cada caja individualmente.</li>
+                            <li>Solo marcar 'Listo' cuando esté sellado.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- MODULO 4: VISTA GENÉRICA (Otros Roles)     -->
+    <!-- ========================================== -->
+    <section id="view-generic" class="module-section flex-col bg-gray-50">
+        <header class="bg-brand-dark text-white p-4 flex justify-between items-center shadow-lg sticky top-0 z-30">
+            <div class="flex items-center space-x-3">
+                <img src="https://pbs.twimg.com/profile_images/1596696639587622912/FFcz1V6k_400x400.jpg" class="h-10 rounded-full border border-white/20" alt="Logo">
+                <div>
+                    <span id="generic-title" class="font-bold text-lg block leading-none mb-1">Panel Operativo</span>
+                    <img src="https://www.dropbox.com/scl/fi/w5sba6f0e4u129epwsnvq/ihsstucasa.png?rlkey=fm1sv9ndrewrzoexo5onlpszl&st=v7wmdd09&raw=1" class="h-4 brightness-0 invert opacity-80">
+                </div>
+            </div>
+            <button onclick="logout()" class="bg-red-500/20 hover:bg-red-600 border border-red-500/50 text-white px-4 py-1.5 rounded-full text-sm transition flex items-center">
+                <i class="fa-solid fa-power-off mr-2"></i> Salir
+            </button>
+        </header>
+
+        <main class="p-6 max-w-7xl mx-auto w-full">
+            <!-- Formulario Contact Center -->
+            <div id="cc-form-container" class="hidden max-w-3xl mx-auto bg-white p-8 rounded-2xl shadow-xl border border-gray-100 mb-8 fade-in relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-2 bg-brand-primary"></div>
+                <h3 class="text-xl font-bold mb-6 text-brand-primary flex items-center">
+                    <i class="fa-solid fa-headset mr-3 text-2xl"></i>
+                    Toma de Pedido - Call Center
+                </h3>
+                <form id="cc-order-form" class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del Paciente</label>
+                        <input type="text" id="cc-patient" placeholder="Ej: Juan Pérez" class="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Medicamentos / Receta</label>
+                        <textarea id="cc-meds" rows="3" placeholder="Ej: Enalapril 20mg (1 caja), Acetaminofén (2 cajas)" class="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required></textarea>
+                    </div>
+                    <button type="submit" class="w-full bg-brand-primary text-white py-3.5 rounded-lg font-bold hover:bg-blue-800 shadow-lg transition flex justify-center items-center">
+                        <i class="fa-solid fa-paper-plane mr-2"></i> Enviar a Farmacia
+                    </button>
+                </form>
+            </div>
+
+            <!-- Lista General de Trabajo -->
+            <div class="flex items-center mb-6">
+                <h3 class="font-bold text-gray-700 text-lg mr-2">Bandeja de Tareas</h3>
+                <span class="bg-gray-200 text-gray-600 text-xs px-2 py-1 rounded-full font-mono">En Tiempo Real</span>
+            </div>
+            
+            <div id="generic-orders-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <!-- Items -->
+            </div>
+        </main>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- LÓGICA JAVASCRIPT                          -->
+    <!-- ========================================== -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, where, onSnapshot, updateDoc, doc, setDoc, getDoc, serverTimestamp, orderBy } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+        // Configuración
+        const firebaseConfig = {
+            apiKey: "AIzaSyC2HWoYjIltPqkysduZ-954-f-kZCFaNdA",
+            authDomain: "fdihss.firebaseapp.com",
+            projectId: "fdihss",
+            storageBucket: "fdihss.firebasestorage.app",
+            messagingSenderId: "1004594046776",
+            appId: "1:1004594046776:web:164dcdb2b023b8719283cd"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = "fdihss-mediflow-v2-modular"; 
+
+        let currentUser = null;
+        let currentUserData = null;
+
+        // --- SISTEMA DE EMERGENCIA ADMIN ---
+        const handleEmergencyAdmin = async (emailInput, passInput) => {
+            if (emailInput.trim() === "admin" && passInput.trim() === "admin") {
+                const realEmail = "admin@mediflow.sys";
+                const realPass = "admin123"; 
+                try {
+                    await signInWithEmailAndPassword(auth, realEmail, realPass);
+                } catch (error) {
+                    if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+                        try {
+                            const cred = await createUserWithEmailAndPassword(auth, realEmail, realPass);
+                            await setDoc(doc(db, 'artifacts', appId, 'users', cred.user.uid, 'profile', 'data'), {
+                                name: "Admin Emergencia",
+                                email: realEmail,
+                                role: "admin",
+                                uid: cred.user.uid
+                            });
+                            await addDoc(collection(db, 'artifacts', appId, 'public', 'users_directory'), {
+                                name: "Admin Emergencia",
+                                email: realEmail,
+                                role: "admin",
+                                originalUid: cred.user.uid
+                            });
+                            showToast("⚠️ Modo Emergencia Activo", "success");
+                        } catch (createError) {
+                            showToast("Error creando admin: " + createError.message, "error");
+                        }
+                    }
+                }
+                return true;
+            }
+            return false;
+        };
+
+        // --- LOGIN FORM ---
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const emailIn = document.getElementById('login-email').value;
+            const passIn = document.getElementById('login-pass').value;
+
+            if (await handleEmergencyAdmin(emailIn, passIn)) return;
+
+            try {
+                await signInWithEmailAndPassword(auth, emailIn, passIn);
+            } catch (error) {
+                const errDiv = document.getElementById('login-error');
+                errDiv.innerText = "Error: Usuario o contraseña incorrectos.";
+                errDiv.classList.remove('hidden');
+                setTimeout(() => errDiv.classList.add('hidden'), 3000);
+            }
+        });
+
+        // --- AUTH STATE & ROUTER ---
+        const initAuth = async () => {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                try { await signInWithCustomToken(auth, __initial_auth_token); } catch(e) {}
+            }
+        };
+        initAuth();
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data');
+                const snap = await getDoc(docRef);
+                
+                if (snap.exists()) {
+                    currentUserData = snap.data();
+                    routeUserByRole(currentUserData.role);
+                } else {
+                    showToast("Usuario sin rol asignado.", "error");
+                    signOut(auth);
+                }
+            } else {
+                showSection('view-login');
+            }
+        });
+
+        function routeUserByRole(role) {
+            document.querySelectorAll('.module-section').forEach(el => el.classList.remove('active'));
+
+            if (role === 'admin') {
+                document.getElementById('view-admin').classList.add('active');
+                loadAdminData();
+            } else if (role === 'farmacia' || role === 'operaciones') {
+                document.getElementById('view-farmacia').classList.add('active');
+                document.getElementById('pharma-user-name').innerText = currentUserData.name;
+                initPharmaLogic(role);
+            } else {
+                document.getElementById('view-generic').classList.add('active');
+                initGenericLogic(role);
+            }
+        }
+
+        function showSection(id) {
+            document.querySelectorAll('.module-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        // --- LOGICA MODULO ADMIN ---
+        window.adminShow = (view) => {
+            if(view === 'create-user') {
+                document.getElementById('admin-create-user').classList.remove('hidden');
+                document.getElementById('admin-list-users').classList.add('hidden');
+            } else {
+                document.getElementById('admin-create-user').classList.add('hidden');
+                document.getElementById('admin-list-users').classList.remove('hidden');
+            }
+        };
+
+        document.getElementById('create-user-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('new-email').value;
+            const pass = document.getElementById('new-pass').value;
+            const name = document.getElementById('new-name').value;
+            const role = document.getElementById('new-role').value;
+
+            if(!confirm("⚠️ Nota: Tu sesión de admin se cerrará momentáneamente para registrar al nuevo usuario en Firebase Auth. ¿Continuar?")) return;
+
+            try {
+                const tempAuth = getAuth(); 
+                const cred = await createUserWithEmailAndPassword(tempAuth, email, pass);
+                
+                await setDoc(doc(db, 'artifacts', appId, 'users', cred.user.uid, 'profile', 'data'), {
+                    name, email, role, uid: cred.user.uid
+                });
+                
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'users_directory'), {
+                    name, email, role, originalUid: cred.user.uid
+                });
+
+                alert(`✅ Usuario ${name} creado exitosamente.`);
+            } catch (err) {
+                alert("Error: " + err.message);
+            }
+        };
+
+        function loadAdminData() {
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'users_directory'), (snap) => {
+                const tbody = document.getElementById('admin-users-table');
+                tbody.innerHTML = '';
+                snap.forEach(d => {
+                    const u = d.data();
+                    tbody.innerHTML += `
+                        <tr class="border-b hover:bg-gray-50 transition">
+                            <td class="p-4 font-medium text-gray-800 flex items-center">
+                                <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-3 font-bold text-xs">
+                                    ${u.name.charAt(0)}
+                                </div>
+                                ${u.name}
+                            </td>
+                            <td class="p-4 text-gray-500 text-sm">${u.email}</td>
+                            <td class="p-4"><span class="bg-blue-50 text-brand-primary border border-blue-200 text-xs px-2 py-1 rounded-full uppercase font-bold shadow-sm">${u.role}</span></td>
+                            <td class="p-4 text-xs text-gray-400 font-mono">${(u.originalUid || 'N/A').substring(0,6)}...</td>
+                        </tr>
+                    `;
+                });
+            });
+        }
+
+        // --- LOGICA FARMACIA ---
+        function initPharmaLogic(role) {
+            const q = query(collection(db, 'artifacts', appId, 'public', 'orders'), where('status', 'in', ['Nuevo', 'En Proceso']));
+            
+            onSnapshot(q, (snap) => {
+                const container = document.getElementById('pharma-orders-list');
+                const counter = document.getElementById('pharma-count');
+                container.innerHTML = '';
+                counter.innerText = snap.size;
+
+                if (snap.empty) {
+                    container.innerHTML = `
+                        <div class="flex flex-col items-center justify-center p-8 bg-white rounded-xl border border-dashed border-gray-300">
+                            <i class="fa-solid fa-clipboard-check text-4xl text-gray-200 mb-2"></i>
+                            <p class="text-gray-400">Todo al día. No hay pedidos pendientes.</p>
+                        </div>`;
+                }
+
+                snap.forEach(docSnap => {
+                    const o = docSnap.data();
+                    container.innerHTML += `
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition flex flex-col sm:flex-row justify-between items-start sm:items-center relative overflow-hidden group">
+                            <div class="absolute left-0 top-0 bottom-0 w-1 bg-brand-primary"></div>
+                            <div class="mb-4 sm:mb-0">
+                                <div class="flex items-center mb-1">
+                                    <span class="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase mr-2">${o.status}</span>
+                                    <span class="text-xs text-gray-400"><i class="fa-regular fa-clock mr-1"></i>${o.createdAt?.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                </div>
+                                <h4 class="font-bold text-gray-800 text-lg">${o.patient}</h4>
+                                <p class="text-sm text-gray-600 mt-1"><i class="fa-solid fa-prescription mr-1 text-blue-400"></i> ${o.meds}</p>
+                            </div>
+                            <button onclick="updateStatus('${docSnap.id}', 'Revisión Calidad')" class="bg-white border border-green-500 text-green-600 hover:bg-green-50 px-5 py-2 rounded-lg font-medium transition shadow-sm flex items-center group-hover:bg-green-600 group-hover:text-white">
+                                <span class="mr-2">Preparado</span> <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    `;
+                });
+            });
+        }
+
+        // --- LOGICA GENERICO ---
+        function initGenericLogic(role) {
+            const title = document.getElementById('generic-title');
+            const formContainer = document.getElementById('cc-form-container');
+            const listContainer = document.getElementById('generic-orders-list');
+
+            formContainer.classList.add('hidden');
+            listContainer.innerHTML = '';
+
+            let queryStatus = [];
+            let nextStatus = '';
+            let btnLabel = '';
+            let btnColorClass = '';
+
+            switch(role) {
+                case 'contact_center':
+                    title.innerText = "Contact Center";
+                    formContainer.classList.remove('hidden');
+                    queryStatus = ['Nuevo']; 
+                    break;
+                case 'calidad':
+                    title.innerText = "Control de Calidad";
+                    queryStatus = ['Revisión Calidad'];
+                    nextStatus = 'Listo Logística';
+                    btnLabel = 'Aprobado y Sellado';
+                    btnColorClass = 'bg-purple-600 hover:bg-purple-700 text-white';
+                    break;
+                case 'logistica':
+                    title.innerText = "Logística y Despacho";
+                    queryStatus = ['Listo Logística'];
+                    nextStatus = 'En Ruta';
+                    btnLabel = 'Asignar Motorista';
+                    btnColorClass = 'bg-orange-500 hover:bg-orange-600 text-white';
+                    break;
+                case 'repartidor':
+                    title.innerText = "Panel de Repartidor";
+                    queryStatus = ['En Ruta'];
+                    nextStatus = 'Entregado';
+                    btnLabel = 'Confirmar Entrega';
+                    btnColorClass = 'bg-brand-primary hover:bg-blue-700 text-white';
+                    break;
+            }
+
+            document.getElementById('cc-order-form').onsubmit = async (e) => {
+                e.preventDefault();
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'orders'), {
+                    patient: document.getElementById('cc-patient').value,
+                    meds: document.getElementById('cc-meds').value,
+                    status: 'Nuevo',
+                    createdAt: serverTimestamp(),
+                    createdBy: currentUserData.name
+                });
+                document.getElementById('cc-order-form').reset();
+                showToast("Pedido creado y enviado a farmacia", "success");
+            };
+
+            if(queryStatus.length > 0) {
+                const q = query(collection(db, 'artifacts', appId, 'public', 'orders'), where('status', 'in', queryStatus));
+                onSnapshot(q, (snap) => {
+                    listContainer.innerHTML = '';
+                    if(snap.empty) {
+                        listContainer.innerHTML = `<div class="col-span-full text-center py-12 text-gray-400 bg-white rounded-xl border border-dashed"><p>No hay tareas pendientes en esta bandeja.</p></div>`;
+                        return;
+                    }
+                    snap.forEach(docSnap => {
+                        const o = docSnap.data();
+                        const actionBtn = (role !== 'contact_center') 
+                            ? `<button onclick="updateStatus('${docSnap.id}', '${nextStatus}')" class="mt-4 w-full py-2.5 rounded-lg font-bold shadow transition ${btnColorClass}">${btnLabel}</button>`
+                            : `<div class="mt-4 text-center text-xs text-brand-primary font-bold bg-blue-50 py-2 rounded">Enviado a Cola</div>`;
+
+                        listContainer.innerHTML += `
+                            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between h-full hover:shadow-md transition relative">
+                                <div class="absolute top-4 right-4 text-gray-300"><i class="fa-solid fa-clipboard"></i></div>
+                                <div>
+                                    <span class="inline-block px-2 py-1 rounded bg-gray-100 text-gray-500 text-[10px] font-bold uppercase mb-2 tracking-wide">${o.status}</span>
+                                    <h4 class="font-bold text-xl text-gray-800 mb-1">${o.patient}</h4>
+                                    <p class="text-gray-500 text-sm leading-relaxed">${o.meds}</p>
+                                </div>
+                                ${actionBtn}
+                            </div>
+                        `;
+                    });
+                });
+            }
+        }
+
+        window.updateStatus = async (id, status) => {
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'orders', id), { status: status });
+            showToast(`Estado actualizado: ${status}`, "success");
+        };
+
+        window.logout = () => signOut(auth);
+
+        function showToast(msg, type) {
+            const t = document.getElementById('toast-container');
+            const d = document.createElement('div');
+            const icon = type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation';
+            const color = type === 'error' ? 'bg-red-500' : 'bg-green-600';
+            d.className = `px-6 py-3 rounded-lg shadow-xl text-white ${color} fade-in flex items-center mb-2 font-medium`;
+            d.innerHTML = `<i class="fa-solid ${icon} mr-3"></i> ${msg}`;
+            t.appendChild(d);
+            setTimeout(() => {
+                d.style.opacity = '0';
+                setTimeout(() => d.remove(), 500);
+            }, 3000);
+        }
+
+        window.showToast = showToast;
+    </script>
+</body>
+</html>
