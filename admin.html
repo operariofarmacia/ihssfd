@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -47,7 +46,6 @@
 <body class="flex flex-col md:flex-row h-screen overflow-hidden text-slate-700 bg-slate-50">
 
     <!-- PANTALLA DE BLOQUEO (Overlay de Seguridad) -->
-    <!-- Por defecto oculta (hidden) para priorizar el panel -->
     <div id="auth-lock" class="fixed inset-0 z-50 bg-[#003366] flex flex-col items-center justify-center text-white hidden fade-in">
         <div class="bg-white p-3 rounded-full mb-5 shadow-2xl ring-4 ring-white/10">
             <img src="https://portal.ihss.hn/cronicos/assets/dist/img/Recurso%201.png" class="h-20 w-20 object-contain">
@@ -59,7 +57,6 @@
             <i class="fa-solid fa-arrow-left mr-3"></i> Ir al Login
         </button>
         
-        <!-- Opción de emergencia para visualización -->
         <button onclick="document.getElementById('auth-lock').classList.add('hidden')" class="text-[10px] text-white/30 hover:text-white/80 underline">
             Ocultar (Solo pruebas)
         </button>
@@ -130,7 +127,7 @@
                         <thead class="bg-slate-50 text-[11px] uppercase text-slate-500 font-semibold tracking-wider">
                             <tr>
                                 <th class="p-5 pl-6">Colaborador (DNI)</th>
-                                <th class="p-5">Departamento & Cargo</th>
+                                <th class="p-5">Departamento & Cargos</th>
                                 <th class="p-5">Acceso</th>
                                 <th class="p-5 text-center">Estatus</th>
                                 <th class="p-5 pr-6 text-right">Acciones</th>
@@ -200,14 +197,11 @@
                         </div>
                         
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Cargo / Función</label>
-                            <div class="relative">
-                                <select id="formJob" class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:border-brand-cyan bg-white appearance-none cursor-pointer disabled:bg-slate-100" disabled>
-                                    <option value="">Seleccione Dept. primero</option>
-                                </select>
-                                <i class="fa-solid fa-chevron-down absolute right-3 top-3 text-slate-400 pointer-events-none text-xs"></i>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Cargos / Funciones (Multi-Select)</label>
+                            <div id="formJobContainer" class="w-full border border-slate-300 rounded-lg p-3 bg-white h-32 overflow-y-auto custom-scroll transition-colors focus-within:border-brand-cyan focus-within:ring-4 focus-within:ring-brand-cyan/10">
+                                <p class="text-xs text-slate-400 italic">Seleccione Dept. primero...</p>
                             </div>
-                            <p class="text-[10px] text-blue-400 mt-1" id="roleDesc">Define los permisos específicos.</p>
+                            <p class="text-[10px] text-brand-cyan mt-1 ml-1 font-medium" id="roleDesc">Seleccione todas las funciones que apliquen.</p>
                         </div>
                     </div>
 
@@ -309,19 +303,30 @@
         }
 
         // --- LÓGICA DE UI ---
-        window.updateRoles = (selectedJob = null) => {
+        window.updateRoles = (selectedJobs = []) => {
             const dept = document.getElementById('formDept').value;
-            const jobSelect = document.getElementById('formJob');
-            jobSelect.innerHTML = '<option value="">Seleccione Cargo...</option>';
+            const container = document.getElementById('formJobContainer');
+            container.innerHTML = '';
+            
+            // Asegurar que sea array
+            const selectedArray = Array.isArray(selectedJobs) ? selectedJobs : (selectedJobs ? [selectedJobs] : []);
+
             if (dept && roleDefinitions[dept]) {
-                jobSelect.disabled = false;
                 roleDefinitions[dept].forEach(role => {
-                    const opt = document.createElement('option');
-                    opt.value = role.val; opt.innerText = role.label;
-                    if(selectedJob === role.val) opt.selected = true;
-                    jobSelect.appendChild(opt);
+                    const isChecked = selectedArray.includes(role.val) ? 'checked' : '';
+                    const div = document.createElement('div');
+                    div.className = 'flex items-start mb-2 last:mb-0';
+                    div.innerHTML = `
+                        <label class="inline-flex items-center cursor-pointer w-full group">
+                            <input type="checkbox" class="job-check form-checkbox h-4 w-4 text-brand-cyan border-slate-300 rounded focus:ring-brand-cyan transition duration-150 ease-in-out" value="${role.val}" ${isChecked}>
+                            <span class="ml-2 text-sm text-slate-600 group-hover:text-brand-dark transition-colors">${role.label}</span>
+                        </label>
+                    `;
+                    container.appendChild(div);
                 });
-            } else { jobSelect.disabled = true; jobSelect.innerHTML = '<option value="">Seleccione Dept. primero</option>'; }
+            } else {
+                container.innerHTML = '<p class="text-xs text-slate-400 italic">Seleccione Dept. primero...</p>';
+            }
         };
 
         const updateStatus = (isOnline) => {
@@ -389,27 +394,34 @@
         window.openModal = (isEdit = false, userData = null) => {
             const modal = document.getElementById('userModal');
             const form = document.getElementById('userForm');
+            const title = document.getElementById('modalTitle');
+            const passHelp = document.getElementById('passHelp');
+            
             form.reset(); 
             
             if(isEdit && userData) {
-                document.getElementById('modalTitle').innerText = "Editar Personal";
+                title.innerText = "Editar Personal";
                 document.getElementById('editUid').value = userData.uid;
                 document.getElementById('formDni').value = userData.dni || ''; document.getElementById('formDni').disabled = true;
                 document.getElementById('formName').value = userData.name;
                 document.getElementById('formUser').value = userData.username; document.getElementById('formUser').disabled = true; 
                 document.getElementById('formPass').placeholder = "(Sin cambios)";
+                passHelp.innerText = "Llenar solo para cambiar clave.";
+                
                 document.getElementById('formDept').value = userData.role; 
-                updateRoles(userData.jobTitle); 
+                updateRoles(userData.jobTitle); // Carga checkboxes y marca los seleccionados
+                
                 document.getElementById('formIpCheck').checked = userData.requireIpApproval || false;
                 document.getElementById('formStart').value = userData.shiftStart || '';
                 document.getElementById('formEnd').value = userData.shiftEnd || '';
                 if(userData.allowedDays) document.querySelectorAll('.day-check').forEach(cb => { if(userData.allowedDays.includes(cb.value)) cb.checked = true; });
             } else {
-                document.getElementById('modalTitle').innerText = "Nuevo Ingreso";
+                title.innerText = "Nuevo Ingreso";
                 document.getElementById('editUid').value = "";
                 document.getElementById('formDni').disabled = false;
                 document.getElementById('formUser').disabled = false;
                 document.getElementById('formPass').placeholder = "Requerido";
+                passHelp.innerText = "Mínimo 6 caracteres.";
                 updateRoles(); 
             }
             modal.classList.remove('hidden');
@@ -425,20 +437,31 @@
             const username = document.getElementById('formUser').value.trim().toLowerCase().replace(/\s+/g, '');
             const pass = document.getElementById('formPass').value;
             const dept = document.getElementById('formDept').value; 
-            const jobTitle = document.getElementById('formJob').value; 
+            
+            // Recoger cargos multiples
+            const jobTitles = [];
+            document.querySelectorAll('.job-check:checked').forEach(cb => jobTitles.push(cb.value));
+
             const requireIp = document.getElementById('formIpCheck').checked;
             const start = document.getElementById('formStart').value;
             const end = document.getElementById('formEnd').value;
             const days = []; document.querySelectorAll('.day-check:checked').forEach(cb => days.push(cb.value));
 
-            if(!dni || !name || !username || !dept || !jobTitle || (!editUid && !pass)) { alert("Complete todos los campos obligatorios."); return; }
+            if(!dni || !name || !username || !dept || jobTitles.length === 0 || (!editUid && !pass)) { alert("Complete todos los campos obligatorios y seleccione al menos un cargo."); return; }
 
             const originalBtn = btn.innerHTML;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
             btn.disabled = true;
 
             try {
-                const userData = { dni, name, username, role: dept, jobTitle: jobTitle, requireIpApproval: requireIp, shiftStart: start, shiftEnd: end, allowedDays: days, lastUpdated: new Date().toISOString() };
+                const userData = { 
+                    dni, name, username, 
+                    role: dept, 
+                    jobTitle: jobTitles, // Array
+                    requireIpApproval: requireIp, 
+                    shiftStart: start, shiftEnd: end, allowedDays: days, 
+                    lastUpdated: new Date().toISOString() 
+                };
 
                 if (editUid) {
                     await updateDoc(doc(db,'artifacts',appId,'users',editUid,'profile','data'), userData);
@@ -492,6 +515,10 @@
                     else if(u.role === 'logistica') { colorClass = 'bg-orange-50 text-orange-600 border-orange-100'; iconClass='fa-truck-fast'; }
                     else if(u.role === 'contact_center') { colorClass = 'bg-blue-50 text-blue-600 border-blue-100'; iconClass='fa-headset'; }
 
+                    // Renderizar cargos multiples
+                    const jobs = Array.isArray(u.jobTitle) ? u.jobTitle : [u.jobTitle || 'General'];
+                    const jobsDisplay = jobs.map(j => `<div class="text-[10px] text-slate-500 bg-slate-50 border border-slate-100 px-1.5 py-0.5 rounded mb-0.5 w-fit">${j}</div>`).join('');
+
                     list.innerHTML += `
                         <tr class="hover:bg-blue-50/40 transition border-b border-slate-50 last:border-0 group cursor-default">
                             <td class="p-5 pl-6">
@@ -502,8 +529,8 @@
                             </td>
                             <td class="p-5">
                                 <div class="flex flex-col items-start">
-                                    <span class="${colorClass} border px-2 py-0.5 rounded text-[10px] font-bold uppercase mb-1 inline-flex items-center shadow-sm"><i class="fa-solid ${iconClass} mr-1.5 opacity-70"></i> ${u.role.replace('_',' ')}</span>
-                                    <div class="text-xs font-medium text-slate-600 pl-0.5">${u.jobTitle || 'General'}</div>
+                                    <span class="${colorClass} border px-2 py-0.5 rounded text-[10px] font-bold uppercase mb-1.5 inline-flex items-center shadow-sm"><i class="fa-solid ${iconClass} mr-1.5 opacity-70"></i> ${u.role.replace('_',' ')}</span>
+                                    <div class="flex flex-col gap-0.5">${jobsDisplay}</div>
                                 </div>
                             </td>
                             <td class="p-5"><div class="space-y-1.5"><div class="text-xs font-mono text-slate-500 bg-slate-100/80 px-2 py-1 rounded w-fit border border-slate-200"><i class="fa-solid fa-user mr-1.5 text-slate-400"></i>${u.username}</div></div></td>
