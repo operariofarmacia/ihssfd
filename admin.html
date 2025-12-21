@@ -37,8 +37,9 @@
         .modal-backdrop { background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
         .toggle-checkbox:checked { right: 0; border-color: #10b981; }
         .toggle-checkbox:checked + .toggle-label { background-color: #10b981; }
-        
-        /* Custom Scrollbar */
+        /* Custom Checkbox */
+        .job-check { accent-color: #06b6d4; width: 16px; height: 16px; cursor: pointer; }
+        select { -webkit-appearance: none; -moz-appearance: none; appearance: none; }
         .custom-scroll::-webkit-scrollbar { width: 6px; }
         .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -48,8 +49,81 @@
         select[multiple] option { padding: 8px; border-radius: 6px; margin-bottom: 4px; border: 1px solid #f1f5f9; transition: all 0.2s; }
         select[multiple] option:checked { background-color: #06b6d4; color: white; border-color: #0891b2; font-weight: 500; }
     </style>
+
+    <!-- SCRIPT DE DEPURACIÓN (Consola Visual) -->
+    <script>
+        // Capturar errores globales
+        window.logs = [];
+        function addLog(type, msg) {
+            const time = new Date().toLocaleTimeString();
+            const logEntry = `[${time}] [${type}] ${msg}\n`;
+            window.logs.push(logEntry);
+            const consoleDiv = document.getElementById('log-output');
+            if(consoleDiv) {
+                const color = type === 'ERROR' ? 'text-red-400' : (type === 'WARN' ? 'text-yellow-400' : 'text-green-400');
+                const line = document.createElement('div');
+                line.className = `border-b border-gray-800 pb-1 mb-1 ${color} break-all`;
+                line.innerText = logEntry;
+                consoleDiv.appendChild(line);
+                consoleDiv.scrollTop = consoleDiv.scrollHeight;
+            }
+        }
+
+        // Interceptar console.error
+        const originalError = console.error;
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addLog('ERROR', args.map(a => (typeof a === 'object' ? JSON.stringify(a) : a)).join(' '));
+        };
+        
+        // Interceptar errores de ventana
+        window.onerror = function(message, source, lineno, colno, error) {
+            addLog('CRITICAL', `${message} at ${source}:${lineno}:${colno}`);
+        };
+
+        // Interceptar promesas rechazadas (Firebase errors)
+        window.onunhandledrejection = function(event) {
+            addLog('PROMISE', `Rejection: ${event.reason}`);
+        };
+
+        function toggleConsole() {
+            const c = document.getElementById('debug-console');
+            c.classList.toggle('hidden');
+        }
+
+        function copyLogs() {
+            const text = window.logs.join('');
+            navigator.clipboard.writeText(text).then(() => alert("Logs copiados al portapapeles. Pégalos en el chat."));
+        }
+        
+        function clearLogs() {
+            window.logs = [];
+            document.getElementById('log-output').innerHTML = '';
+        }
+    </script>
 </head>
 <body class="flex flex-col md:flex-row h-screen overflow-hidden text-slate-700 bg-slate-50">
+
+    <!-- CONSOLA DE DEPURACIÓN FLOTANTE -->
+    <div id="debug-console" class="fixed bottom-0 left-0 w-full h-1/3 bg-gray-900 text-xs font-mono p-0 z-[100] hidden flex flex-col shadow-[0_-5px_20px_rgba(0,0,0,0.5)] border-t border-gray-700 font-mono">
+        <div class="flex justify-between items-center bg-gray-800 p-2 border-b border-gray-700">
+            <span class="font-bold text-white flex items-center"><i class="fa-solid fa-terminal mr-2 text-green-500"></i>Consola de Diagnóstico</span>
+            <div class="flex gap-2">
+                <button onclick="copyLogs()" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-500 transition text-[10px] font-bold uppercase"><i class="fa-solid fa-copy mr-1"></i> Copiar Error</button>
+                <button onclick="clearLogs()" class="px-3 py-1 bg-gray-700 text-white rounded hover:bg-gray-600 transition text-[10px] font-bold uppercase">Limpiar</button>
+                <button onclick="toggleConsole()" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-500 transition text-[10px] font-bold uppercase"><i class="fa-solid fa-times"></i></button>
+            </div>
+        </div>
+        <div id="log-output" class="flex-1 overflow-y-auto p-4 text-gray-300 font-mono leading-tight bg-black/80">
+            <!-- Logs aparecerán aquí -->
+            <div class="text-gray-500 italic">Esperando eventos... (Si algo falla, aparecerá aquí)</div>
+        </div>
+    </div>
+
+    <!-- BOTÓN DE BUG FLOTANTE -->
+    <button onclick="toggleConsole()" class="fixed bottom-4 right-4 z-50 w-10 h-10 bg-gray-800 text-white rounded-full shadow-lg hover:bg-gray-700 transition border border-gray-600 flex items-center justify-center group" title="Ver Errores / Reportar Bug">
+        <i class="fa-solid fa-bug text-red-400 group-hover:text-red-300 group-hover:rotate-12 transition"></i>
+    </button>
 
     <!-- PANTALLA DE BLOQUEO -->
     <div id="auth-lock" class="fixed inset-0 z-50 bg-[#003366] flex flex-col items-center justify-center text-white hidden fade-in">
@@ -61,6 +135,7 @@
         <button onclick="forceNavigateLogin()" class="bg-brand-cyan hover:bg-brand-teal text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg transform hover:scale-105 flex items-center mb-4">
             <i class="fa-solid fa-arrow-left mr-3"></i> Ir al Login
         </button>
+        <button onclick="document.getElementById('auth-lock').classList.add('hidden')" class="text-[10px] text-white/30 hover:text-white/80 underline">Ocultar (Solo pruebas)</button>
     </div>
 
     <!-- SIDEBAR -->
@@ -137,6 +212,7 @@
                 <form id="userForm" class="space-y-6">
                     <input type="hidden" id="editUid">
 
+                    <!-- Sección 1: Identidad -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div class="col-span-2 md:col-span-1">
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-1">DNI (Cédula)</label>
@@ -159,6 +235,7 @@
 
                     <hr class="border-slate-100">
 
+                    <!-- Sección 2: Estructura Organizacional (Dinámica) -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Departamento</label>
@@ -176,19 +253,29 @@
                         
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Cargos / Funciones (Multi-Selección)</label>
+                            <!-- SELECT MULTIPLE NATIVO -->
                             <select id="formJob" multiple class="w-full border border-slate-300 rounded-lg outline-none focus:border-brand-cyan bg-white text-sm cursor-pointer shadow-inner">
                                 <option disabled>Seleccione Dept. primero...</option>
                             </select>
-                            <p class="text-[10px] text-brand-cyan mt-1 ml-1 font-medium"><i class="fa-solid fa-circle-info mr-1"></i>Mantén Ctrl/Cmd para seleccionar varios.</p>
+                            <p class="text-[10px] text-brand-cyan mt-1 ml-1 font-medium"><i class="fa-solid fa-circle-info mr-1"></i>Ctrl+Click (Win) o Cmd+Click (Mac) para seleccionar varios.</p>
                         </div>
                     </div>
 
+                    <!-- Sección 3: Seguridad Avanzada -->
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
                         <h4 class="text-xs font-bold text-brand-dark uppercase mb-3 flex items-center"><i class="fa-solid fa-lock mr-2"></i> Control de Acceso</h4>
+                        
                         <div class="flex items-center justify-between mb-4">
-                            <div class="mr-4"><span class="text-sm font-semibold text-slate-700 block">Validación de Dispositivo</span><span class="text-xs text-slate-500">Requiere aprobación IP.</span></div>
-                            <label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="formIpCheck" class="sr-only peer"><div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-clinical"></div></label>
+                            <div class="mr-4">
+                                <span class="text-sm font-semibold text-slate-700 block">Validación de Dispositivo</span>
+                                <span class="text-xs text-slate-500">Requiere aprobación del admin si cambia de IP/PC.</span>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="formIpCheck" class="sr-only peer">
+                                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-clinical"></div>
+                            </label>
                         </div>
+
                         <div class="border-t border-slate-200/60 pt-3">
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Días Permitidos</label>
                             <div class="flex flex-wrap gap-2 mb-3">
@@ -208,7 +295,9 @@
 
             <div class="p-5 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 shrink-0">
                 <button type="button" onclick="closeModal()" class="px-5 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-700 transition">Cancelar</button>
-                <button type="button" onclick="saveUser()" id="btnSave" class="bg-brand-clinical hover:bg-emerald-600 text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg shadow-emerald-200 transition transform active:scale-95 flex items-center"><i class="fa-solid fa-save mr-2"></i> Guardar Usuario</button>
+                <button type="button" onclick="saveUser()" id="btnSave" class="bg-brand-clinical hover:bg-emerald-600 text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg shadow-emerald-200 transition transform active:scale-95 flex items-center">
+                    <i class="fa-solid fa-save mr-2"></i> Guardar Usuario
+                </button>
             </div>
         </div>
     </div>
@@ -294,6 +383,8 @@
         ['mousemove', 'keydown', 'click', 'scroll'].forEach(evt => window.addEventListener(evt, resetInactivityTimer));
 
         onAuthStateChanged(auth, async (u) => { 
+            if(window.isCreatingUser || window.isPreviewMode) return; 
+
             if(!u) {
                 let msg = "Debes iniciar sesión para acceder.";
                 if(isTimeoutLogout) { msg = "Tu sesión ha expirado por inactividad (30 min)."; isTimeoutLogout = false; }
@@ -337,7 +428,7 @@
 
         window.closeModal = () => document.getElementById('userModal').classList.add('hidden');
 
-        // --- GUARDAR CON SECONDARY AUTH PARA NO CERRAR SESION ---
+        // --- GUARDAR CON SECONDARY AUTH ---
         window.saveUser = async () => {
             const btn = document.getElementById('btnSave');
             const editUid = document.getElementById('editUid').value;
@@ -347,6 +438,7 @@
             const pass = document.getElementById('formPass').value;
             const dept = document.getElementById('formDept').value; 
             
+            // Leer Select Multiple
             const jobSelect = document.getElementById('formJob');
             const jobTitles = Array.from(jobSelect.selectedOptions).map(opt => opt.value);
 
@@ -368,19 +460,17 @@
 
                 if (editUid) {
                     await updateDoc(doc(db,'artifacts',appId,'users',editUid,'profile','data'), userData);
-                    // Actualizamos tambien el directorio público (en un entorno real usariamos ID, aquí simulamos que no es necesario porque es NoSQL y se leera despues)
+                    // Actualizar público (Simulado con alerta para esta demo)
                     alert("Datos actualizados correctamente.");
                 } else {
                     const email = username + DOMAIN_SUFFIX;
                     
-                    // USAMOS AUTH SECUNDARIO PARA CREAR USUARIO SIN CERRAR SESION DEL ADMIN
+                    // USAMOS AUTH SECUNDARIO
                     const cred = await createUserWithEmailAndPassword(secondaryAuth, email, pass);
-                    // Desloguear la instancia secundaria inmediatamente para limpiar
                     await signOut(secondaryAuth);
 
                     userData.uid = cred.user.uid; userData.createdAt = new Date().toISOString(); userData.status = "offline";
                     
-                    // ESCRIBIMOS CON EL AUTH PRINCIPAL (ADMIN)
                     await setDoc(doc(db,'artifacts',appId,'users',cred.user.uid,'profile','data'), userData);
                     await addDoc(collection(db,'artifacts',appId,'public','data','users_directory'), userData);
                     
@@ -409,8 +499,9 @@
         onSnapshot(collection(db,'artifacts',appId,'public','data','users_directory'), (s) => {
             const list = document.getElementById('user-list');
             const totalEl = document.getElementById('stat-total');
+            const securityEl = document.getElementById('stat-security');
             if(totalEl) totalEl.innerText = s.size;
-            document.getElementById('stat-security').innerText = 0; 
+            if(securityEl) securityEl.innerText = 0; 
 
             if (list) {
                 list.innerHTML = '';
