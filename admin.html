@@ -49,81 +49,8 @@
         select[multiple] option { padding: 8px; border-radius: 6px; margin-bottom: 4px; border: 1px solid #f1f5f9; transition: all 0.2s; }
         select[multiple] option:checked { background-color: #06b6d4; color: white; border-color: #0891b2; font-weight: 500; }
     </style>
-
-    <!-- SCRIPT DE DEPURACIÓN (Consola Visual) -->
-    <script>
-        // Capturar errores globales
-        window.logs = [];
-        function addLog(type, msg) {
-            const time = new Date().toLocaleTimeString();
-            const logEntry = `[${time}] [${type}] ${msg}\n`;
-            window.logs.push(logEntry);
-            const consoleDiv = document.getElementById('log-output');
-            if(consoleDiv) {
-                const color = type === 'ERROR' ? 'text-red-400' : (type === 'WARN' ? 'text-yellow-400' : 'text-green-400');
-                const line = document.createElement('div');
-                line.className = `border-b border-gray-800 pb-1 mb-1 ${color} break-all`;
-                line.innerText = logEntry;
-                consoleDiv.appendChild(line);
-                consoleDiv.scrollTop = consoleDiv.scrollHeight;
-            }
-        }
-
-        // Interceptar console.error
-        const originalError = console.error;
-        console.error = function(...args) {
-            originalError.apply(console, args);
-            addLog('ERROR', args.map(a => (typeof a === 'object' ? JSON.stringify(a) : a)).join(' '));
-        };
-        
-        // Interceptar errores de ventana
-        window.onerror = function(message, source, lineno, colno, error) {
-            addLog('CRITICAL', `${message} at ${source}:${lineno}:${colno}`);
-        };
-
-        // Interceptar promesas rechazadas (Firebase errors)
-        window.onunhandledrejection = function(event) {
-            addLog('PROMISE', `Rejection: ${event.reason}`);
-        };
-
-        function toggleConsole() {
-            const c = document.getElementById('debug-console');
-            c.classList.toggle('hidden');
-        }
-
-        function copyLogs() {
-            const text = window.logs.join('');
-            navigator.clipboard.writeText(text).then(() => alert("Logs copiados al portapapeles. Pégalos en el chat."));
-        }
-        
-        function clearLogs() {
-            window.logs = [];
-            document.getElementById('log-output').innerHTML = '';
-        }
-    </script>
 </head>
 <body class="flex flex-col md:flex-row h-screen overflow-hidden text-slate-700 bg-slate-50">
-
-    <!-- CONSOLA DE DEPURACIÓN FLOTANTE -->
-    <div id="debug-console" class="fixed bottom-0 left-0 w-full h-1/3 bg-gray-900 text-xs font-mono p-0 z-[100] hidden flex flex-col shadow-[0_-5px_20px_rgba(0,0,0,0.5)] border-t border-gray-700 font-mono">
-        <div class="flex justify-between items-center bg-gray-800 p-2 border-b border-gray-700">
-            <span class="font-bold text-white flex items-center"><i class="fa-solid fa-terminal mr-2 text-green-500"></i>Consola de Diagnóstico</span>
-            <div class="flex gap-2">
-                <button onclick="copyLogs()" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-500 transition text-[10px] font-bold uppercase"><i class="fa-solid fa-copy mr-1"></i> Copiar Error</button>
-                <button onclick="clearLogs()" class="px-3 py-1 bg-gray-700 text-white rounded hover:bg-gray-600 transition text-[10px] font-bold uppercase">Limpiar</button>
-                <button onclick="toggleConsole()" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-500 transition text-[10px] font-bold uppercase"><i class="fa-solid fa-times"></i></button>
-            </div>
-        </div>
-        <div id="log-output" class="flex-1 overflow-y-auto p-4 text-gray-300 font-mono leading-tight bg-black/80">
-            <!-- Logs aparecerán aquí -->
-            <div class="text-gray-500 italic">Esperando eventos... (Si algo falla, aparecerá aquí)</div>
-        </div>
-    </div>
-
-    <!-- BOTÓN DE BUG FLOTANTE -->
-    <button onclick="toggleConsole()" class="fixed bottom-4 right-4 z-50 w-10 h-10 bg-gray-800 text-white rounded-full shadow-lg hover:bg-gray-700 transition border border-gray-600 flex items-center justify-center group" title="Ver Errores / Reportar Bug">
-        <i class="fa-solid fa-bug text-red-400 group-hover:text-red-300 group-hover:rotate-12 transition"></i>
-    </button>
 
     <!-- PANTALLA DE BLOQUEO -->
     <div id="auth-lock" class="fixed inset-0 z-50 bg-[#003366] flex flex-col items-center justify-center text-white hidden fade-in">
@@ -212,7 +139,7 @@
                 <form id="userForm" class="space-y-6">
                     <input type="hidden" id="editUid">
 
-                    <!-- Sección 1: Identidad -->
+                    <!-- Identidad -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div class="col-span-2 md:col-span-1">
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-1">DNI (Cédula)</label>
@@ -235,7 +162,7 @@
 
                     <hr class="border-slate-100">
 
-                    <!-- Sección 2: Estructura Organizacional (Dinámica) -->
+                    <!-- Roles Dinámicos (MultiSelect) -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Departamento</label>
@@ -253,29 +180,20 @@
                         
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Cargos / Funciones (Multi-Selección)</label>
-                            <!-- SELECT MULTIPLE NATIVO -->
                             <select id="formJob" multiple class="w-full border border-slate-300 rounded-lg outline-none focus:border-brand-cyan bg-white text-sm cursor-pointer shadow-inner">
                                 <option disabled>Seleccione Dept. primero...</option>
                             </select>
-                            <p class="text-[10px] text-brand-cyan mt-1 ml-1 font-medium"><i class="fa-solid fa-circle-info mr-1"></i>Ctrl+Click (Win) o Cmd+Click (Mac) para seleccionar varios.</p>
+                            <p class="text-[10px] text-brand-cyan mt-1 ml-1 font-medium"><i class="fa-solid fa-circle-info mr-1"></i>Mantén Ctrl/Cmd para seleccionar varios.</p>
                         </div>
                     </div>
 
-                    <!-- Sección 3: Seguridad Avanzada -->
+                    <!-- Seguridad -->
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
                         <h4 class="text-xs font-bold text-brand-dark uppercase mb-3 flex items-center"><i class="fa-solid fa-lock mr-2"></i> Control de Acceso</h4>
-                        
                         <div class="flex items-center justify-between mb-4">
-                            <div class="mr-4">
-                                <span class="text-sm font-semibold text-slate-700 block">Validación de Dispositivo</span>
-                                <span class="text-xs text-slate-500">Requiere aprobación del admin si cambia de IP/PC.</span>
-                            </div>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" id="formIpCheck" class="sr-only peer">
-                                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-clinical"></div>
-                            </label>
+                            <div class="mr-4"><span class="text-sm font-semibold text-slate-700 block">Validación de Dispositivo</span><span class="text-xs text-slate-500">Requiere aprobación IP.</span></div>
+                            <label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="formIpCheck" class="sr-only peer"><div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-clinical"></div></label>
                         </div>
-
                         <div class="border-t border-slate-200/60 pt-3">
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Días Permitidos</label>
                             <div class="flex flex-wrap gap-2 mb-3">
@@ -295,9 +213,7 @@
 
             <div class="p-5 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 shrink-0">
                 <button type="button" onclick="closeModal()" class="px-5 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-700 transition">Cancelar</button>
-                <button type="button" onclick="saveUser()" id="btnSave" class="bg-brand-clinical hover:bg-emerald-600 text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg shadow-emerald-200 transition transform active:scale-95 flex items-center">
-                    <i class="fa-solid fa-save mr-2"></i> Guardar Usuario
-                </button>
+                <button type="button" onclick="saveUser()" id="btnSave" class="bg-brand-clinical hover:bg-emerald-600 text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg shadow-emerald-200 transition transform active:scale-95 flex items-center"><i class="fa-solid fa-save mr-2"></i> Guardar Usuario</button>
             </div>
         </div>
     </div>
@@ -306,7 +222,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
         import { getAuth, signOut, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, setDoc, doc, getDoc, onSnapshot, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, setDoc, doc, getDoc, onSnapshot, updateDoc, deleteDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
         // Configuración
         const firebaseConfig = { apiKey: "AIzaSyC2HWoYjIltPqkysduZ-954-f-kZCFaNdA", authDomain: "fdihss.firebaseapp.com", projectId: "fdihss", storageBucket: "fdihss.firebasestorage.app", messagingSenderId: "1004594046776", appId: "1:1004594046776:web:164dcdb2b023b8719283cd" };
@@ -315,10 +231,26 @@
         const db = getFirestore(app);
         const appId = "fdihss-mediflow-v2-modular";
         const DOMAIN_SUFFIX = "@mediflow.sys"; 
-
-        // IMPORTANTE: INSTANCIA SECUNDARIA PARA CREAR USUARIOS SIN CERRAR SESIÓN DEL ADMIN
+        
+        // App Secundaria para crear usuarios sin logout
         const secondaryApp = initializeApp(firebaseConfig, "Secondary");
         const secondaryAuth = getAuth(secondaryApp);
+
+        // --- MANEJO DE ESTATUS ONLINE/OFFLINE ---
+        async function setUserStatus(uid, status) {
+            try {
+                // 1. Actualizar perfil privado
+                const userRef = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'data');
+                await updateDoc(userRef, { status: status });
+                
+                // 2. Actualizar directorio público (buscando el documento correcto)
+                const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'users_directory'), where('uid', '==', uid));
+                const snapshot = await getDocs(q);
+                snapshot.forEach(async (docSnap) => {
+                    await updateDoc(docSnap.ref, { status: status });
+                });
+            } catch (e) { console.error("Error updating status:", e); }
+        }
 
         const roleDefinitions = {
             'farmacia': [ { val: 'Supervisor de Farmacia', label: 'Supervisor General' }, { val: 'Revisión y Asignación', label: 'Revisor de Pacientes' }, { val: 'Despacho de Medicamentos', label: 'Despacho (Salida)' }, { val: 'Gestión de Inventario', label: 'Gestión de Inventario' } ],
@@ -379,11 +311,15 @@
                inactivityTimer = setTimeout(doInactivityLogout, TIMEOUT_LIMIT);
             }
         };
-        const doInactivityLogout = async () => { isTimeoutLogout = true; await signOut(auth); };
+        const doInactivityLogout = async () => { 
+            isTimeoutLogout = true; 
+            if(auth.currentUser) await setUserStatus(auth.currentUser.uid, 'offline');
+            await signOut(auth); 
+        };
         ['mousemove', 'keydown', 'click', 'scroll'].forEach(evt => window.addEventListener(evt, resetInactivityTimer));
 
         onAuthStateChanged(auth, async (u) => { 
-            if(window.isCreatingUser || window.isPreviewMode) return; 
+            if(window.isCreatingUser) return;
 
             if(!u) {
                 let msg = "Debes iniciar sesión para acceder.";
@@ -393,7 +329,12 @@
                 try {
                     const s = await getDoc(doc(db,'artifacts',appId,'users',u.uid,'profile','data')); 
                     if(!s.exists() || s.data().role!=='admin') showLockScreen("Acceso Restringido. Rol no autorizado.");
-                    else { resetInactivityTimer(); document.getElementById('auth-lock').classList.add('hidden'); }
+                    else { 
+                        // SESIÓN ACTIVA: PONER ONLINE
+                        await setUserStatus(u.uid, 'online');
+                        resetInactivityTimer(); 
+                        document.getElementById('auth-lock').classList.add('hidden'); 
+                    }
                 } catch(e) { console.error("Error Auth:", e); }
             }
         });
@@ -428,7 +369,6 @@
 
         window.closeModal = () => document.getElementById('userModal').classList.add('hidden');
 
-        // --- GUARDAR CON SECONDARY AUTH ---
         window.saveUser = async () => {
             const btn = document.getElementById('btnSave');
             const editUid = document.getElementById('editUid').value;
@@ -438,7 +378,6 @@
             const pass = document.getElementById('formPass').value;
             const dept = document.getElementById('formDept').value; 
             
-            // Leer Select Multiple
             const jobSelect = document.getElementById('formJob');
             const jobTitles = Array.from(jobSelect.selectedOptions).map(opt => opt.value);
 
@@ -460,16 +399,25 @@
 
                 if (editUid) {
                     await updateDoc(doc(db,'artifacts',appId,'users',editUid,'profile','data'), userData);
-                    // Actualizar público (Simulado con alerta para esta demo)
+                    // Actualizar directorio público (Simulación por falta de ID directo en UI)
+                    // Para que se vea en tiempo real, buscamos y actualizamos:
+                    const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'users_directory'), where('uid', '==', editUid));
+                    const snapshot = await getDocs(q);
+                    snapshot.forEach(async (docSnap) => {
+                        await updateDoc(docSnap.ref, userData);
+                    });
+                    
                     alert("Datos actualizados correctamente.");
                 } else {
+                    if(!confirm("⚠️ ¿Crear nuevo usuario?\n(La sesión de Admin NO se cerrará).")) { btn.innerHTML = originalBtn; btn.disabled = false; return; }
+                    
                     const email = username + DOMAIN_SUFFIX;
                     
-                    // USAMOS AUTH SECUNDARIO
+                    // CREAR CON AUTH SECUNDARIO (Sin cerrar sesión admin)
                     const cred = await createUserWithEmailAndPassword(secondaryAuth, email, pass);
-                    await signOut(secondaryAuth);
+                    await signOut(secondaryAuth); // Cerrar sesión secundaria limpia
 
-                    userData.uid = cred.user.uid; userData.createdAt = new Date().toISOString(); userData.status = "offline";
+                    userData.uid = cred.user.uid; userData.createdAt = new Date().toISOString(); userData.status = "offline"; // Empieza offline
                     
                     await setDoc(doc(db,'artifacts',appId,'users',cred.user.uid,'profile','data'), userData);
                     await addDoc(collection(db,'artifacts',appId,'public','data','users_directory'), userData);
@@ -499,9 +447,8 @@
         onSnapshot(collection(db,'artifacts',appId,'public','data','users_directory'), (s) => {
             const list = document.getElementById('user-list');
             const totalEl = document.getElementById('stat-total');
-            const securityEl = document.getElementById('stat-security');
+            
             if(totalEl) totalEl.innerText = s.size;
-            if(securityEl) securityEl.innerText = 0; 
 
             if (list) {
                 list.innerHTML = '';
@@ -520,8 +467,16 @@
                     else if(u.role === 'logistica') { colorClass = 'bg-orange-50 text-orange-600 border-orange-100'; iconClass='fa-truck-fast'; }
                     else if(u.role === 'contact_center') { colorClass = 'bg-blue-50 text-blue-600 border-blue-100'; iconClass='fa-headset'; }
 
+                    // Renderizar cargos multiples
                     const jobs = Array.isArray(u.jobTitle) ? u.jobTitle : [u.jobTitle || 'General'];
                     const jobsDisplay = jobs.map(j => `<div class="text-[10px] text-slate-500 bg-slate-50 border border-slate-100 px-1.5 py-0.5 rounded mb-0.5 w-fit">${j}</div>`).join('');
+
+                    // Lógica visual de estatus ONLINE/OFFLINE
+                    const isOnline = u.status === 'online';
+                    const statusBadge = isOnline 
+                        ? `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse mr-1.5"></span> ONLINE</span>`
+                        : `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-50 text-red-400 border border-red-100"><span class="w-1.5 h-1.5 rounded-full bg-red-400 mr-1.5"></span> OFFLINE</span>`;
+
 
                     list.innerHTML += `
                         <tr class="hover:bg-blue-50/40 transition border-b border-slate-50 last:border-0 group cursor-default">
@@ -538,7 +493,7 @@
                                 </div>
                             </td>
                             <td class="p-5"><div class="space-y-1.5"><div class="text-xs font-mono text-slate-500 bg-slate-100/80 px-2 py-1 rounded w-fit border border-slate-200"><i class="fa-solid fa-user mr-1.5 text-slate-400"></i>${u.username}</div></div></td>
-                            <td class="p-5 text-center"><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold ${u.status==='online'?'bg-emerald-100 text-emerald-700':'bg-slate-100 text-slate-400'}"><span class="w-1.5 h-1.5 rounded-full ${u.status==='online'?'bg-emerald-500 animate-pulse':'bg-slate-400'} mr-1.5"></span> ${u.status==='online'?'Online':'Offline'}</span></td>
+                            <td class="p-5 text-center">${statusBadge}</td>
                             <td class="p-5 pr-6 text-right">
                                 <div class="flex justify-end gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
                                     <button onclick="prompt('Enlace de Acceso Único:', '${link}')" class="w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition flex items-center justify-center border border-slate-200" title="Copiar Enlace"><i class="fa-solid fa-link"></i></button>
@@ -551,7 +506,12 @@
             }
         });
 
-        window.logout = () => { if(confirm("¿Cerrar sesión de administrador?")) signOut(auth).then(()=>safeNavigate('index.html')); };
+        window.logout = () => { 
+            if(confirm("¿Cerrar sesión de administrador?")) {
+                if(auth.currentUser) setUserStatus(auth.currentUser.uid, 'offline'); // Poner offline antes de salir
+                signOut(auth).then(() => safeNavigate('index.html')); 
+            }
+        };
     </script>
 </body>
 </html>
