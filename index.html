@@ -93,11 +93,10 @@
         // 1. GENERAR HUELLA DE DISPOSITIVO ÚNICA
         let deviceId = localStorage.getItem('mediflow_device_id');
         if (!deviceId) {
-            deviceId = crypto.randomUUID(); // Genera un ID único para este navegador
+            deviceId = crypto.randomUUID(); 
             localStorage.setItem('mediflow_device_id', deviceId);
         }
 
-        // Variables temporales para el flujo de verificación
         let pendingUser = null;
         let pendingUserData = null;
 
@@ -112,6 +111,30 @@
         window.addEventListener('online', () => updateStatus(true));
         window.addEventListener('offline', () => updateStatus(false));
         updateStatus(navigator.onLine);
+
+        // Safe Navigation Wrapper
+        function safeNavigate(targetUrl) {
+            try {
+                // Intentar redirección estándar
+                window.location.href = targetUrl;
+            } catch (e) {
+                console.warn("Redirección bloqueada por el navegador:", e);
+                // Fallback visual en caso de que href falle
+                const loginCard = document.getElementById('login-card');
+                loginCard.innerHTML = `
+                    <div class="p-4 text-center">
+                        <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <h2 class="text-xl font-bold text-[#003366] mb-2">Acceso Autorizado</h2>
+                        <p class="text-sm text-gray-500 mb-6">El sistema ha validado tus credenciales. Haz clic abajo para entrar al panel.</p>
+                        <a href="./${targetUrl}" class="block w-full bg-[#0056b3] text-white font-bold py-3.5 rounded-xl hover:bg-blue-800 transition shadow-lg text-center">
+                            ENTRAR AHORA
+                        </a>
+                    </div>
+                `;
+            }
+        }
 
         // Login Logic
         document.getElementById('login-form').addEventListener('submit', async (e) => {
@@ -129,13 +152,9 @@
             const email = usernameInput.includes('@') ? usernameInput : usernameInput + DOMAIN_SUFFIX;
 
             try { 
-                // Autenticar primero
                 const userCredential = await signInWithEmailAndPassword(auth, email, pass);
                 pendingUser = userCredential.user;
-                
-                // Verificar Perfil y Dispositivo
                 await checkDeviceAuthorization(pendingUser);
-
             } catch (error) { 
                 resetUI("Usuario o contraseña incorrectos."); 
                 console.error(error);
@@ -148,49 +167,43 @@
                 const snap = await getDoc(userRef);
                 
                 if (!snap.exists()) {
-                    resetUI("Error: Perfil de usuario no encontrado.");
+                    resetUI("Error: Perfil no encontrado.");
                     await signOut(auth);
                     return;
                 }
 
                 pendingUserData = snap.data();
-                
-                // Si el usuario requiere aprobación de IP y este dispositivo no está en la lista
                 const authorizedDevices = pendingUserData.authorizedDevices || [];
-                const requireIpApproval = pendingUserData.requireIpApproval === true; // Por defecto false si no existe
+                const requireIpApproval = pendingUserData.requireIpApproval === true;
 
-                // Si es admin o no requiere aprobación o el dispositivo ya está autorizado
                 if (pendingUserData.role === 'admin' || !requireIpApproval || authorizedDevices.includes(deviceId)) {
                     finalizeLogin(user, pendingUserData.role);
                 } else {
-                    // DISPOSITIVO NO RECONOCIDO -> PEDIR LLAVE
                     document.getElementById('login-card').classList.add('hidden');
                     document.getElementById('device-modal').classList.remove('hidden');
-                    // No finalizamos login todavía
                 }
             } catch (e) {
-                resetUI("Error de verificación: " + e.message);
+                resetUI("Error de verificación.");
                 await signOut(auth);
             }
         }
 
         window.verifyDevice = async () => {
             const inputKey = document.getElementById('device-key').value;
-            const correctKey = pendingUserData.ipUnlockKey; // La clave guardada por el admin
+            const correctKey = pendingUserData.ipUnlockKey;
 
             if (inputKey === correctKey) {
-                // Clave Correcta: Registrar dispositivo y entrar
                 try {
                     const userRef = doc(db, 'artifacts', appId, 'users', pendingUser.uid, 'profile', 'data');
                     await updateDoc(userRef, {
-                        authorizedDevices: arrayUnion(deviceId) // Agregar este PC a la lista blanca
+                        authorizedDevices: arrayUnion(deviceId) 
                     });
                     finalizeLogin(pendingUser, pendingUserData.role);
                 } catch(e) {
-                    alert("Error guardando dispositivo: " + e.message);
+                    alert("Error guardando dispositivo.");
                 }
             } else {
-                alert("Llave incorrecta. Contacte al administrador.");
+                alert("Llave incorrecta.");
             }
         };
 
@@ -201,17 +214,13 @@
 
         async function finalizeLogin(user, role) {
             try {
-                // AQUÍ SE APLICA LA LÓGICA DE SESIÓN ÚNICA
-                // Guardamos el deviceId actual como la "Sesión Activa" en la BD
                 const userRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data');
-                
                 await updateDoc(userRef, {
-                    activeSessionId: deviceId, // La "marca" de sesión activa
+                    activeSessionId: deviceId,
                     status: 'online',
                     lastLogin: new Date().toISOString()
                 });
 
-                // Redireccionar
                 const map = {
                     'admin': 'admin.html',
                     'farmacia': 'farmacia.html',
@@ -223,15 +232,14 @@
                 };
                 
                 if(map[role]) {
-                    window.location.href = map[role];
+                    safeNavigate(map[role]);
                 } else {
-                    alert("Rol no configurado.");
                     await signOut(auth);
                     resetUI("Rol inválido.");
                 }
             } catch(e) {
                 console.error("Error finalizando login:", e);
-                resetUI("Error al iniciar sesión en base de datos.");
+                resetUI("Error de base de datos.");
             }
         }
 
@@ -267,24 +275,16 @@
             }
         }
 
-        // Auth State Listener (Solo para redirección automática si ya hay sesión válida)
         onAuthStateChanged(auth, async (user) => {
-            if (user && !pendingUser) { // Si ya estaba logueado al cargar la página
+            if (user && !pendingUser) { 
                  try {
                     const snap = await getDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data'));
                     if (snap.exists()) {
                         const data = snap.data();
-                        
-                        // Verificar Sesión Única al cargar (Kick out si no coincide)
                         if (data.activeSessionId && data.activeSessionId !== deviceId && data.role !== 'admin') {
-                            // Si la BD dice que la sesión activa es OTRA ID, salimos.
-                            // Admin is exempt or logic handled inside admin.html too.
-                            console.log("Sesión inválida en carga inicial.");
                             await signOut(auth);
                             return; 
                         }
-                        
-                        // Si todo bien, redirigir
                          const map = {
                             'admin': 'admin.html',
                             'farmacia': 'farmacia.html',
@@ -294,13 +294,12 @@
                             'logistica': 'logistica.html',
                             'repartidor': 'delivery.html'
                         };
-                        if(map[data.role]) window.location.href = map[data.role];
+                        if(map[data.role]) safeNavigate(map[data.role]);
                     }
                 } catch (e) { console.error(e); }
             }
         });
 
-        // Admin Emergency Logic (Sin cambios mayores, solo adaptado)
         async function handleEmergencyAdmin() {
             const email = "admin" + DOMAIN_SUFFIX;
             try { await signInWithEmailAndPassword(auth, email, "admin123"); }
@@ -310,13 +309,13 @@
                         const c = await createUserWithEmailAndPassword(auth, email, "admin123");
                         await setDoc(doc(db, 'artifacts', appId, 'users', c.user.uid, 'profile', 'data'), {
                             name:"Super Admin", role:"admin", username:"admin", 
-                            authorizedDevices: [deviceId], // Auto-autorizar este dispositivo
+                            authorizedDevices: [deviceId], 
                             activeSessionId: deviceId 
                         });
                         await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'users_directory'), {name:"Super Admin", role:"admin", username:"admin"});
                         window.location.reload();
-                    } catch(err) { resetUI("Error creando admin: " + err.message); }
-                } else resetUI("Error sistema: " + e.message);
+                    } catch(err) { resetUI("Error creando admin."); }
+                } else resetUI("Error sistema.");
             }
         }
     </script>
