@@ -28,7 +28,7 @@
     <style>
         body { font-family: 'Poppins', sans-serif; background-color: #f8fafc; }
         .fade-in { animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .modal-backdrop { background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
         .toggle-checkbox:checked { right: 0; border-color: #10b981; }
         .toggle-checkbox:checked + .toggle-label { background-color: #10b981; }
@@ -48,6 +48,9 @@
         .timeline-step:first-child::before { display: none; }
         .timeline-active .step-dot { background-color: #10b981; color: white; border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); }
         .timeline-active::before { background: #10b981; }
+        /* Tabs Styles */
+        .tab-btn.active { border-bottom: 3px solid #003366; color: #003366; background-color: #f1f5f9; }
+        .tab-btn { color: #64748b; }
     </style>
 </head>
 <body class="flex flex-col md:flex-row h-screen overflow-hidden text-slate-700 bg-slate-50">
@@ -62,7 +65,6 @@
         <button onclick="forceNavigateLogin()" class="bg-brand-cyan hover:bg-brand-teal text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg transform hover:scale-105 flex items-center mb-4">
             <i class="fa-solid fa-arrow-left mr-3"></i> Ir al Login
         </button>
-        <button onclick="enablePreviewMode()" class="text-[10px] text-white/30 hover:text-white/80 underline cursor-pointer">Ver Diseño (Modo Prueba Visual)</button>
     </div>
 
     <!-- SIDEBAR -->
@@ -82,18 +84,14 @@
             <button onclick="switchView('dashboard')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-dashboard">
                 <i class="fa-solid fa-house w-5"></i><span class="font-medium text-sm">Inicio</span>
             </button>
-            
             <div class="pt-4 pb-2 px-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">Gestión</div>
-            
             <button onclick="switchView('users')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-users">
                 <i class="fa-solid fa-users-gear w-5"></i><span class="font-medium text-sm">Personal</span>
             </button>
             <button onclick="switchView('beneficiaries')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-beneficiaries">
                 <i class="fa-solid fa-hospital-user w-5"></i><span class="font-medium text-sm">Derechohabientes</span>
             </button>
-            
             <div class="pt-4 pb-2 px-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">Operaciones</div>
-
             <button onclick="switchView('shipments')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-shipments">
                 <i class="fa-solid fa-truck-fast w-5"></i><span class="font-medium text-sm">Gestión de Envíos</span>
             </button>
@@ -102,10 +100,6 @@
             </button>
         </nav>
         <div class="p-4 bg-black/20 border-t border-white/5 space-y-2">
-            <!-- Botón Generar Datos (Deshabilitado en prod, activado aquí para testing) -->
-            <button onclick="generateRealDemoData()" class="w-full bg-emerald-800/50 hover:bg-emerald-700 text-emerald-100 py-2 rounded-lg text-[10px] font-bold uppercase transition flex items-center justify-center border border-emerald-700/50">
-                <i class="fa-solid fa-database mr-2"></i> Crear 1 Dato Prueba (BD)
-            </button>
             <button onclick="logout()" class="w-full bg-red-500/20 hover:bg-red-600 text-red-100 py-2 rounded-lg text-xs font-bold uppercase transition flex items-center justify-center group">
                 <i class="fa-solid fa-power-off mr-2 group-hover:scale-110 transition-transform"></i> Cerrar Sesión
             </button>
@@ -140,7 +134,12 @@
         <div id="view-users" class="hidden-view flex-1 flex flex-col h-full overflow-hidden fade-in">
             <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center z-10 shrink-0">
                 <div><h1 class="text-2xl font-bold text-brand-dark">Directorio de Personal</h1></div>
-                <button onclick="openModal()" class="bg-brand-dark hover:bg-brand-cyan text-white px-6 py-2.5 rounded-xl font-bold shadow-lg transition-all flex items-center text-sm"><i class="fa-solid fa-user-plus mr-2"></i> Nuevo Usuario</button>
+                <div class="flex gap-2">
+                    <button onclick="balanceWorkload()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-200 px-4 py-2.5 rounded-xl font-bold transition flex items-center text-sm shadow-sm">
+                        <i class="fa-solid fa-scale-balanced mr-2"></i> Equilibrar Cargas
+                    </button>
+                    <button onclick="openModal()" class="bg-brand-dark hover:bg-brand-cyan text-white px-6 py-2.5 rounded-xl font-bold shadow-lg transition-all flex items-center text-sm"><i class="fa-solid fa-user-plus mr-2"></i> Nuevo Usuario</button>
+                </div>
             </header>
             <div class="flex-1 overflow-y-auto p-6 md:p-8 custom-scroll">
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
@@ -194,7 +193,7 @@
         </div>
     </div>
 
-    <!-- MODAL BENEFICIARIO (DOBLE ASIGNACIÓN + VENTANILLA + PREFERENCIA GUARDADA) -->
+    <!-- MODAL BENEFICIARIO (ACTUALIZADO: DOBLE ASIGNACIÓN + VENTANILLA + FECHAS + SINCRONIZACIÓN) -->
     <div id="benModal" class="fixed inset-0 modal-backdrop hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl w-full max-w-4xl flex flex-col max-h-[90vh]">
             <div class="bg-brand-dark p-5 text-white flex justify-between"><h3 class="font-bold">Derechohabiente</h3><button onclick="document.getElementById('benModal').classList.add('hidden')"><i class="fa-solid fa-xmark"></i></button></div>
@@ -212,7 +211,6 @@
                         <div><label class="block text-xs font-bold text-blue-700 uppercase mb-1"><i class="fa-solid fa-truck-fast mr-1"></i> Fecha Envío (Admin)</label><input type="date" id="benNextShipment" class="w-full border border-blue-200 rounded-lg p-2.5 bg-white text-sm"></div>
                     </div>
                     
-                    <!-- CONTACTO FAMILIAR -->
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 relative">
                         <h4 class="text-xs font-bold text-slate-400 uppercase mb-3 flex items-center"><i class="fa-solid fa-users mr-2"></i> Contacto Familiar</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -231,8 +229,8 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                         <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Tipo de Afiliado</label><select id="benType" class="w-full border rounded-lg p-2.5 bg-white outline-none"><option>Afiliado Directo</option><option>Jubilado</option><option>Pensionado</option><option>Beneficiaria Padre</option><option>Beneficiaria(o) Compañera(o)</option><option>Beneficiaria(o) Esposa(o)</option><option>Beneficiaria Hijo(a)</option></select></div>
-                        <div><label class="block text-xs font-bold text-emerald-600 uppercase mb-1">Gestor Farmacia (Permanente)</label><select id="benAssignPharma" class="w-full border rounded-lg p-2.5 bg-white outline-none border-emerald-200 focus:border-emerald-500"><option value="">-- Seleccionar (Solo Admin) --</option></select></div>
-                        <div><label class="block text-xs font-bold text-blue-600 uppercase mb-1">Gestor CC (Permanente)</label><select id="benAssignCC" class="w-full border rounded-lg p-2.5 bg-white outline-none border-blue-200 focus:border-blue-500"><option value="">-- Seleccionar (Solo Admin) --</option></select></div>
+                        <div><label class="block text-xs font-bold text-emerald-600 uppercase mb-1">Gestor Farmacia</label><select id="benAssignPharma" class="w-full border rounded-lg p-2.5 bg-white outline-none border-emerald-200 focus:border-emerald-500"><option value="">-- Seleccionar (Solo Admin) --</option></select></div>
+                        <div><label class="block text-xs font-bold text-blue-600 uppercase mb-1">Gestor CC</label><select id="benAssignCC" class="w-full border rounded-lg p-2.5 bg-white outline-none border-blue-200 focus:border-blue-500"><option value="">-- Seleccionar (Solo Admin) --</option></select></div>
                     </div>
                 </form>
             </div>
@@ -243,31 +241,14 @@
         </div>
     </div>
 
-    <!-- MODAL HISTORIAL DE ENVÍOS -->
-    <div id="historyModal" class="fixed inset-0 modal-backdrop hidden z-[80] flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl w-full max-w-3xl flex flex-col max-h-[90vh]">
-            <div class="bg-brand-dark p-5 flex justify-between text-white shrink-0">
-                <h3 class="font-bold text-lg"><i class="fa-solid fa-history mr-2"></i> Historial de Envíos - <span id="histBenName" class="font-normal text-slate-300"></span></h3>
-                <button onclick="document.getElementById('historyModal').classList.add('hidden')" class="text-white/70 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
-            </div>
-            <div class="p-6 overflow-y-auto custom-scroll">
-                <table class="w-full text-left border-collapse">
-                    <thead class="bg-slate-50 text-[10px] uppercase text-slate-500 font-bold">
-                        <tr><th class="p-3">Fecha</th><th class="p-3">Guía</th><th class="p-3">Estado</th><th class="p-3 text-right">Etapa Actual</th></tr>
-                    </thead>
-                    <tbody id="hist-list" class="divide-y divide-slate-100 text-sm text-slate-600">
-                        <tr><td colspan="4" class="p-6 text-center">Cargando...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL DETALLE DE DÍA (VISOR CON PESTAÑAS) -->
+    <!-- MODAL DETALLE DE DÍA (VISOR CON PESTAÑAS Y DESCARGA CSV) -->
     <div id="dayModal" class="fixed inset-0 modal-backdrop hidden z-[70] flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl w-full max-w-4xl flex flex-col max-h-[90vh]">
             <div class="bg-white border-b p-5 flex justify-between items-center shrink-0">
-                <h3 class="font-bold text-lg text-brand-dark flex items-center"><i class="fa-regular fa-calendar-check mr-2 text-brand-cyan"></i> Envíos del <span id="dayModalDate" class="ml-1 text-slate-600"></span></h3>
+                <div class="flex items-center gap-4">
+                    <h3 class="font-bold text-lg text-brand-dark flex items-center"><i class="fa-regular fa-calendar-check mr-2 text-brand-cyan"></i> Envíos del <span id="dayModalDate" class="ml-1 text-slate-600"></span></h3>
+                    <button onclick="downloadDayReport()" class="bg-green-100 text-green-700 text-xs font-bold px-3 py-1.5 rounded hover:bg-green-200 transition"><i class="fa-solid fa-file-csv mr-1"></i> Descargar Reporte</button>
+                </div>
                 <button onclick="document.getElementById('dayModal').classList.add('hidden')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <!-- Pestañas -->
@@ -286,13 +267,16 @@
     <div id="shipmentModal" class="fixed inset-0 modal-backdrop hidden z-[80] flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl w-full max-w-xl flex flex-col">
             <div class="bg-brand-dark p-5 flex justify-between text-white"><h3 class="font-bold">Nueva Guía</h3><button onclick="document.getElementById('shipmentModal').classList.add('hidden')"><i class="fa-solid fa-xmark"></i></button></div>
-            <div class="p-6"><form id="shipForm" class="space-y-4"><input type="hidden" id="shipDate"><p id="shipDateDisplay" class="font-bold text-center"></p><select id="shipBeneficiary" class="border w-full p-2 rounded"><option>Cargando...</option></select><input id="shipGuide" placeholder="Tracking #" class="border w-full p-2 rounded">
-                <select id="shipStatus" class="border w-full p-2 rounded">
-                    <option>Nuevo</option>
-                    <option>En Proceso</option><option>Confirmacion CC</option><option>Retorno Farmacia</option><option>Empaquetado</option><option>Revision Calidad</option><option>Listo Logistica</option><option>En Ruta</option><option>Entregado</option>
-                </select>
-            </form></div>
+            <div class="p-6"><form id="shipForm" class="space-y-4"><input type="hidden" id="shipDate"><p id="shipDateDisplay" class="font-bold text-center"></p><select id="shipBeneficiary" class="border w-full p-2 rounded"><option>Cargando...</option></select><input id="shipGuide" placeholder="Tracking #" class="border w-full p-2 rounded"><select id="shipStatus" class="border w-full p-2 rounded"><option>Nuevo</option><option>En Proceso</option><option>Confirmacion CC</option><option>Retorno Farmacia</option><option>Empaquetado</option><option>Revision Calidad</option><option>Listo Logistica</option><option>En Ruta</option><option>Entregado</option></select></form></div>
             <div class="p-5 border-t flex justify-end gap-3"><button onclick="document.getElementById('shipmentModal').classList.add('hidden')" class="text-slate-500">Cancelar</button><button onclick="saveShipment()" class="bg-brand-cyan text-white px-4 py-2 rounded">Guardar</button></div>
+        </div>
+    </div>
+
+    <!-- MODAL HISTORIAL DE ENVÍOS -->
+    <div id="historyModal" class="fixed inset-0 modal-backdrop hidden z-[80] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-3xl flex flex-col max-h-[90vh]">
+            <div class="bg-brand-dark p-5 flex justify-between text-white shrink-0"><h3 class="font-bold text-lg"><i class="fa-solid fa-history mr-2"></i> Historial</h3><button onclick="document.getElementById('historyModal').classList.add('hidden')" class="text-white/70 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button></div>
+            <div class="p-6 overflow-y-auto custom-scroll"><table class="w-full text-left border-collapse"><thead class="bg-slate-50 text-[10px] uppercase text-slate-500 font-bold"><tr><th class="p-3">Fecha</th><th class="p-3">Guía</th><th class="p-3">Estado</th><th class="p-3 text-right">Etapa Actual</th></tr></thead><tbody id="hist-list" class="divide-y divide-slate-100 text-sm text-slate-600"><tr><td colspan="4" class="p-6 text-center">Cargando...</td></tr></tbody></table></div>
         </div>
     </div>
 
@@ -311,25 +295,14 @@
         const secondaryApp = initializeApp(firebaseConfig, "Secondary");
         const secondaryAuth = getAuth(secondaryApp);
 
-        window.isPreviewMode = false;
         window.isCreatingUser = false;
         let currentYear = null, currentMonth = null, selectedDate = null;
         const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
         function renderUserRow(u, docId) {
              const jobs = Array.isArray(u.jobTitle) ? u.jobTitle : [u.jobTitle || 'General'];
-             return `<tr class="hover:bg-blue-50/40 border-b border-slate-50"><td class="p-5 pl-6"><div class="flex items-center"><div class="w-10 h-10 rounded-xl bg-white border border-slate-100 shadow-sm flex items-center justify-center text-sm font-bold text-brand-dark mr-3">${u.name.charAt(0)}</div><div><div class="font-bold text-slate-700 text-sm">${u.name}</div><div class="text-[11px] text-slate-400 font-mono">${u.dni||'--'}</div></div></div></td><td class="p-5"><div class="flex flex-col gap-1"><span class="bg-slate-100 border px-2 py-0.5 rounded text-[10px] font-bold uppercase w-fit">${u.role}</span><div class="text-xs text-slate-500">${jobs.join(', ')}</div></div></td><td class="p-5"><span class="text-xs font-mono text-slate-500 bg-slate-100 px-2 py-1 rounded">${u.username}</span></td><td class="p-5 text-center"><span class="text-[10px] font-bold ${u.status==='online'?'text-emerald-500':'text-slate-400'}">${u.status==='online'?'ONLINE':'OFFLINE'}</span></td><td class="p-5 pr-6 text-right"><div class="flex justify-end gap-2 opacity-60 group-hover:opacity-100"><button onclick="deleteUser('${docId}', '${u.uid}', '${u.name}', '${u.role}')" class="text-red-500 p-2 rounded hover:bg-red-50" title="Dar de baja"><i class="fa-solid fa-user-slash"></i></button></div></td></tr>`;
+             return `<tr class="hover:bg-blue-50/40 border-b border-slate-50"><td class="p-5 pl-6"><div class="flex items-center"><div class="w-10 h-10 rounded-xl bg-white border border-slate-100 shadow-sm flex items-center justify-center text-sm font-bold text-brand-dark mr-3">${u.name.charAt(0)}</div><div><div class="font-bold text-slate-700 text-sm">${u.name}</div><div class="text-[11px] text-slate-400 font-mono">${u.dni||'--'}</div></div></div></td><td class="p-5"><div class="flex flex-col gap-1"><span class="bg-slate-100 border px-2 py-0.5 rounded text-[10px] font-bold uppercase w-fit">${u.role}</span><div class="text-xs text-slate-500">${jobs.join(', ')}</div></div></td><td class="p-5"><span class="text-xs font-mono text-slate-500 bg-slate-100 px-2 py-1 rounded">${u.username}</span></td><td class="p-5 text-center"><span class="text-[10px] font-bold ${u.status==='online'?'text-emerald-500':'text-slate-400'}">${u.status==='online'?'ONLINE':'OFFLINE'}</span></td><td class="p-5 pr-6 text-right"><button class="text-blue-500 p-2"><i class="fa-solid fa-pen"></i></button></td></tr>`;
         }
-
-        // --- MODO PRUEBA (RESTAURADO) ---
-        window.enablePreviewMode = () => {
-            window.isPreviewMode = true;
-            document.getElementById('auth-lock').classList.add('hidden');
-            const uList = document.getElementById('user-list'); uList.innerHTML = '';
-            const demoU = [ {name:"Juan Demo", role:"farmacia", username:"jdemo", status:"online", dni:"0801-1990-0000", jobTitle:["Supervisor"]} ];
-            demoU.forEach(u => uList.innerHTML += renderUserRow(u));
-            const bList = document.getElementById('ben-list'); bList.innerHTML = `<tr class="hover:bg-slate-50 border-b"><td class="p-4">María Demo<br><span class="text-xs text-slate-400">0801-1950-12345</span><span class="block mt-1 text-[9px] font-bold text-red-600 bg-red-100 px-1.5 py-0.5 rounded w-fit animate-pulse">🔴 PRIORIDAD ALTA</span></td><td class="p-4 text-xs">Jubilado</td><td class="p-4 text-xs">TGU</td><td class="p-4 text-xs"><div class="flex flex-col gap-1"><span class="text-emerald-600 font-bold"><i class="fa-solid fa-pills mr-1"></i>Farmacéutico 1</span><span class="text-blue-600 font-bold"><i class="fa-solid fa-headset mr-1"></i>Agente 1</span></div></td><td class="p-4 text-right flex justify-end gap-2"><button class="text-slate-400 p-2"><i class="fa-solid fa-pen-to-square"></i></button></td></tr>`;
-        };
 
         window.switchView = (viewId) => {
             ['users','beneficiaries','dashboard','shipments','reports'].forEach(id => {
@@ -350,14 +323,47 @@
         
         function updateBreadcrumb() { const b=document.getElementById('ship-breadcrumb'); let h=`<span class="cursor-pointer" onclick="resetShipView()">Inicio</span>`; if(currentYear) h+=` > <span class="cursor-pointer" onclick="openYear(${currentYear})">${currentYear}</span>`; if(currentMonth!==null) h+=` > <b>${monthNames[currentMonth]}</b>`; b.innerHTML=h; }
         function renderCalendar(y,m) { const g=document.getElementById('calendar-grid'); g.innerHTML=''; const dim=new Date(y,m+1,0).getDate(); const fd=new Date(y,m,1).getDay(); for(let i=0;i<fd;i++)g.innerHTML+=`<div></div>`; for(let d=1;d<=dim;d++) { const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; g.innerHTML+=`<div onclick="openDayView('${ds}')" class="calendar-day bg-white border border-slate-100 rounded-xl p-2 relative cursor-pointer hover:shadow-md"><span class="text-sm font-bold text-slate-700">${d}</span><div id="ship-count-${ds}" class="mt-1"></div></div>`; loadDayStats(ds); } }
-        async function loadDayStats(ds) { if(window.isPreviewMode) return; const q=query(collection(db,'artifacts',appId,'public','data','shipments'),where('date','==',ds)); const s=await getDocs(q); if(!s.empty) document.getElementById(`ship-count-${ds}`).innerHTML=`<span class="text-[10px] bg-emerald-100 text-emerald-700 px-1 rounded font-bold">${s.size} Envíos</span>`; }
+        async function loadDayStats(ds) { const q=query(collection(db,'artifacts',appId,'public','data','shipments'),where('date','==',ds)); const s=await getDocs(q); if(!s.empty) document.getElementById(`ship-count-${ds}`).innerHTML=`<span class="text-[10px] bg-emerald-100 text-emerald-700 px-1 rounded font-bold">${s.size} Envíos</span>`; }
+        window.openNewShipmentModal = () => { document.getElementById('shipDate').value = selectedDate; document.getElementById('shipDateDisplay').innerText = selectedDate; const select = document.getElementById('shipBeneficiary'); select.innerHTML = '<option>Cargando...</option>'; getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries')).then(snap => { select.innerHTML = '<option value="">Seleccione Beneficiario...</option>'; snap.forEach(d => { select.innerHTML += `<option value="${d.id}|${d.data().name}">${d.data().name} (${d.id})</option>`; }); }); document.getElementById('shipmentModal').classList.remove('hidden'); };
+        window.saveShipment=async()=>{ const d=document.getElementById('shipDate').value, b=document.getElementById('shipBeneficiary').value, g=document.getElementById('shipGuide').value, st=document.getElementById('shipStatus').value; if(!b || !g){alert("Datos incompletos");return;} const [bid,bn]=b.split('|'); try{ await addDoc(collection(db,'artifacts',appId,'public','data','shipments'),{date:d,beneficiaryId:bid,beneficiaryName:bn,guideNumber:g,status:st,createdAt:new Date().toISOString()}); alert("Guía guardada."); document.getElementById('shipmentModal').classList.add('hidden'); openDayView(d); loadDayStats(d); }catch(e){alert(e.message);} };
 
-        // --- DETALLE DÍA Y TIMELINE (8 PASOS + PESTAÑAS) ---
+        // --- DETALLE DÍA Y TIMELINE (8 PASOS + PESTAÑAS + CSV) ---
         window.switchDayTab = (tab) => {
             const btnRoute = document.getElementById('tab-route'); const btnPickup = document.getElementById('tab-pickup');
             const contentRoute = document.getElementById('content-route'); const contentPickup = document.getElementById('content-pickup');
             if (tab === 'route') { btnRoute.classList.add('active','border-brand-dark','text-brand-dark'); btnRoute.classList.remove('text-slate-400','border-transparent'); btnPickup.classList.remove('active','border-orange-500','text-orange-600'); btnPickup.classList.add('text-slate-400','border-transparent'); contentRoute.classList.remove('hidden'); contentPickup.classList.add('hidden'); }
             else { btnRoute.classList.remove('active','border-brand-dark','text-brand-dark'); btnRoute.classList.add('text-slate-400','border-transparent'); btnPickup.classList.add('active','border-orange-500','text-orange-600'); btnPickup.classList.remove('text-slate-400','border-transparent'); contentRoute.classList.add('hidden'); contentPickup.classList.remove('hidden'); }
+        };
+
+        // Descargar Reporte CSV del Día
+        window.downloadDayReport = async () => {
+             const date = document.getElementById('dayModalDate').innerText;
+             if(!date) return;
+             
+             const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'shipments'), where('date', '==', date));
+             const snap = await getDocs(q);
+             
+             if(snap.empty) { alert("No hay datos para exportar en esta fecha."); return; }
+
+             let csvContent = "data:text/csv;charset=utf-8,Fecha,Guia,Beneficiario,ID_Ben,Estado,Tipo_Entrega,Farmacia,Call_Center\n";
+             
+             snap.forEach(docSnap => {
+                 const s = docSnap.data();
+                 const type = (s.pickupCounter || (s.assignedCC?.uid === 'ventanilla')) ? "Ventanilla" : "Domicilio";
+                 const row = [
+                     s.date, s.guideNumber, s.beneficiaryName, s.beneficiaryId, s.status, type, 
+                     s.assignedPharma?.name || 'S/A', s.assignedCC?.name || 'S/A'
+                 ].join(",");
+                 csvContent += row + "\n";
+             });
+
+             const encodedUri = encodeURI(csvContent);
+             const link = document.createElement("a");
+             link.setAttribute("href", encodedUri);
+             link.setAttribute("download", `Reporte_Envios_${date}.csv`);
+             document.body.appendChild(link);
+             link.click();
+             document.body.removeChild(link);
         };
 
         window.openDayView = async (dateStr) => {
@@ -378,6 +384,7 @@
 
             snap.forEach(d => {
                 const s = d.data();
+                // Determinar si es ventanilla con lógica robusta
                 const isPickup = s.pickupCounter === true || (s.assignedCC && s.assignedCC.uid === 'ventanilla');
                 const itemHtml = renderTimelineItem(s);
                 if(isPickup) { listPickup.innerHTML += itemHtml; hasPickup = true; } 
@@ -396,21 +403,6 @@
             return `<div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm"><div class="flex justify-between items-start mb-4"><div><h4 class="font-bold text-brand-dark text-lg">${ship.beneficiaryName}</h4><span class="text-xs text-slate-500 font-mono bg-slate-100 px-2 py-0.5 rounded">Guía: ${ship.guideNumber}</span></div><span class="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-xs font-bold uppercase">${ship.status}</span></div><div class="flex justify-between items-center relative mt-2"><div class="absolute top-2.5 left-0 w-full h-0.5 bg-slate-100 z-0"></div>${stepsHtml}</div></div>`;
         }
 
-        window.openNewShipmentModal = () => {
-            document.getElementById('shipDate').value = selectedDate;
-            document.getElementById('shipDateDisplay').innerText = selectedDate;
-            const select = document.getElementById('shipBeneficiary');
-            select.innerHTML = '<option>Cargando...</option>';
-            if(!window.isPreviewMode) {
-                getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries')).then(snap => {
-                    select.innerHTML = '<option value="">Seleccione Beneficiario...</option>';
-                    snap.forEach(d => { select.innerHTML += `<option value="${d.id}|${d.data().name}">${d.data().name} (${d.id})</option>`; });
-                });
-            }
-            document.getElementById('shipmentModal').classList.remove('hidden');
-        };
-        window.saveShipment=async()=>{ const d=document.getElementById('shipDate').value, b=document.getElementById('shipBeneficiary').value, g=document.getElementById('shipGuide').value, st=document.getElementById('shipStatus').value; if(!b || !g){alert("Datos incompletos");return;} const [bid,bn]=b.split('|'); try{ if(!window.isPreviewMode) await addDoc(collection(db,'artifacts',appId,'public','data','shipments'),{date:d,beneficiaryId:bid,beneficiaryName:bn,guideNumber:g,status:st,createdAt:new Date().toISOString()}); alert("Guía guardada."); document.getElementById('shipmentModal').classList.add('hidden'); openDayView(d); loadDayStats(d); }catch(e){alert(e.message);} };
-
         // --- GESTIÓN HISTORIAL ---
         window.openHistory = async (benId, benName) => {
             document.getElementById('histBenName').innerText = benName;
@@ -424,7 +416,7 @@
             snap.forEach(d => { const s = d.data(); const date = new Date(s.createdAt).toLocaleDateString(); list.innerHTML += `<tr class="border-b border-slate-50 last:border-0"><td class="p-3 font-mono text-xs text-slate-500">${s.date}</td><td class="p-3 font-bold text-brand-dark">${s.guideNumber}</td><td class="p-3"><span class="bg-blue-50 text-blue-600 px-2 py-0.5 rounded text-[10px] font-bold uppercase">${s.status}</span></td><td class="p-3 text-right text-xs text-slate-400">Creado el ${date}</td></tr>`; });
         };
 
-        // --- GESTIÓN BENEFICIARIOS ---
+        // --- GESTIÓN BENEFICIARIOS (SYNC & AUTO CREATE SHIPMENT) ---
         async function loadAssignableLists(selectedPharma = null, selectedCC = null) {
             const pharmaSelect = document.getElementById('benAssignPharma');
             const ccSelect = document.getElementById('benAssignCC');
@@ -485,6 +477,7 @@
             const valPharma = document.getElementById('benAssignPharma').value;
             const valCC = document.getElementById('benAssignCC').value;
             const isPickup = document.getElementById('benPickup').checked;
+            const nextShipment = document.getElementById('benNextShipment').value;
             
             if(!id || !name) { alert("ID y Nombre son obligatorios."); return; }
 
@@ -510,14 +503,34 @@
                 assignedCC: cc,
                 pickupCounter: isPickup,
                 lastDispense: document.getElementById('benLastDispense').value || null,
-                nextShipment: document.getElementById('benNextShipment').value || null,
+                nextShipment: nextShipment || null,
                 status: 'Activo',
                 updatedAt: new Date().toISOString()
             };
 
             try {
+                // 1. Guardar/Actualizar el Derechohabiente
                 await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'beneficiaries', id), data, {merge: true});
-                alert("Datos guardados.");
+
+                // 2. LOGICA AUTOMÁTICA: Si se definió "Fecha Envío (Admin)", crear la guía en el calendario automáticamente
+                if (nextShipment) {
+                    const shipId = `${id}_${nextShipment}`; // ID único por día/persona
+                    const shipmentData = {
+                        date: nextShipment,
+                        beneficiaryId: id,
+                        beneficiaryName: name,
+                        guideNumber: "PENDIENTE",
+                        status: "Nuevo",
+                        assignedPharma: pharma,
+                        assignedCC: cc,
+                        pickupCounter: isPickup,
+                        createdAt: new Date().toISOString(),
+                        isPlanned: true
+                    };
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shipments', shipId), shipmentData);
+                }
+
+                alert("Datos guardados y sincronizados.");
                 document.getElementById('benModal').classList.add('hidden');
             } catch(e) { alert("Error: " + e.message); }
         };
@@ -525,12 +538,8 @@
         window.handleCSVUpload = (input) => { /* Lógica CSV igual */ alert("Simulando carga CSV..."); };
 
         onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries'), (s) => {
-            if(window.isPreviewMode) return;
-            const list = document.getElementById('ben-list');
-            if(!list) return;
-            list.innerHTML = '';
+            const list = document.getElementById('ben-list'); if(!list) return; list.innerHTML = '';
             if(s.empty) { list.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-slate-400">Sin registros.</td></tr>'; return; }
-            
             s.forEach(d => {
                 const b = d.data();
                 const jsonString = encodeURIComponent(JSON.stringify(b));
@@ -543,93 +552,6 @@
             });
         });
 
-        // --- REASIGNACIÓN POR ELIMINACIÓN DE USUARIO (SOLICITUD: TRASPASO DE CARGA) ---
-        window.deleteUser = async (docId, uid, name, role) => {
-            if(!confirm(`¿Dar de baja a ${name}?\n\nSe buscarán otros agentes activos para transferir sus pacientes asignados.`)) return;
-            
-            // 1. Buscar reemplazo
-            let queryRole = role; // El rol del usuario a eliminar
-            if (role === 'farmacia' || role === 'contact_center') {
-                const qAgents = query(collection(db, 'artifacts', appId, 'public', 'data', 'users_directory'), where('role', '==', role), where('uid', '!=', uid));
-                const snapAgents = await getDocs(qAgents);
-                const agents = [];
-                snapAgents.forEach(d => agents.push(d.data()));
-
-                if(agents.length > 0) {
-                    // 2. Buscar pacientes asignados
-                    const fieldToCheck = role === 'farmacia' ? 'assignedPharma.uid' : 'assignedCC.uid';
-                    const qPatients = query(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries'), where(fieldToCheck, '==', uid));
-                    const snapPatients = await getDocs(qPatients);
-
-                    if(!snapPatients.empty) {
-                         const batch = writeBatch(db);
-                         snapPatients.forEach(docSnap => {
-                             const newAgent = agents[Math.floor(Math.random() * agents.length)];
-                             const updateData = role === 'farmacia' 
-                                 ? { assignedPharma: { uid: newAgent.uid, name: newAgent.name } }
-                                 : { assignedCC: { uid: newAgent.uid, name: newAgent.name } };
-                             batch.update(docSnap.ref, updateData);
-                         });
-                         await batch.commit();
-                         alert(`Carga de trabajo reasignada a otros ${agents.length} agentes.`);
-                    }
-                } else {
-                    alert("Aviso: No hay otros agentes activos para reasignar la carga.");
-                }
-            }
-
-            try {
-                await deleteDoc(doc(db,'artifacts',appId,'public','data','users_directory', docId));
-                await deleteDoc(doc(db,'artifacts',appId,'users',uid,'profile','data'));
-                alert("Usuario eliminado.");
-            } catch(e) { alert("Error: " + e.message); }
-        };
-
-        // --- EQUILIBRAR CARGAS (Botón Nuevo) ---
-        window.balanceWorkload = async () => {
-             if(!confirm("¿Equilibrar Cargas de Trabajo?\n\nEl sistema buscará agentes nuevos sin pacientes y les transferirá carga de los agentes saturados.")) return;
-             
-             const qAgents = query(collection(db, 'artifacts', appId, 'public', 'data', 'users_directory'), where('role', '==', 'contact_center'));
-             const agentsSnap = await getDocs(qAgents);
-             const agents = [];
-             agentsSnap.forEach(d => agents.push({id: d.data().uid, name: d.data().name, count: 0}));
-             
-             if(agents.length < 2) return alert("Se necesitan al menos 2 agentes para equilibrar.");
-
-             const qBen = query(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries'));
-             const benSnap = await getDocs(qBen);
-             
-             const benList = [];
-             benSnap.forEach(d => {
-                 const b = d.data();
-                 benList.push({ref: d.ref, currentAgentId: b.assignedCC?.uid});
-                 const agent = agents.find(a => a.id === b.assignedCC?.uid);
-                 if(agent) agent.count++;
-             });
-
-             const avg = Math.floor(benList.length / agents.length);
-             const overloaded = agents.filter(a => a.count > avg + 2);
-             const underloaded = agents.filter(a => a.count < avg - 2);
-
-             if(underloaded.length === 0) return alert("La carga está equilibrada.");
-
-             const batch = writeBatch(db);
-             let moved = 0;
-             
-             for (const heavyAgent of overloaded) {
-                 const bensToMove = benList.filter(b => b.currentAgentId === heavyAgent.id).slice(0, heavyAgent.count - avg);
-                 for (const b of bensToMove) {
-                     if(moved >= 450) break; 
-                     const targetAgent = underloaded[moved % underloaded.length]; 
-                     batch.update(b.ref, { assignedCC: {uid: targetAgent.id, name: targetAgent.name} });
-                     moved++;
-                 }
-             }
-
-             if(moved > 0) { await batch.commit(); alert(`⚖️ Equilibrio completado: Se reasignaron ${moved} pacientes.`); } 
-             else { alert("No se requirieron cambios significativos."); }
-        };
-
         // --- COMMON ---
         window.safeNavigate = (url) => { try { window.location.href = url; } catch (e) { console.warn("Nav blocked:", e); if(url === 'index.html') showLockScreen("Redirección bloqueada. Usa el botón."); } };
         window.forceNavigateLogin = () => { try { window.location.href = 'index.html'; } catch(e) { alert("Recarga la página."); } };
@@ -640,8 +562,8 @@
         window.closeModal = () => document.getElementById('userModal').classList.add('hidden');
         window.saveUser = async () => { /* Logica previa de crear usuario con secondary auth */ alert("Activa en modo real"); };
         window.logout = () => { if(confirm("¿Salir?")) signOut(auth).then(()=>safeNavigate('index.html')); };
-        onAuthStateChanged(auth, async (u) => { if(window.isCreatingUser || window.isPreviewMode) return; if(!u) showLockScreen("Inicia sesión."); else { try { const s = await getDoc(doc(db,'artifacts',appId,'users',u.uid,'profile','data')); if(!s.exists() || s.data().role!=='admin') showLockScreen("Acceso Restringido."); else document.getElementById('auth-lock').classList.add('hidden'); } catch(e){} } });
-        onSnapshot(collection(db,'artifacts',appId,'public','data','users_directory'), (s) => { if(window.isPreviewMode) return; const l=document.getElementById('user-list'); l.innerHTML=''; s.forEach(d => l.innerHTML += renderUserRow(d.data(), d.id)); });
+        onAuthStateChanged(auth, async (u) => { if(window.isCreatingUser) return; if(!u) showLockScreen("Inicia sesión."); else { try { const s = await getDoc(doc(db,'artifacts',appId,'users',u.uid,'profile','data')); if(!s.exists() || s.data().role!=='admin') showLockScreen("Acceso Restringido."); else document.getElementById('auth-lock').classList.add('hidden'); } catch(e){} } });
+        onSnapshot(collection(db,'artifacts',appId,'public','data','users_directory'), (s) => { const l=document.getElementById('user-list'); l.innerHTML=''; s.forEach(d => l.innerHTML += renderUserRow(d.data(), d.id)); });
     </script>
 </body>
 </html>
