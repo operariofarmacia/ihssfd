@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Administración - IHSS a tu Casa</title>
+    <title>Admin - IHSS a tu Casa</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
@@ -17,7 +17,12 @@
                 extend: {
                     colors: {
                         brand: {
-                            dark: '#003366', teal: '#0e7490', cyan: '#06b6d4', clinical: '#10b981', danger: '#ef4444', light: '#f8fafc'
+                            dark: '#003366',    // Azul Institucional
+                            teal: '#0e7490',    // Acento
+                            cyan: '#06b6d4',    // Vibrante
+                            clinical: '#10b981', // Verde Éxito
+                            danger: '#ef4444',   // Rojo Alerta
+                            light: '#f0fdfa'
                         }
                     }
                 }
@@ -39,178 +44,171 @@
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .hidden-view { display: none !important; }
         .dash-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1); }
-        .calendar-day { min-height: 110px; transition: all 0.2s; border-radius: 12px; border: 1px solid #e2e8f0; }
+        .calendar-day { min-height: 110px; transition: all 0.2s; border-radius: 12px; border: 1px solid #e2e8f0; position: relative; }
         .calendar-day:hover { background-color: #f0f9ff; border-color: #06b6d4; }
+        
+        /* Timeline Styles */
         .timeline-step { position: relative; z-index: 1; min-width: 50px; }
         .timeline-step::before { content: ''; position: absolute; top: 9px; left: -50%; width: 100%; height: 2px; background: #e2e8f0; z-index: -1; }
         .timeline-step:first-child::before { display: none; }
         .timeline-active .step-dot { background-color: #10b981; color: white; border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); }
         .timeline-active::before { background: #10b981; }
+        
+        /* Tabs Styles */
         .tab-btn.active { border-bottom: 3px solid #003366; color: #003366; font-weight: 700; background-color: #f1f5f9; }
         .tab-btn { color: #64748b; transition: all 0.2s; }
     </style>
 </head>
 <body class="flex flex-col md:flex-row h-screen overflow-hidden text-slate-700 bg-slate-50">
 
-    <!-- PANTALLA DE BLOQUEO -->
-    <div id="auth-lock" class="fixed inset-0 z-[150] bg-[#003366] flex flex-col items-center justify-center text-white hidden fade-in">
+    <!-- BLOQUE: PANTALLA DE BLOQUEO Y SEGURIDAD -->
+    <div id="auth-lock" class="fixed inset-0 z-[200] bg-[#003366] flex flex-col items-center justify-center text-white hidden fade-in">
         <div class="bg-white p-3 rounded-full mb-5 shadow-2xl ring-4 ring-white/10">
             <img src="https://portal.ihss.hn/cronicos/assets/dist/img/Recurso%201.png" class="h-20 w-20 object-contain">
         </div>
-        <h2 class="text-3xl font-bold mb-2 tracking-tight">Acceso Restringido</h2>
-        <p class="text-blue-200 text-sm mb-6 max-w-xs text-center leading-relaxed" id="lock-msg">Inicie sesión para continuar.</p>
-        <button onclick="forceNavigateLogin()" class="bg-brand-cyan hover:bg-brand-teal text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-transform transform active:scale-95 flex items-center mb-4">
+        <h2 class="text-3xl font-bold mb-2 tracking-tight">Sesión Finalizada</h2>
+        <p class="text-blue-200 text-sm mb-8 max-w-xs text-center leading-relaxed" id="lock-msg">Tu sesión ha expirado.</p>
+        <button onclick="forceNavigateLogin()" class="bg-brand-cyan hover:bg-brand-teal text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg transform hover:scale-105 flex items-center mb-4">
             <i class="fa-solid fa-arrow-left mr-3"></i> Ir al Login
         </button>
-        <button onclick="enablePreviewMode()" class="text-[10px] text-white/30 hover:text-white/80 underline cursor-pointer mt-4">Ver Diseño (Modo Prueba)</button>
     </div>
 
-    <!-- SIDEBAR -->
+    <!-- Menú Lateral -->
     <aside class="w-full md:w-72 bg-brand-dark text-white flex flex-col shadow-2xl z-20 shrink-0 relative">
         <div class="p-6 border-b border-blue-900/50 flex flex-col items-center text-center">
             <div class="bg-white p-1 rounded-full shadow-lg mb-3 w-16 h-16 flex items-center justify-center ring-2 ring-brand-cyan/50 cursor-pointer hover:scale-105 transition-transform" onclick="switchView('dashboard')">
                 <img src="https://portal.ihss.hn/cronicos/assets/dist/img/Recurso%201.png" class="object-contain h-full w-full p-1">
             </div>
-            <h2 class="font-bold text-lg tracking-wide">IHSS a tu Casa</h2>
-            <p class="text-[10px] text-brand-cyan uppercase tracking-widest font-bold">Administrador</p>
+            <h2 class="font-bold text-lg tracking-wide text-white">ADMINISTRACIÓN</h2>
+            <p class="text-[10px] text-brand-cyan uppercase tracking-wider mb-2">Panel de Control</p>
+            <div class="flex items-center bg-black/20 px-3 py-1 rounded-full border border-white/10 mt-2">
+                <span id="status-dot" class="w-2 h-2 rounded-full bg-brand-clinical animate-pulse mr-2"></span>
+                <span id="status-text" class="text-[10px] font-bold text-emerald-300 uppercase">Sistema Online</span>
+            </div>
         </div>
         <nav class="flex-1 p-4 space-y-2 overflow-y-auto custom-scroll">
-            <button onclick="switchView('dashboard')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-dashboard">
-                <i class="fa-solid fa-house w-5 text-center"></i><span class="font-medium text-sm text-inherit">Inicio</span>
+            <button onclick="switchView('dashboard')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-dashboard">
+                <i class="fa-solid fa-house w-5"></i><span class="font-medium text-sm">Inicio</span>
             </button>
-            <div class="pt-4 pb-2 px-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">Gestión Principal</div>
-            <button onclick="switchView('users')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-users">
-                <i class="fa-solid fa-users-gear w-5 text-center"></i><span class="font-medium text-sm text-inherit">Personal</span>
+            
+            <div class="pt-4 pb-2 px-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">Gestión</div>
+            
+            <button onclick="switchView('users')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-users">
+                <i class="fa-solid fa-users-gear w-5"></i><span class="font-medium text-sm">Personal</span>
             </button>
-            <button onclick="switchView('beneficiaries')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-beneficiaries">
-                <i class="fa-solid fa-hospital-user w-5 text-center"></i><span class="font-medium text-sm text-inherit">Pacientes</span>
+            <button onclick="switchView('beneficiaries')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-beneficiaries">
+                <i class="fa-solid fa-hospital-user w-5"></i><span class="font-medium text-sm">Derechohabientes</span>
             </button>
-            <button onclick="switchView('shipments')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-shipments">
-                <i class="fa-solid fa-truck-fast w-5 text-center"></i><span class="font-medium text-sm text-inherit">Logística</span>
+            
+            <div class="pt-4 pb-2 px-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">Operaciones</div>
+
+            <button onclick="switchView('shipments')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-shipments">
+                <i class="fa-solid fa-truck-fast w-5"></i><span class="font-medium text-sm">Gestión de Envíos</span>
+            </button>
+            <button onclick="switchView('reports')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-reports">
+                <i class="fa-solid fa-chart-pie w-5"></i><span class="font-medium text-sm">Reportes</span>
             </button>
         </nav>
-        <div class="p-4 bg-black/20 border-t border-white/5">
-            <button onclick="logout()" class="w-full bg-red-500/20 hover:bg-red-600 text-red-100 py-2.5 rounded-lg text-xs font-bold uppercase transition flex items-center justify-center group">
+        <div class="p-4 bg-black/20 border-t border-white/5 space-y-2">
+            <button onclick="logout()" class="w-full bg-red-500/20 hover:bg-red-600 text-red-100 py-2 rounded-lg text-xs font-bold uppercase transition flex items-center justify-center group">
                 <i class="fa-solid fa-power-off mr-2 group-hover:scale-110 transition-transform"></i> Cerrar Sesión
             </button>
         </div>
     </aside>
 
-    <!-- CONTENIDO PRINCIPAL -->
+    <!-- BLOQUE: CONTENEDOR PRINCIPAL -->
     <main class="flex-1 overflow-hidden flex flex-col bg-slate-50 relative">
         
-        <!-- DASHBOARD -->
+        <!-- Vista Dashboard -->
         <div id="view-dashboard" class="flex-1 flex flex-col h-full overflow-hidden fade-in">
-            <header class="bg-white shadow-sm border-b border-slate-200 p-8 shrink-0">
-                <h1 class="text-3xl font-bold text-brand-dark mb-1 tracking-tight">Panel de Control</h1>
-                <p class="text-slate-500 text-sm italic">Gestión integral del sistema de dispensación IHSS.</p>
+            <header class="bg-white shadow-sm border-b border-slate-200 p-8 z-10 shrink-0">
+                <h1 class="text-3xl font-bold text-brand-dark mb-1">Bienvenido al Sistema</h1>
+                <p class="text-slate-500">Seleccione un módulo de gestión para comenzar.</p>
             </header>
             <div class="flex-1 overflow-y-auto p-8 custom-scroll">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div onclick="switchView('users')" class="dash-card bg-white rounded-3xl p-8 border border-slate-100 shadow-sm cursor-pointer group">
-                        <div class="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-user-shield"></i></div>
-                        <h3 class="font-bold text-slate-700 text-lg">Personal</h3>
-                        <p class="text-xs text-slate-400">Directorio y seguridad</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div onclick="switchView('users')" class="dash-card bg-white rounded-3xl p-6 border border-slate-100 shadow-sm cursor-pointer group relative overflow-hidden">
+                        <div class="relative z-10 text-center"><div class="w-14 h-14 mx-auto rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-3xl mb-6 shadow-sm group-hover:scale-110 transition-transform"><i class="fa-solid fa-users-gear"></i></div><h3 class="font-bold text-slate-700">Personal</h3><p class="text-sm text-slate-500 mb-6">Gestión de Accesos</p><span class="text-blue-600 text-sm font-bold flex items-center group-hover:translate-x-2 transition-transform">Acceder <i class="fa-solid fa-arrow-right ml-2"></i></span></div>
                     </div>
-                    <div onclick="switchView('beneficiaries')" class="dash-card bg-white rounded-3xl p-8 border border-slate-100 shadow-sm cursor-pointer group">
-                        <div class="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-hospital-user"></i></div>
-                        <h3 class="font-bold text-slate-700 text-lg">Pacientes</h3>
-                        <p class="text-xs text-slate-400">Derechohabientes</p>
+                    <div onclick="switchView('beneficiaries')" class="dash-card bg-white rounded-3xl p-6 border border-slate-100 shadow-sm cursor-pointer group relative overflow-hidden">
+                        <div class="relative z-10 text-center"><div class="w-14 h-14 mx-auto rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-3xl mb-6 shadow-sm group-hover:scale-110 transition-transform"><i class="fa-solid fa-hospital-user"></i></div><h3 class="font-bold text-slate-700">Pacientes</h3><p class="text-sm text-slate-500 mb-6">Afiliados y Asignaciones</p><span class="text-emerald-600 text-sm font-bold flex items-center group-hover:translate-x-2 transition-transform">Acceder <i class="fa-solid fa-arrow-right ml-2"></i></span></div>
                     </div>
-                    <div onclick="switchView('shipments')" class="dash-card bg-white rounded-3xl p-8 border border-slate-100 shadow-sm cursor-pointer group">
-                        <div class="w-16 h-16 rounded-2xl bg-cyan-50 text-brand-cyan flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-map-location-dot"></i></div>
-                        <h3 class="font-bold text-slate-700 text-lg">Logística</h3>
-                        <p class="text-xs text-slate-400">Monitoreo de rutas</p>
+                    <div onclick="switchView('shipments')" class="dash-card bg-white rounded-3xl p-6 border border-slate-100 shadow-sm cursor-pointer group relative overflow-hidden">
+                        <div class="relative z-10 text-center"><div class="w-14 h-14 mx-auto rounded-2xl bg-cyan-50 text-brand-cyan flex items-center justify-center text-3xl mb-6 shadow-sm group-hover:scale-110 transition-transform"><i class="fa-solid fa-truck-fast"></i></div><h3 class="font-bold text-slate-700">Envíos</h3><p class="text-sm text-slate-500 mb-6">Calendario Logístico</p><span class="text-brand-cyan text-sm font-bold flex items-center group-hover:translate-x-2 transition-transform">Acceder <i class="fa-solid fa-arrow-right ml-2"></i></span></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- VISTA USUARIOS -->
+        <!-- Vista Usuarios -->
         <div id="view-users" class="hidden-view flex-1 flex flex-col h-full overflow-hidden fade-in">
-            <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center shrink-0">
-                <h1 class="text-2xl font-bold text-brand-dark">Directorio de Personal</h1>
-                <button onclick="openUserModal()" class="bg-brand-dark hover:bg-brand-cyan text-white px-6 py-2 rounded-xl font-bold shadow-lg transition-all flex items-center text-sm"><i class="fa-solid fa-user-plus mr-2"></i> Nuevo Usuario</button>
+            <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center z-10 shrink-0">
+                <div><h1 class="text-2xl font-bold text-brand-dark">Directorio de Personal</h1></div>
+                <div class="flex gap-2">
+                    <button onclick="balanceWorkload()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-200 px-4 py-2 rounded-xl font-bold text-xs shadow-sm transition-all">⚖️ Equilibrar Cargas</button>
+                    <button onclick="openUserModal()" class="bg-brand-dark hover:bg-brand-cyan text-white px-6 py-2.5 rounded-xl font-bold shadow-lg transition-all flex items-center text-sm"><i class="fa-solid fa-user-plus mr-2"></i> Nuevo Usuario</button>
+                </div>
             </header>
-            <div class="flex-1 overflow-y-auto p-6 custom-scroll">
+            <div class="flex-1 overflow-y-auto p-6 md:p-8 custom-scroll">
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <table class="w-full text-left border-collapse">
-                        <thead class="bg-slate-50 text-[10px] uppercase text-slate-500 font-bold tracking-wider">
-                            <tr><th class="p-5 pl-6">Colaborador</th><th class="p-5">Cargos</th><th class="p-5">Acceso</th><th class="p-5 text-center">Estatus</th><th class="p-5 pr-6 text-right">Acciones</th></tr>
-                        </thead>
-                        <tbody id="user-list" class="divide-y divide-slate-100 text-sm text-slate-600"></tbody>
-                    </table>
+                    <div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead class="bg-slate-50 text-[11px] uppercase text-slate-500 font-semibold tracking-wider"><tr><th class="p-5 pl-6">Colaborador</th><th class="p-5">Cargo</th><th class="p-5">Acceso</th><th class="p-5 text-center">Estatus</th><th class="p-5 pr-6 text-right">Acciones</th></tr></thead><tbody id="user-list" class="divide-y divide-slate-100 text-sm text-slate-600"><tr><td colspan="5" class="p-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando...</td></tr></tbody></table></div>
                 </div>
             </div>
         </div>
 
-        <!-- VISTA DERECHOHABIENTES -->
+        <!-- Vista Derechohabientes -->
         <div id="view-beneficiaries" class="hidden-view flex-1 flex flex-col h-full overflow-hidden fade-in">
-            <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center shrink-0">
-                <h1 class="text-2xl font-bold text-brand-dark tracking-tight">Gestión de Derechohabientes</h1>
+            <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center z-10 shrink-0">
+                <div><h1 class="text-2xl font-bold text-brand-dark">Derechohabientes</h1></div>
                 <div class="flex gap-3">
-                    <label class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2 rounded-xl font-bold shadow-lg cursor-pointer flex items-center text-sm"><i class="fa-solid fa-file-csv mr-2"></i> Cargar CSV<input type="file" id="csvInput" accept=".csv" class="hidden" onchange="handleCSVUpload(this)"></label>
-                    <button onclick="openBeneficiaryModal()" class="bg-brand-dark hover:bg-brand-cyan text-white px-5 py-2 rounded-xl font-bold shadow-lg flex items-center text-sm"><i class="fa-solid fa-plus mr-2"></i> Crear Manual</button>
+                    <label class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg cursor-pointer flex items-center text-sm"><i class="fa-solid fa-file-csv mr-2"></i> Importar CSV<input type="file" id="csvInput" accept=".csv" class="hidden" onchange="handleCSVUpload(this)"></label>
+                    <button onclick="openBeneficiaryModal()" class="bg-brand-dark hover:bg-brand-cyan text-white px-5 py-2.5 rounded-xl font-bold shadow-lg flex items-center text-sm"><i class="fa-solid fa-plus mr-2"></i> Crear Manual</button>
                 </div>
             </header>
-            <div class="flex-1 overflow-y-auto p-6 custom-scroll">
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <table class="w-full text-left border-collapse text-sm text-slate-600">
-                        <thead class="bg-slate-50 text-[10px] uppercase text-slate-500 font-bold">
-                            <tr><th class="p-5 pl-6">Paciente</th><th class="p-5">Tipo</th><th class="p-5">Ubicación</th><th class="p-5">Gestores Responsables</th><th class="p-5 pr-6 text-right">Acciones</th></tr>
-                        </thead>
-                        <tbody id="ben-list" class="divide-y divide-slate-100"></tbody>
-                    </table>
+            <div class="flex-1 overflow-y-auto p-6 md:p-8 custom-scroll">
+                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead class="bg-slate-50 text-[11px] uppercase text-slate-500 font-semibold tracking-wider"><tr><th class="p-5 pl-6">Identidad / Prioridad</th><th class="p-5">Tipo</th><th class="p-5">Ubicación</th><th class="p-5">Gestores</th><th class="p-5 text-right">Acciones</th></tr></thead><tbody id="ben-list" class="divide-y divide-slate-100 text-sm text-slate-600"></tbody></table></div>
                 </div>
             </div>
         </div>
 
-        <!-- VISTA LOGÍSTICA -->
+        <!-- Vista Envíos -->
         <div id="view-shipments" class="hidden-view flex-1 flex flex-col h-full overflow-hidden fade-in">
-            <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center shrink-0">
-                <div>
-                    <h1 class="text-2xl font-bold text-brand-dark flex items-center"><i class="fa-solid fa-truck-ramp-box mr-3 text-brand-cyan"></i> Logística IHSS</h1>
-                    <nav class="flex text-[10px] text-slate-500 mt-1 font-bold" id="ship-breadcrumb"><span class="cursor-pointer hover:underline" onclick="resetShipView()">Inicio</span></nav>
-                </div>
+            <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center z-10 shrink-0">
+                <div><h1 class="text-2xl font-bold text-brand-dark flex items-center"><i class="fa-solid fa-truck-ramp-box mr-3 text-brand-cyan"></i> Gestión de Envíos</h1><nav class="flex text-xs text-slate-500 mt-1" id="ship-breadcrumb"><span class="font-bold text-brand-dark">Inicio</span></nav></div>
             </header>
-            <div class="flex flex-col md:flex-row h-full overflow-hidden">
-                <div class="flex-1 overflow-y-auto p-6 custom-scroll bg-slate-50/50">
-                    <div id="ship-years" class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <div onclick="openYear(2026)" class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 hover:border-brand-cyan hover:shadow-xl cursor-pointer text-center group transition-all">
-                            <div class="text-4xl font-bold text-brand-dark group-hover:text-brand-cyan mb-2 transition-colors">2026</div><p class="text-xs text-slate-400 uppercase tracking-widest font-bold">Año Fiscal</p>
-                        </div>
-                    </div>
-                    <div id="ship-months" class="hidden grid grid-cols-1 md:grid-cols-4 gap-4 fade-in"></div>
-                    <div id="ship-days" class="hidden fade-in">
-                        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
-                            <div class="grid grid-cols-7 gap-2 mb-2 text-center text-[10px] font-bold text-slate-400 uppercase">
-                                <div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div>
-                            </div>
-                            <div id="calendar-grid" class="grid grid-cols-7 gap-2"></div>
-                        </div>
+            <div class="flex-1 overflow-y-auto p-6 md:p-8 custom-scroll bg-slate-50/50">
+                <div id="ship-years" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"><div onclick="openYear(2026)" class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 hover:border-brand-cyan hover:shadow-xl cursor-pointer transition-all group text-center year-card" data-year="2026"><div class="text-4xl font-bold text-brand-dark group-hover:text-brand-cyan mb-2">2026</div><p class="text-xs text-slate-400 uppercase tracking-widest">Año Fiscal</p></div><div onclick="createNewYear()" class="bg-slate-100 p-8 rounded-3xl border-2 border-dashed border-slate-300 hover:border-brand-cyan hover:bg-white cursor-pointer transition-all group text-center flex flex-col items-center justify-center"><div class="w-12 h-12 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center text-xl mb-2 group-hover:bg-brand-cyan group-hover:text-white transition-colors"><i class="fa-solid fa-plus"></i></div><p class="text-xs text-slate-400 font-bold uppercase tracking-widest group-hover:text-brand-cyan">Crear Año</p></div></div>
+                <div id="ship-months" class="hidden grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+                <div id="ship-days" class="hidden"><div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6"><div class="grid grid-cols-7 gap-2 mb-2 text-center text-xs font-bold text-slate-400 uppercase"><div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div></div><div id="calendar-grid" class="grid grid-cols-7 gap-2"></div></div></div>
+            </div>
+            <!-- Panel Lateral IA -->
+            <aside class="w-full md:w-80 bg-white border-l border-slate-200 shadow-xl flex flex-col z-20">
+                <div class="p-5 border-b border-slate-100 bg-brand-light">
+                    <h3 class="font-bold text-brand-teal flex items-center text-sm uppercase tracking-wider"><i class="fa-solid fa-robot mr-2 text-brand-cyan"></i> Planificador IA</h3>
+                    <p class="text-[10px] text-slate-500 mt-1">Detección de ciclos de recetas próximas.</p>
+                </div>
+                <div class="flex-1 overflow-y-auto p-4 custom-scroll" id="ai-suggestions-list">
+                    <div class="text-center py-10 px-4">
+                        <button onclick="runAIScheduler()" class="bg-brand-cyan hover:bg-brand-teal text-white px-6 py-2.5 rounded-full font-bold shadow-lg transition-transform transform active:scale-95 text-xs w-full mb-4">
+                            <i class="fa-solid fa-wand-magic-sparkles mr-2"></i> ANALIZAR PRÓXIMO MES
+                        </button>
                     </div>
                 </div>
-                <!-- Panel IA -->
-                <aside class="w-full md:w-80 bg-white border-l border-slate-200 shadow-xl flex flex-col z-20">
-                    <div class="p-5 border-b border-slate-100 bg-brand-light">
-                        <h3 class="font-bold text-brand-teal flex items-center text-sm uppercase tracking-wider"><i class="fa-solid fa-robot mr-2 text-brand-cyan"></i> Planificador IA</h3>
-                        <p class="text-[10px] text-slate-500 mt-1">Sugerencias de reabastecimiento próximo.</p>
-                    </div>
-                    <div class="flex-1 overflow-y-auto p-4 custom-scroll" id="ai-suggestions-list">
-                        <div class="text-center py-10 px-4">
-                            <button onclick="runAIScheduler()" class="bg-brand-cyan hover:bg-brand-teal text-white px-6 py-2.5 rounded-full font-bold shadow-lg transition-transform transform active:scale-95 text-xs w-full mb-4">
-                                <i class="fa-solid fa-wand-magic-sparkles mr-2"></i> ANALIZAR PRÓXIMO MES
-                            </button>
-                            <p class="text-[10px] text-slate-400">Analiza historiales y ciclos de recetas para programar envíos futuros.</p>
-                        </div>
-                    </div>
-                </aside>
-            </div>
+            </aside>
         </div>
 
+        <!-- REPORTES -->
+        <div id="view-reports" class="hidden-view flex-1 flex flex-col h-full overflow-hidden fade-in items-center justify-center text-center">
+            <div class="bg-white p-10 rounded-full shadow-lg mb-6 ring-8 ring-slate-100"><i class="fa-solid fa-chart-pie text-6xl text-slate-300"></i></div>
+            <h2 class="text-3xl font-bold text-slate-700 mb-2">Módulo de Reportes</h2>
+            <p class="text-slate-500 max-w-md">Próximamente</p>
+        </div>
     </main>
 
-    <!-- MODAL USUARIO -->
+    <!-- BLOQUE 3: MODALES DE GESTIÓN -->
+    
+    <!-- MODAL USUARIO (CON RESTRICCIONES VISIBLES) -->
     <div id="userModal" class="fixed inset-0 modal-backdrop hidden z-[110] flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-3xl flex flex-col max-h-[90vh] shadow-2xl">
             <div class="bg-brand-dark p-6 text-white flex justify-between items-center rounded-t-3xl shrink-0">
@@ -242,13 +240,26 @@
                     <div class="bg-blue-50 p-5 rounded-2xl border border-blue-100">
                         <h4 class="text-xs font-bold text-brand-dark uppercase mb-4 flex items-center"><i class="fa-solid fa-shield-halved mr-2"></i> Seguridad</h4>
                         <div class="flex items-center justify-between mb-4 bg-white p-3 rounded-xl border border-blue-100 shadow-sm">
-                             <div class="text-sm font-semibold text-slate-700">Validar IP Nueva</div>
+                             <div class="text-sm font-semibold text-slate-700">Validación Dispositivo/IP Nueva</div>
                              <label class="relative inline-flex items-center cursor-pointer">
                                  <input type="checkbox" id="formIpCheck" class="sr-only peer">
                                  <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-clinical transition-all"></div>
                              </label>
                         </div>
                         <input id="formIpKey" class="w-full border p-3 rounded-xl text-xs mb-4 outline-none focus:border-brand-cyan font-mono shadow-sm bg-white" placeholder="LLAVE DE DESBLOQUEO IP">
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <label class="text-xs bg-white border px-3 py-1.5 rounded-full cursor-pointer hover:border-brand-cyan transition shadow-sm"><input type="checkbox" class="day-check mr-1" value="Lunes"> L</label>
+                            <label class="text-xs bg-white border px-3 py-1.5 rounded-full cursor-pointer hover:border-brand-cyan transition shadow-sm"><input type="checkbox" class="day-check mr-1" value="Martes"> M</label>
+                            <label class="text-xs bg-white border px-3 py-1.5 rounded-full cursor-pointer hover:border-brand-cyan transition shadow-sm"><input type="checkbox" class="day-check mr-1" value="Miercoles"> X</label>
+                            <label class="text-xs bg-white border px-3 py-1.5 rounded-full cursor-pointer hover:border-brand-cyan transition shadow-sm"><input type="checkbox" class="day-check mr-1" value="Jueves"> J</label>
+                            <label class="text-xs bg-white border px-3 py-1.5 rounded-full cursor-pointer hover:border-brand-cyan transition shadow-sm"><input type="checkbox" class="day-check mr-1" value="Viernes"> V</label>
+                            <label class="text-xs bg-white border px-3 py-1.5 rounded-full cursor-pointer hover:border-brand-cyan transition shadow-sm"><input type="checkbox" class="day-check mr-2" value="Sabado"> S</label>
+                            <label class="text-xs bg-white border px-3 py-1.5 rounded-full cursor-pointer hover:border-brand-cyan transition shadow-sm"><input type="checkbox" class="day-check mr-2" value="Domingo"> D</label>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <input type="time" id="formStart" class="w-full border p-2 rounded-xl text-sm bg-white shadow-sm outline-none">
+                            <input type="time" id="formEnd" class="w-full border p-2 rounded-xl text-sm bg-white shadow-sm outline-none">
+                        </div>
                     </div>
                 </form>
             </div>
@@ -259,8 +270,8 @@
         </div>
     </div>
 
-    <!-- MODAL BENEFICIARIO (CAMPOS RESTAURADOS Y LÓGICA DE REVISIÓN) -->
-    <div id="benModal" class="fixed inset-0 modal-backdrop hidden z-[110] flex items-center justify-center p-4">
+    <!-- MODAL BENEFICIARIO (DOBLE ASIGNACIÓN + VENTANILLA + FECHAS + FAMILIAR) -->
+    <div id="benModal" class="fixed inset-0 modal-backdrop hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-4xl flex flex-col max-h-[90vh] shadow-2xl">
             <div class="bg-brand-dark p-6 text-white flex justify-between items-center rounded-t-3xl shrink-0">
                 <h3 class="font-bold text-lg" id="benModalTitle">Expediente de Paciente</h3>
@@ -269,53 +280,42 @@
             <div class="p-6 overflow-y-auto custom-scroll">
                 <form id="benForm" class="space-y-6">
                     <div class="grid grid-cols-2 gap-5">
-                        <div><label class="text-xs font-bold text-slate-400 uppercase ml-1">Cédula</label><input id="benId" class="w-full border p-2.5 rounded-xl bg-slate-50 outline-none focus:border-brand-cyan"></div>
+                        <div><label class="text-xs font-bold text-slate-400 uppercase ml-1">ID (Cédula)</label><input id="benId" class="w-full border p-2.5 rounded-xl bg-slate-50 outline-none focus:border-brand-cyan"></div>
                         <div><label class="text-xs font-bold text-slate-400 uppercase ml-1">Nombre</label><input id="benName" class="w-full border p-2.5 rounded-xl bg-slate-50 outline-none focus:border-brand-cyan"></div>
                         <div><label class="text-xs font-bold text-slate-400 uppercase ml-1">Teléfono</label><input id="benPhone" class="w-full border p-2.5 rounded-xl bg-slate-50 outline-none focus:border-brand-cyan"></div>
                         <div><label class="text-xs font-bold text-slate-400 uppercase ml-1">Municipio</label><input id="benMuni" class="w-full border p-2.5 rounded-xl bg-slate-50 outline-none focus:border-brand-cyan"></div>
                         <div class="col-span-2"><label class="text-xs font-bold text-slate-400 uppercase ml-1">Dirección Exacta</label><input id="benAddr" class="w-full border p-2.5 rounded-xl bg-slate-50 outline-none focus:border-brand-cyan"></div>
                     </div>
-                    
-                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 relative">
-                        <h4 class="text-xs font-bold text-slate-400 uppercase mb-3 flex items-center"><i class="fa-solid fa-users mr-2"></i> Contacto Familiar (Emergencia)</h4>
-                        <div class="grid grid-cols-2 gap-5">
-                            <div><label class="text-[10px] font-bold text-slate-400">NOMBRE FAMILIAR</label><input id="benFamName" class="w-full border p-2 rounded-lg bg-white"></div>
-                            <div><label class="text-[10px] font-bold text-slate-400">TELÉFONO FAMILIAR</label><input id="benFamPhone" class="w-full border p-2 rounded-lg bg-white"></div>
-                        </div>
-                    </div>
-
                     <div class="bg-blue-50 p-5 rounded-2xl border border-blue-100 grid grid-cols-2 gap-5">
-                        <div>
-                            <label class="text-[10px] font-bold text-blue-700 uppercase ml-1">Última Dispensación</label>
-                            <input type="date" id="benLastDispense" class="w-full border border-blue-200 p-2 rounded-xl text-sm bg-white outline-none" onchange="calculateNextDate()">
-                        </div>
-                        <div>
-                            <label class="text-[10px] font-bold text-blue-700 uppercase ml-1">Próximo Envío (Calculado)</label>
-                            <input type="date" id="benNextShipment" class="w-full border border-blue-200 p-2 rounded-xl text-sm bg-white outline-none">
+                        <div><label class="text-[10px] font-bold text-blue-700 uppercase ml-1">Próximo Envío</label><input type="date" id="benNextShipment" class="w-full border border-blue-200 p-2 rounded-xl text-sm bg-white outline-none"></div>
+                        <div><label class="text-[10px] font-bold text-blue-700 uppercase ml-1">Última Dispensación</label><input type="date" id="benLastDispense" class="w-full border border-blue-200 p-2 rounded-xl text-sm bg-white outline-none" onchange="calculateNextDate()"></div>
+                        <div class="flex items-center pt-4 col-span-2">
+                             <input type="checkbox" id="benPickup" class="w-6 h-6 text-orange-600 rounded-lg border-gray-300 mr-3 cursor-pointer" onchange="toggleCCAssign()">
+                             <label for="benPickup" class="text-sm font-bold text-slate-700 cursor-pointer uppercase">Entrega en Ventanilla</label>
                         </div>
                     </div>
-                    
-                    <div class="grid grid-cols-2 gap-5">
-                        <div><label class="text-xs font-bold text-slate-400 uppercase ml-1">Gestor Farmacia</label><select id="benAssignPharma" class="w-full border p-2.5 rounded-xl bg-white outline-none focus:border-emerald-500"></select></div>
-                        <div>
-                            <label class="text-xs font-bold text-slate-400 uppercase ml-1">Agente Call Center</label>
-                            <select id="benAssignCC" class="w-full border p-2.5 rounded-xl bg-white outline-none focus:border-blue-500"></select>
-                            <div class="flex items-center mt-2">
-                                 <input type="checkbox" id="benPickup" class="w-4 h-4 text-orange-600 rounded border-gray-300 mr-2 cursor-pointer" onchange="toggleCCAssign()">
-                                 <label for="benPickup" class="text-xs font-bold text-orange-600 cursor-pointer uppercase">Entrega en Ventanilla</label>
-                            </div>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 relative">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase mb-3 flex items-center"><i class="fa-solid fa-users mr-2"></i> Contacto Familiar</h4>
+                        <div class="grid grid-cols-2 gap-5">
+                            <div><label class="text-[10px] font-bold text-slate-400 uppercase">Nombre Familiar</label><input id="benFamName" class="w-full border p-2 rounded-lg bg-white outline-none"></div>
+                            <div><label class="text-[10px] font-bold text-slate-400 uppercase">Teléfono Familiar</label><input id="benFamPhone" class="w-full border p-2 rounded-lg bg-white outline-none"></div>
                         </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                        <div><label class="text-xs font-bold text-slate-400 uppercase ml-1">Tipo Afiliado</label><select id="benType" class="w-full border p-2.5 rounded-xl bg-white outline-none"><option>Afiliado Directo</option><option>Jubilado</option><option>Pensionado</option><option>Beneficiaria Padre</option><option>Beneficiaria(o) Compañera(o)</option><option>Beneficiaria(o) Esposa(o)</option><option>Beneficiaria Hijo(a)</option></select></div>
+                        <div><label class="text-xs font-bold text-emerald-600 uppercase ml-1">Gestor Farmacia</label><select id="benAssignPharma" class="w-full border p-2.5 rounded-xl bg-white outline-none focus:border-emerald-500"></select></div>
+                        <div><label class="text-xs font-bold text-blue-600 uppercase ml-1">Gestor Call Center</label><select id="benAssignCC" class="w-full border p-2.5 rounded-xl bg-white outline-none focus:border-blue-500"></select></div>
                     </div>
                 </form>
             </div>
             <div class="p-6 border-t bg-slate-50 flex justify-end rounded-b-3xl gap-3">
-                <button onclick="document.getElementById('benModal').classList.add('hidden')" class="px-5 py-2 text-sm font-bold text-slate-500">Cerrar</button>
-                <button onclick="saveBeneficiary()" id="btnSaveBen" class="bg-brand-dark text-white px-8 py-2.5 rounded-xl font-bold shadow-lg transition-transform active:scale-95">Guardar Expediente</button>
+                <button onclick="document.getElementById('benModal').classList.add('hidden')" class="px-5 py-2 text-sm font-bold text-slate-500">Cancelar</button>
+                <button onclick="saveBeneficiary()" id="btnSaveBen" class="bg-brand-dark text-white px-8 py-2.5 rounded-xl font-bold shadow-lg transition-transform active:scale-95">Actualizar Expediente</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL DETALLE DÍA -->
+    <!-- MODAL DETALLE DE DÍA (VISOR CON PESTAÑAS) -->
     <div id="dayModal" class="fixed inset-0 modal-backdrop hidden z-[110] flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-4xl flex flex-col max-h-[90vh] shadow-2xl overflow-hidden">
             <div class="bg-white border-b p-5 flex justify-between items-center shrink-0">
@@ -351,6 +351,15 @@
                     <tbody id="hist-list" class="divide-y divide-slate-100 text-slate-600"></tbody>
                 </table>
             </div>
+        </div>
+    </div>
+
+    <!-- MODAL NUEVO ENVÍO -->
+    <div id="shipmentModal" class="fixed inset-0 modal-backdrop hidden z-[80] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-xl flex flex-col">
+            <div class="bg-brand-dark p-5 flex justify-between text-white"><h3 class="font-bold">Nueva Guía</h3><button onclick="document.getElementById('shipmentModal').classList.add('hidden')"><i class="fa-solid fa-xmark"></i></button></div>
+            <div class="p-6"><form id="shipForm" class="space-y-4"><input type="hidden" id="shipDate"><p id="shipDateDisplay" class="font-bold text-center"></p><select id="shipBeneficiary" class="border w-full p-2 rounded"><option>Cargando...</option></select><input id="shipGuide" placeholder="Tracking #" class="border w-full p-2 rounded"><select id="shipStatus" class="border w-full p-2 rounded"><option>Nuevo</option><option>En Proceso</option><option>Confirmacion CC</option><option>Retorno Farmacia</option><option>Empaquetado</option><option>Revision Calidad</option><option>Listo Logistica</option><option>En Ruta</option><option>Entregado</option></select></form></div>
+            <div class="p-5 border-t flex justify-end gap-3"><button onclick="document.getElementById('shipmentModal').classList.add('hidden')" class="text-slate-500">Cancelar</button><button onclick="saveShipment()" class="bg-brand-cyan text-white px-4 py-2 rounded">Guardar</button></div>
         </div>
     </div>
 
@@ -494,6 +503,7 @@
                 document.getElementById('formIpKey').value = userData.ipUnlockKey || '';
                 document.getElementById('formStart').value = userData.shiftStart || '';
                 document.getElementById('formEnd').value = userData.shiftEnd || '';
+                document.querySelectorAll('.day-check').forEach(cb => { if(userData.allowedDays?.includes(cb.value)) cb.checked = true; });
             } else {
                 document.getElementById('editUid').value = ""; document.getElementById('formUser').disabled = false;
                 window.updateRoles();
@@ -513,7 +523,7 @@
             if(!user || !dept || jobs.length === 0) return alert("Faltan datos.");
             btn.disabled = true; btn.innerText = "...";
             try {
-                const userData = { dni: document.getElementById('formDni').value, name: document.getElementById('formName').value, username: user, role: dept, jobTitle: jobs, requireIpApproval: document.getElementById('formIpCheck').checked, ipUnlockKey: document.getElementById('formIpKey').value, shiftStart: document.getElementById('formStart').value, shiftEnd: document.getElementById('formEnd').value, lastUpdate: new Date().toISOString() };
+                const userData = { dni: document.getElementById('formDni').value, name: document.getElementById('formName').value, username: user, role: dept, jobTitle: jobs, requireIpApproval: document.getElementById('formIpCheck').checked, ipUnlockKey: document.getElementById('formIpKey').value, shiftStart: document.getElementById('formStart').value, shiftEnd: document.getElementById('formEnd').value, allowedDays: Array.from(document.querySelectorAll('.day-check:checked')).map(c => c.value), lastUpdate: new Date().toISOString() };
                 if(uid) {
                     await updateDoc(doc(db, 'artifacts', appId, 'users', uid, 'profile', 'data'), userData);
                     const qDir = query(collection(db, 'artifacts', appId, 'public', 'data', 'users_directory'), where('uid', '==', uid));
@@ -529,6 +539,37 @@
                 alert("Guardado."); window.closeModal();
             } catch(e) { alert("Error: " + e.message); } finally { btn.disabled = false; btn.innerText = "Guardar"; window.isCreatingUser = false; }
         };
+
+        window.deleteUser = async (docId, uid, name, role) => {
+            if(!confirm(`¿Dar de baja definitiva a ${name}?`)) return;
+            try {
+                const qAgents = query(collection(db, 'artifacts', appId, 'public', 'data', 'users_directory'), where('role', '==', role), where('uid', '!=', uid));
+                const snapAgents = await getDocs(qAgents);
+                if(!snapAgents.empty) {
+                    const field = role === 'farmacia' ? 'assignedPharma.uid' : 'assignedCC.uid';
+                    const qPatients = query(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries'), where(field, '==', uid));
+                    const snapPatients = await getDocs(qPatients);
+                    if(!snapPatients.empty) {
+                        const batch = writeBatch(db);
+                        const agents = []; snapAgents.forEach(d => agents.push(d.data()));
+                        snapPatients.forEach(p => {
+                            const next = agents[Math.floor(Math.random() * agents.length)];
+                            const update = role === 'farmacia' ? { assignedPharma: { uid: next.uid, name: next.name } } : { assignedCC: { uid: next.uid, name: next.name } };
+                            batch.update(p.ref, update);
+                        });
+                        await batch.commit();
+                    }
+                }
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users_directory', docId));
+                await deleteDoc(doc(db, 'artifacts', appId, 'users', uid, 'profile', 'data'));
+                alert("Eliminado.");
+            } catch(e) { alert("Error al eliminar."); }
+        };
+
+        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'users_directory'), (s) => {
+            const l = document.getElementById('user-list'); if(!l) return; l.innerHTML = '';
+            s.forEach(d => l.innerHTML += window.renderUserRow(d.data(), d.id));
+        });
 
         /* --- BLOQUE: DERECHOHABIENTES (100%) --- */
         window.calculateNextDate = () => {
@@ -546,13 +587,10 @@
                 document.getElementById('benId').value = benData.id; document.getElementById('benId').disabled = true;
                 document.getElementById('benName').value = benData.name;
                 document.getElementById('benPhone').value = benData.phone || ''; document.getElementById('benMuni').value = benData.municipality || '';
-                document.getElementById('benAddr').value = benData.address || ''; 
-                document.getElementById('benFamName').value = benData.family?.name || '';
-                document.getElementById('benFamPhone').value = benData.family?.phone || '';
-                document.getElementById('benType').value = benData.type || 'Afiliado Directo';
+                document.getElementById('benAddr').value = benData.address || ''; document.getElementById('benFamName').value = benData.family?.name || '';
+                document.getElementById('benFamPhone').value = benData.family?.phone || ''; document.getElementById('benType').value = benData.type || 'Afiliado Directo';
+                document.getElementById('benLastDispense').value = benData.lastDispense || ''; document.getElementById('benNextShipment').value = benData.nextShipment || '';
                 document.getElementById('benPickup').checked = benData.pickupCounter || false;
-                document.getElementById('benLastDispense').value = benData.lastDispense || '';
-                document.getElementById('benNextShipment').value = benData.nextShipment || '';
                 window.toggleCCAssign(); loadAssignableLists(benData.assignedPharma?.uid, benData.assignedCC?.uid);
             } else { document.getElementById('benId').disabled = false; window.toggleCCAssign(); loadAssignableLists(); }
             document.getElementById('benModal').classList.remove('hidden');
@@ -574,19 +612,31 @@
             try {
                 await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'beneficiaries', id), { 
                     id, name, 
-                    phone: document.getElementById('benPhone').value,
-                    address: document.getElementById('benAddr').value,
-                    municipality: document.getElementById('benMuni').value,
-                    family: { name: document.getElementById('benFamName').value, phone: document.getElementById('benFamPhone').value },
+                    phone: document.getElementById('benPhone').value, address: document.getElementById('benAddr').value,
+                    municipality: document.getElementById('benMuni').value, family: { name: document.getElementById('benFamName').value, phone: document.getElementById('benFamPhone').value },
                     type: document.getElementById('benType').value,
                     pickupCounter: isPickup, assignedPharma: ph, assignedCC: cc, nextShipment: nextDate, updatedAt: new Date().toISOString() 
                 }, {merge:true});
                 if(nextDate) {
                     await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shipments', `${id}_${nextDate}`), { date: nextDate, beneficiaryId: id, beneficiaryName: name, status: 'Nuevo', assignedPharma: ph, assignedCC: cc, pickupCounter: isPickup, createdAt: new Date().toISOString() });
                 }
-                alert("Guardado."); document.getElementById('benModal').classList.add('hidden');
+                alert("Sincronizado."); document.getElementById('benModal').classList.add('hidden');
             } catch(e) { alert("Error."); }
         };
+
+        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries'), (s) => {
+            const l = document.getElementById('ben-list'); if(!l) return; l.innerHTML = '';
+            s.forEach(d => {
+                const b = d.data();
+                const j = encodeURIComponent(JSON.stringify(b));
+                l.innerHTML += `<tr class="hover:bg-slate-50 border-b transition">
+                    <td class="p-4 pl-6"><b>${b.name}</b><br><span class="text-[10px] text-slate-400 font-mono">${b.id}</span></td>
+                    <td class="p-4 text-xs font-bold ${b.pickupCounter?'text-orange-600':'text-blue-600'}">${b.pickupCounter?'Ventanilla':'Ruta'}</td>
+                    <td class="p-4 text-[10px] font-bold text-slate-400">P: ${b.assignedPharma?.name||'?'}<br>CC: ${b.assignedCC?.name||'?'}</td>
+                    <td class="p-4 pr-6 text-right"><div class="flex justify-end gap-2"><button onclick="openHistory('${b.id}','${b.name}')" class="text-slate-400 hover:text-blue-500"><i class="fa-solid fa-history"></i></button><button onclick="editBeneficiary('${j}')" class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-pen"></i></button></div></td>
+                </tr>`;
+            });
+        });
 
         /* --- BLOQUE: LOGÍSTICA --- */
         window.openYear = function(y) { 
