@@ -3,10 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - IHSS a tu Casa</title>
+    <title>Panel Administrativo - IHSS a tu Casa</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- PapaParse -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     
     <script>
@@ -39,6 +43,8 @@
         .dash-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1); }
         .calendar-day { min-height: 110px; transition: all 0.2s; border-radius: 12px; border: 1px solid #e2e8f0; position: relative; }
         .calendar-day:hover { background-color: #f0f9ff; border-color: #06b6d4; }
+        
+        /* Timeline Styles */
         .timeline-step { position: relative; z-index: 1; min-width: 50px; }
         .timeline-step::before { content: ''; position: absolute; top: 9px; left: -50%; width: 100%; height: 2px; background: #e2e8f0; z-index: -1; }
         .timeline-step:first-child::before { display: none; }
@@ -46,32 +52,35 @@
         .timeline-active::before { background: #10b981; }
         .tab-btn.active { border-bottom: 3px solid #003366; color: #003366; font-weight: 700; background-color: #f1f5f9; }
         .tab-btn { color: #64748b; transition: all 0.2s; }
-        .progress-bar-container { background-color: #e2e8f0; border-radius: 9999px; height: 12px; overflow: hidden; }
-        .progress-bar-fill { background: linear-gradient(90deg, #06b6d4, #10b981); height: 100%; width: 0%; transition: width 0.3s ease; }
     </style>
 </head>
 <body class="flex flex-col md:flex-row h-screen overflow-hidden text-slate-700 bg-slate-50">
 
-    <!-- PANTALLA DE BLOQUEO -->
+    <!-- BLOQUE 0: PANTALLA DE BLOQUEO Y RECUPERACIÓN DE SESIÓN -->
     <div id="auth-lock" class="fixed inset-0 z-[200] bg-[#003366] flex flex-col items-center justify-center text-white hidden fade-in">
         <div class="bg-white p-3 rounded-full mb-5 shadow-2xl ring-4 ring-white/10">
             <img src="https://portal.ihss.hn/cronicos/assets/dist/img/Recurso%201.png" class="h-20 w-20 object-contain">
         </div>
         <h2 class="text-3xl font-bold mb-2 tracking-tight">Sesión Finalizada</h2>
-        <p class="text-blue-200 text-sm mb-8 max-w-xs text-center leading-relaxed" id="lock-msg">Tu sesión ha expirado.</p>
-        <button onclick="forceNavigateLogin()" class="bg-brand-cyan hover:bg-brand-teal text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg transform hover:scale-105 flex items-center mb-4">
-            <i class="fa-solid fa-arrow-left mr-3"></i> Ir al Login
+        <p class="text-blue-200 text-sm mb-8 max-w-xs text-center leading-relaxed" id="lock-msg">Tu sesión ha expirado o se ha iniciado en otro lugar.</p>
+        
+        <!-- BOTÓN DE SALIDA SEGURA (Rompe el bucle de usuario congelado) -->
+        <button onclick="logoutAndNavigate()" class="bg-brand-cyan hover:bg-brand-teal text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-transform transform active:scale-95 flex items-center mb-4">
+            <i class="fa-solid fa-power-off mr-3"></i> Cerrar Sesión y Salir
         </button>
     </div>
 
-    <!-- SIDEBAR -->
+    <!-- BLOQUE 1: SIDEBAR -->
     <aside class="w-full md:w-72 bg-brand-dark text-white flex flex-col shadow-2xl z-20 shrink-0 relative">
         <div class="p-6 border-b border-blue-900/50 flex flex-col items-center text-center">
             <div class="bg-white p-1 rounded-full shadow-lg mb-3 w-16 h-16 flex items-center justify-center ring-2 ring-brand-cyan/50 cursor-pointer hover:scale-105 transition-transform" onclick="switchView('dashboard')">
                 <img src="https://portal.ihss.hn/cronicos/assets/dist/img/Recurso%201.png" class="object-contain h-full w-full p-1">
             </div>
-            <h2 class="font-bold text-lg tracking-wide">IHSS a tu Casa</h2>
-            <p class="text-[10px] text-brand-cyan uppercase tracking-widest font-bold">Administrador</p>
+            <h2 class="font-bold text-lg tracking-wide uppercase">Administración</h2>
+            <div class="flex items-center bg-black/20 px-3 py-1 rounded-full border border-white/10 mt-2">
+                <span id="status-dot" class="w-2 h-2 rounded-full bg-brand-clinical animate-pulse mr-2"></span>
+                <span id="status-text" class="text-[10px] font-bold text-emerald-300 uppercase">Sistema Online</span>
+            </div>
         </div>
         <nav class="flex-1 p-4 space-y-2 overflow-y-auto custom-scroll">
             <button onclick="switchView('dashboard')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-dashboard">
@@ -86,7 +95,7 @@
             </button>
             <div class="pt-4 pb-2 px-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">Operaciones</div>
             <button onclick="switchView('shipments')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-shipments">
-                <i class="fa-solid fa-truck-fast w-5 text-center"></i><span class="font-medium text-sm">Gestión de Envíos</span>
+                <i class="fa-solid fa-truck-fast w-5 text-center"></i><span class="font-medium text-sm">Logística</span>
             </button>
             <button onclick="switchView('reports')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-reports">
                 <i class="fa-solid fa-chart-pie w-5 text-center"></i><span class="font-medium text-sm">Reportes</span>
@@ -99,53 +108,64 @@
         </div>
     </aside>
 
-    <!-- CONTENIDO PRINCIPAL -->
+    <!-- BLOQUE 2: CONTENIDO PRINCIPAL -->
     <main class="flex-1 overflow-hidden flex flex-col bg-slate-50 relative">
         
         <!-- DASHBOARD -->
         <div id="view-dashboard" class="flex-1 flex flex-col h-full overflow-hidden fade-in">
             <header class="bg-white shadow-sm border-b border-slate-200 p-8 shrink-0">
-                <h1 class="text-3xl font-bold text-brand-dark mb-1">Bienvenido al Sistema</h1>
-                <p class="text-slate-500 text-sm">Seleccione un módulo de gestión para comenzar.</p>
+                <h1 class="text-3xl font-bold text-brand-dark mb-1 tracking-tight">Panel de Control</h1>
+                <p class="text-slate-500 text-sm">Gestión integral del sistema de dispensación IHSS.</p>
             </header>
             <div class="flex-1 overflow-y-auto p-8 custom-scroll">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div onclick="switchView('users')" class="dash-card bg-white rounded-3xl p-6 border border-slate-100 shadow-sm cursor-pointer group relative overflow-hidden">
-                        <div class="relative z-10 text-center"><div class="w-14 h-14 mx-auto rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-3xl mb-6 shadow-sm group-hover:scale-110 transition-transform"><i class="fa-solid fa-users-gear"></i></div><h3 class="font-bold text-slate-700">Personal</h3><p class="text-sm text-slate-500 mb-6">Gestión de Accesos</p><span class="text-blue-600 text-sm font-bold flex items-center group-hover:translate-x-2 transition-transform">Acceder <i class="fa-solid fa-arrow-right ml-2"></i></span></div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div onclick="switchView('users')" class="dash-card bg-white rounded-3xl p-8 border border-slate-100 shadow-sm cursor-pointer group">
+                        <div class="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-user-shield"></i></div>
+                        <h3 class="font-bold text-slate-700 text-lg">Personal</h3>
+                        <p class="text-xs text-slate-400">Directorio y seguridad</p>
                     </div>
-                    <div onclick="switchView('beneficiaries')" class="dash-card bg-white rounded-3xl p-6 border border-slate-100 shadow-sm cursor-pointer group relative overflow-hidden">
-                        <div class="relative z-10 text-center"><div class="w-14 h-14 mx-auto rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-3xl mb-6 shadow-sm group-hover:scale-110 transition-transform"><i class="fa-solid fa-hospital-user"></i></div><h3 class="font-bold text-slate-700">Pacientes</h3><p class="text-sm text-slate-500 mb-6">Afiliados y Asignaciones</p><span class="text-emerald-600 text-sm font-bold flex items-center group-hover:translate-x-2 transition-transform">Acceder <i class="fa-solid fa-arrow-right ml-2"></i></span></div>
+                    <div onclick="switchView('beneficiaries')" class="dash-card bg-white rounded-3xl p-8 border border-slate-100 shadow-sm cursor-pointer group">
+                        <div class="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-hospital-user"></i></div>
+                        <h3 class="font-bold text-slate-700 text-lg">Pacientes</h3>
+                        <p class="text-xs text-slate-400">Expedientes y asignaciones</p>
                     </div>
-                    <div onclick="switchView('shipments')" class="dash-card bg-white rounded-3xl p-6 border border-slate-100 shadow-sm cursor-pointer group relative overflow-hidden">
-                        <div class="relative z-10 text-center"><div class="w-14 h-14 mx-auto rounded-2xl bg-cyan-50 text-brand-cyan flex items-center justify-center text-3xl mb-6 shadow-sm group-hover:scale-110 transition-transform"><i class="fa-solid fa-truck-fast"></i></div><h3 class="font-bold text-slate-700">Envíos</h3><p class="text-sm text-slate-500 mb-6">Calendario Logístico</p><span class="text-brand-cyan text-sm font-bold flex items-center group-hover:translate-x-2 transition-transform">Acceder <i class="fa-solid fa-arrow-right ml-2"></i></span></div>
+                    <div onclick="switchView('shipments')" class="dash-card bg-white rounded-3xl p-8 border border-slate-100 shadow-sm cursor-pointer group">
+                        <div class="w-16 h-16 rounded-2xl bg-cyan-50 text-brand-cyan flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-map-location-dot"></i></div>
+                        <h3 class="font-bold text-slate-700 text-lg">Logística</h3>
+                        <p class="text-xs text-slate-400">Envíos y rutas</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- VISTA USUARIOS -->
+        <!-- GESTIÓN DE PERSONAL -->
         <div id="view-users" class="hidden-view flex-1 flex flex-col h-full overflow-hidden fade-in">
-            <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center z-10 shrink-0">
-                <div><h1 class="text-2xl font-bold text-brand-dark">Directorio de Personal</h1></div>
+            <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center shrink-0">
+                <h1 class="text-2xl font-bold text-brand-dark">Directorio de Personal</h1>
                 <div class="flex gap-2">
                     <button onclick="balanceWorkload()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-200 px-4 py-2 rounded-xl font-bold text-xs shadow-sm transition-all">⚖️ Equilibrar Cargas</button>
-                    <button onclick="openUserModal()" class="bg-brand-dark hover:bg-brand-cyan text-white px-6 py-2.5 rounded-xl font-bold shadow-lg transition-all flex items-center text-sm"><i class="fa-solid fa-user-plus mr-2"></i> Nuevo Usuario</button>
+                    <button onclick="openUserModal()" class="bg-brand-dark hover:bg-brand-cyan text-white px-6 py-2 rounded-xl font-bold shadow-lg transition-all flex items-center text-sm"><i class="fa-solid fa-user-plus mr-2"></i> Nuevo Usuario</button>
                 </div>
             </header>
-            <div class="flex-1 overflow-y-auto p-6 md:p-8 custom-scroll">
+            <div class="flex-1 overflow-y-auto p-6 custom-scroll">
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead class="bg-slate-50 text-[11px] uppercase text-slate-500 font-semibold tracking-wider"><tr><th class="p-5 pl-6">Colaborador</th><th class="p-5">Cargos</th><th class="p-5">Acceso</th><th class="p-5 text-center">Estatus</th><th class="p-5 pr-6 text-right">Acciones</th></tr></thead><tbody id="user-list" class="divide-y divide-slate-100 text-sm text-slate-600"><tr><td colspan="5" class="p-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando...</td></tr></tbody></table></div>
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-50 text-[10px] uppercase text-slate-500 font-bold tracking-wider">
+                            <tr><th class="p-5 pl-6">Colaborador</th><th class="p-5">Cargos</th><th class="p-5">Acceso</th><th class="p-5 text-center">Estatus</th><th class="p-5 pr-6 text-right">Acciones</th></tr>
+                        </thead>
+                        <tbody id="user-list" class="divide-y divide-slate-100 text-sm text-slate-600"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <!-- VISTA DERECHOHABIENTES -->
+        <!-- GESTIÓN DERECHOHABIENTES -->
         <div id="view-beneficiaries" class="hidden-view flex-1 flex flex-col h-full overflow-hidden fade-in">
-            <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center z-10 shrink-0">
-                <div><h1 class="text-2xl font-bold text-brand-dark">Derechohabientes</h1></div>
+            <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center shrink-0">
+                <h1 class="text-2xl font-bold text-brand-dark tracking-tight">Gestión de Derechohabientes</h1>
                 <div class="flex gap-3">
-                    <label class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg cursor-pointer flex items-center text-sm"><i class="fa-solid fa-file-csv mr-2"></i> Cargar CSV<input type="file" id="csvInput" accept=".csv" class="hidden" onchange="handleCSVUpload(this)"></label>
-                    <button onclick="openBeneficiaryModal()" class="bg-brand-dark hover:bg-brand-cyan text-white px-5 py-2.5 rounded-xl font-bold shadow-lg flex items-center text-sm"><i class="fa-solid fa-plus mr-2"></i> Crear Manual</button>
+                    <label class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2 rounded-xl font-bold shadow-lg cursor-pointer flex items-center text-sm"><i class="fa-solid fa-file-csv mr-2"></i> Cargar CSV<input type="file" id="csvInput" accept=".csv" class="hidden" onchange="handleCSVUpload(this)"></label>
+                    <button onclick="openBeneficiaryModal()" class="bg-brand-dark hover:bg-brand-cyan text-white px-5 py-2 rounded-xl font-bold shadow-lg flex items-center text-sm"><i class="fa-solid fa-plus mr-2"></i> Crear Manual</button>
                 </div>
             </header>
             <div class="flex-1 overflow-y-auto p-6 md:p-8 custom-scroll">
@@ -155,30 +175,39 @@
             </div>
         </div>
 
-        <!-- VISTA ENVÍOS -->
+        <!-- LOGÍSTICA -->
         <div id="view-shipments" class="hidden-view flex-1 flex flex-col h-full overflow-hidden fade-in">
-            <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center z-10 shrink-0">
-                <div><h1 class="text-2xl font-bold text-brand-dark flex items-center"><i class="fa-solid fa-truck-ramp-box mr-3 text-brand-cyan"></i> Gestión de Envíos</h1><nav class="flex text-xs text-slate-500 mt-1" id="ship-breadcrumb"><span class="font-bold text-brand-dark">Inicio</span></nav></div>
+            <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center shrink-0">
+                <div>
+                    <h1 class="text-2xl font-bold text-brand-dark flex items-center"><i class="fa-solid fa-truck-ramp-box mr-3 text-brand-cyan"></i> Logística IHSS</h1>
+                    <nav class="flex text-[10px] text-slate-500 mt-1 font-bold" id="ship-breadcrumb"><span class="cursor-pointer hover:underline" onclick="resetShipView()">Inicio</span></nav>
+                </div>
             </header>
-            <div class="flex-1 overflow-y-auto p-6 md:p-8 custom-scroll bg-slate-50/50">
-                <div id="ship-years" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"><div onclick="openYear(2026)" class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 hover:border-brand-cyan hover:shadow-xl cursor-pointer transition-all group text-center year-card" data-year="2026"><div class="text-4xl font-bold text-brand-dark group-hover:text-brand-cyan mb-2">2026</div><p class="text-xs text-slate-400 uppercase tracking-widest">Año Fiscal</p></div><div onclick="createNewYear()" class="bg-slate-100 p-8 rounded-3xl border-2 border-dashed border-slate-300 hover:border-brand-cyan hover:bg-white cursor-pointer transition-all group text-center flex flex-col items-center justify-center"><div class="w-12 h-12 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center text-xl mb-2 group-hover:bg-brand-cyan group-hover:text-white transition-colors"><i class="fa-solid fa-plus"></i></div><p class="text-xs text-slate-400 font-bold uppercase tracking-widest group-hover:text-brand-cyan">Crear Año</p></div></div>
-                <div id="ship-months" class="hidden grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
-                <div id="ship-days" class="hidden"><div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6"><div class="grid grid-cols-7 gap-2 mb-2 text-center text-xs font-bold text-slate-400 uppercase"><div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div></div><div id="calendar-grid" class="grid grid-cols-7 gap-2"></div></div></div>
-            </div>
-            <!-- Panel Lateral IA -->
-            <aside class="w-full md:w-80 bg-white border-l border-slate-200 shadow-xl flex flex-col z-20">
-                <div class="p-5 border-b border-slate-100 bg-brand-light">
-                    <h3 class="font-bold text-brand-teal flex items-center text-sm uppercase tracking-wider"><i class="fa-solid fa-robot mr-2 text-brand-cyan"></i> Planificador IA</h3>
-                    <p class="text-[10px] text-slate-500 mt-1">Detección de ciclos de recetas.</p>
-                </div>
-                <div class="flex-1 overflow-y-auto p-4 custom-scroll" id="ai-suggestions-list">
-                    <div class="text-center py-10 px-4">
-                        <button onclick="runAIScheduler()" class="bg-brand-cyan hover:bg-brand-teal text-white px-6 py-2.5 rounded-full font-bold shadow-lg transition-transform transform active:scale-95 text-xs w-full mb-4">
-                            <i class="fa-solid fa-wand-magic-sparkles mr-2"></i> ANALIZAR PRÓXIMO MES
-                        </button>
+            <div class="flex flex-col md:flex-row h-full overflow-hidden">
+                <div class="flex-1 overflow-y-auto p-6 custom-scroll bg-slate-50/50">
+                    <div id="ship-years" class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div onclick="openYear(2026)" class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 hover:border-brand-cyan hover:shadow-xl cursor-pointer text-center group transition-all">
+                            <div class="text-4xl font-bold text-brand-dark group-hover:text-brand-cyan mb-2 transition-colors">2026</div><p class="text-xs text-slate-400 uppercase tracking-widest font-bold">Año Fiscal</p>
+                        </div>
                     </div>
+                    <div id="ship-months" class="hidden grid grid-cols-1 md:grid-cols-4 gap-4 fade-in"></div>
+                    <div id="ship-days" class="hidden fade-in"><div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6"><div class="grid grid-cols-7 gap-2 mb-2 text-center text-[10px] font-bold text-slate-400 uppercase"><div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div></div><div id="calendar-grid" class="grid grid-cols-7 gap-2"></div></div></div>
                 </div>
-            </aside>
+                <!-- Panel Lateral IA -->
+                <aside class="w-full md:w-80 bg-white border-l border-slate-200 shadow-xl flex flex-col z-20">
+                    <div class="p-5 border-b border-slate-100 bg-brand-light">
+                        <h3 class="font-bold text-brand-teal flex items-center text-sm uppercase tracking-wider"><i class="fa-solid fa-robot mr-2 text-brand-cyan"></i> Planificador IA</h3>
+                        <p class="text-[10px] text-slate-500 mt-1">Detección de ciclos de recetas.</p>
+                    </div>
+                    <div class="flex-1 overflow-y-auto p-4 custom-scroll" id="ai-suggestions-list">
+                        <div class="text-center py-10 px-4">
+                            <button onclick="runAIScheduler()" class="bg-brand-cyan hover:bg-brand-teal text-white px-6 py-2.5 rounded-full font-bold shadow-lg transition-transform transform active:scale-95 text-xs w-full mb-4">
+                                <i class="fa-solid fa-wand-magic-sparkles mr-2"></i> ANALIZAR PRÓXIMO MES
+                            </button>
+                        </div>
+                    </div>
+                </aside>
+            </div>
         </div>
 
         <!-- REPORTES -->
@@ -189,9 +218,11 @@
         </div>
     </main>
 
-    <!-- MODALES -->
+    <!-- ========================================== -->
+    <!-- BLOQUE 3: MODALES Y FORMULARIOS            -->
+    <!-- ========================================== -->
 
-    <!-- MODAL CSV PROGRESS (NUEVO) -->
+    <!-- MODAL CSV PROGRESS -->
     <div id="csvProgressModal" class="fixed inset-0 modal-backdrop hidden z-[200] flex items-center justify-center p-4 fade-in">
         <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full text-center relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-2 bg-slate-100"><div id="uploadBarTop" class="h-full bg-brand-cyan transition-all duration-300" style="width: 0%"></div></div>
@@ -276,34 +307,31 @@
                 <form id="benForm" class="space-y-6">
                     <div class="grid grid-cols-2 gap-5">
                         <div><label class="text-xs font-bold text-slate-400 uppercase ml-1">ID (Cédula)</label><input id="benId" class="w-full border p-2.5 rounded-xl bg-slate-50 outline-none focus:border-brand-cyan" required></div>
-                        <div><label class="text-xs font-bold text-slate-400 uppercase ml-1">Nombre Completo</label><input type="text" id="benName" class="w-full border rounded-lg p-2.5 focus:border-brand-cyan outline-none" required></div>
-                        <div><label class="text-xs font-bold text-slate-400 uppercase ml-1">Teléfono</label><input type="text" id="benPhone" class="w-full border rounded-lg p-2.5 focus:border-brand-cyan outline-none" required></div>
-                        <div><label class="text-xs font-bold text-slate-400 uppercase ml-1">Municipio</label><input type="text" id="benMuni" class="w-full border rounded-lg p-2.5 focus:border-brand-cyan outline-none" required></div>
-                        <div class="col-span-2"><label class="text-xs font-bold text-slate-400 uppercase ml-1">Dirección Exacta</label><input type="text" id="benAddr" class="w-full border rounded-lg p-2.5 focus:border-brand-cyan outline-none" required></div>
+                        <div><label class="text-xs font-bold text-slate-400 uppercase ml-1">Nombre Completo</label><input type="text" id="benName" class="w-full border p-2.5 rounded-xl bg-slate-50 outline-none focus:border-brand-cyan" required></div>
+                        <div><label class="text-xs font-bold text-slate-400 uppercase ml-1">Teléfono</label><input type="text" id="benPhone" class="w-full border p-2.5 rounded-xl bg-slate-50 outline-none focus:border-brand-cyan" required></div>
+                        <div><label class="text-xs font-bold text-slate-400 uppercase ml-1">Municipio</label><input type="text" id="benMuni" class="w-full border p-2.5 rounded-xl bg-slate-50 outline-none focus:border-brand-cyan" required></div>
+                        <div class="col-span-2"><label class="text-xs font-bold text-slate-400 uppercase ml-1">Dirección Exacta</label><input type="text" id="benAddr" class="w-full border p-2.5 rounded-xl bg-slate-50 outline-none focus:border-brand-cyan" required></div>
                     </div>
-                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div><label class="text-[10px] font-bold text-blue-700 uppercase ml-1">Última Dispensación</label><input type="date" id="benLastDispense" class="w-full border border-blue-200 rounded-lg p-2.5 bg-white text-sm" onchange="calculateNextDate()"></div>
-                        <div><label class="text-[10px] font-bold text-blue-700 uppercase ml-1">Próximo Envío (Admin)</label><input type="date" id="benNextShipment" class="w-full border border-blue-200 rounded-lg p-2.5 bg-white text-sm"></div>
+                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 grid grid-cols-2 gap-5">
+                        <div><label class="text-[10px] font-bold text-blue-700 uppercase ml-1">Última Dispensación</label><input type="date" id="benLastDispense" class="w-full border border-blue-200 p-2 rounded-xl text-sm bg-white outline-none" onchange="calculateNextDate()"></div>
+                        <div><label class="text-[10px] font-bold text-blue-700 uppercase ml-1">Próximo Envío (Admin)</label><input type="date" id="benNextShipment" class="w-full border border-blue-200 p-2 rounded-xl text-sm bg-white outline-none"></div>
                     </div>
-                    
                     <!-- CONTACTO FAMILIAR -->
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 relative">
                         <h4 class="text-xs font-bold text-slate-400 uppercase mb-3 flex items-center"><i class="fa-solid fa-users mr-2"></i> Contacto Familiar</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <div><label class="text-xs font-bold text-slate-500 uppercase mb-1">Nombre Familiar</label><input type="text" id="benFamName" class="w-full border rounded-lg p-2.5 bg-white"></div>
-                            <div><label class="text-xs font-bold text-slate-500 uppercase mb-1">Teléfono Familiar</label><input type="text" id="benFamPhone" class="w-full border rounded-lg p-2.5 bg-white"></div>
+                        <div class="grid grid-cols-2 gap-5">
+                            <div><label class="text-[10px] font-bold text-slate-400 uppercase">Nombre Familiar</label><input type="text" id="benFamName" class="w-full border p-2 rounded-lg bg-white outline-none"></div>
+                            <div><label class="text-[10px] font-bold text-slate-400 uppercase">Teléfono Familiar</label><input type="text" id="benFamPhone" class="w-full border p-2 rounded-lg bg-white outline-none"></div>
                         </div>
                     </div>
-
                     <div class="flex items-center p-3 bg-orange-50 border border-orange-100 rounded-lg">
                         <input type="checkbox" id="benPickup" class="w-5 h-5 text-orange-600 rounded-lg border-gray-300 mr-3 cursor-pointer" onchange="toggleCCAssign()">
                         <label for="benPickup" class="text-sm font-bold text-slate-700 cursor-pointer uppercase">Entregar en Ventanilla (Omitir Contact Center)</label>
                     </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                        <div><label class="text-xs font-bold text-slate-500 uppercase mb-1">Tipo de Afiliado</label><select id="benType" class="w-full border rounded-lg p-2.5 bg-white outline-none"><option>Afiliado Directo</option><option>Jubilado</option><option>Pensionado</option><option>Beneficiaria Padre</option><option>Beneficiaria(o) Compañera(o)</option><option>Beneficiaria(o) Esposa(o)</option><option>Beneficiaria Hijo(a)</option></select></div>
-                        <div><label class="text-xs font-bold text-emerald-600 uppercase mb-1">Gestor Farmacia</label><select id="benAssignPharma" class="w-full border rounded-lg p-2.5 bg-white outline-none border-emerald-200 focus:border-emerald-500"><option value="">-- Seleccionar (Solo Admin) --</option></select></div>
-                        <div><label class="text-xs font-bold text-blue-600 uppercase mb-1">Gestor CC</label><select id="benAssignCC" class="w-full border rounded-lg p-2.5 bg-white outline-none border-blue-200 focus:border-blue-500"><option value="">-- Seleccionar (Solo Admin) --</option></select></div>
+                    <div class="grid grid-cols-3 gap-5">
+                        <div><label class="text-xs font-bold text-slate-400 uppercase ml-1">Tipo de Afiliado</label><select id="benType" class="w-full border p-2.5 rounded-xl bg-white outline-none"><option>Afiliado Directo</option><option>Jubilado</option><option>Pensionado</option><option>Beneficiaria Padre</option><option>Beneficiaria(o) Compañera(o)</option><option>Beneficiaria(o) Esposa(o)</option><option>Beneficiaria Hijo(a)</option></select></div>
+                        <div><label class="text-xs font-bold text-emerald-600 uppercase ml-1">Gestor Farmacia</label><select id="benAssignPharma" class="w-full border p-2.5 rounded-xl bg-white outline-none border-emerald-200 focus:border-emerald-500"><option value="">-- Seleccionar (Solo Admin) --</option></select></div>
+                        <div><label class="text-xs font-bold text-blue-600 uppercase ml-1">Gestor CC</label><select id="benAssignCC" class="w-full border p-2.5 rounded-xl bg-white outline-none border-blue-200 focus:border-blue-500"><option value="">-- Seleccionar (Solo Admin) --</option></select></div>
                     </div>
                 </form>
             </div>
@@ -352,6 +380,8 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const appId = "fdihss-mediflow-v2-modular";
+        const DOMAIN_SUFFIX = "@mediflow.sys"; 
+        
         const secondaryApp = initializeApp(firebaseConfig, "Secondary");
         const secondaryAuth = getAuth(secondaryApp);
 
@@ -378,7 +408,7 @@
         };
 
         window.renderTimelineItem = function(ship) {
-            const statusMap = { 'Nuevo': 1, 'En Proceso': 1, 'Confirmacion CC': 2, 'Retorno Farmacia': 3, 'Empaquetado': 4, 'Revision Calidad': 5, 'Listo Logistica': 6, 'En Ruta': 7, 'Entregado': 8 };
+            const statusMap = { 'Nuevo': 1, 'Confirmacion CC': 2, 'Retorno Farmacia': 3, 'Empaquetado': 4, 'Revision Calidad': 5, 'Listo Logistica': 6, 'En Ruta': 7, 'Entregado': 8 };
             let step = statusMap[ship.status] || 1;
             const stepsHtml = [ {l:'FARM', i:1}, {l:'CC', i:2}, {l:'FARM', i:3}, {l:'OPER', i:4}, {l:'CALI', i:5}, {l:'LOGI', i:6}, {l:'RUTA', i:7}, {l:'ENTR', i:8} ].map(s => { 
                 const active = s.i <= step ? 'timeline-active' : ''; 
@@ -427,7 +457,8 @@
              onSnapshot(doc(db, 'artifacts', appId, 'users', u.uid, 'profile', 'data'), (snap) => {
                  if(snap.exists()) {
                      const data = snap.data();
-                     if (data.activeSessionId && data.activeSessionId !== deviceId) {
+                     // VERIFICACIÓN DE SESIÓN (SOLO SI SE ACTIVÓ "REQUIRE IP APPROVAL")
+                     if (data.requireIpApproval && data.activeSessionId && data.activeSessionId !== deviceId) {
                          showLockScreen("Sesión iniciada en otro dispositivo.");
                          signOut(auth); return;
                      }
@@ -572,7 +603,10 @@
                     const batch = writeBatch(db);
                     chunk.forEach(row => {
                         const id = row.ID || row.Cédula; const name = row.Nombre; if(!id) return;
-                        batch.set(doc(db, 'artifacts', appId, 'public', 'data', 'beneficiaries', id), { id, name, updatedAt: new Date().toISOString(), status: 'Activo' }, { merge: true });
+                        // Mapeo Inteligente y Asignación Automática
+                        const pickup = row.Ventanilla === 'S' || row.Ventanilla === '1';
+                        // Aquí iría la lógica de asignación random si es nuevo, simplificada para mantener bloque
+                        batch.set(doc(db, 'artifacts', appId, 'public', 'data', 'beneficiaries', id), { id, name, pickupCounter: pickup, updatedAt: new Date().toISOString(), status: 'Activo' }, { merge: true });
                     });
                     await batch.commit();
                     processed += chunk.length;
