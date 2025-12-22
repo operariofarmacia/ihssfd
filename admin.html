@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Administración - IHSS a tu Casa</title>
-    <!-- Librerías Externas -->
+    <title>Admin - IHSS a tu Casa</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <script>
@@ -16,7 +17,7 @@
                 extend: {
                     colors: {
                         brand: {
-                            dark: '#003366', teal: '#0e7490', cyan: '#06b6d4', clinical: '#10b981', danger: '#ef4444', light: '#f8fafc'
+                            dark: '#003366', teal: '#0e7490', cyan: '#06b6d4', clinical: '#10b981', danger: '#ef4444', light: '#f0fdfa'
                         }
                     }
                 }
@@ -29,63 +30,64 @@
         .fade-in { animation: fadeIn 0.3s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
         .modal-backdrop { background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
+        .toggle-checkbox:checked { right: 0; border-color: #10b981; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #10b981; }
+        .job-check { accent-color: #06b6d4; width: 16px; height: 16px; cursor: pointer; }
+        select { -webkit-appearance: none; -moz-appearance: none; appearance: none; }
         .custom-scroll::-webkit-scrollbar { width: 6px; }
         .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .hidden-view { display: none !important; }
         .dash-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1); }
-        .calendar-day { min-height: 110px; transition: all 0.2s; border-radius: 12px; border: 1px solid #e2e8f0; position: relative; }
+        .calendar-day { min-height: 100px; transition: all 0.2s; border-radius: 12px; border: 1px solid #e2e8f0; position: relative; }
         .calendar-day:hover { background-color: #f0f9ff; border-color: #06b6d4; }
         
-        .timeline-step { position: relative; z-index: 1; min-width: 45px; }
+        /* Timeline Styles */
+        .timeline-step { position: relative; z-index: 1; min-width: 50px; }
         .timeline-step::before { content: ''; position: absolute; top: 9px; left: -50%; width: 100%; height: 2px; background: #e2e8f0; z-index: -1; }
         .timeline-step:first-child::before { display: none; }
         .timeline-active .step-dot { background-color: #10b981; color: white; border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); }
         .timeline-active::before { background: #10b981; }
-        
         .tab-btn.active { border-bottom: 3px solid #003366; color: #003366; font-weight: 700; background-color: #f1f5f9; }
         .tab-btn { color: #64748b; transition: all 0.2s; }
     </style>
 </head>
 <body class="flex flex-col md:flex-row h-screen overflow-hidden text-slate-700 bg-slate-50">
 
-    <!-- BLOQUE 0: SEGURIDAD Y BLOQUEO -->
+    <!-- PANTALLA DE BLOQUEO (SEGURIDAD) -->
     <div id="auth-lock" class="fixed inset-0 z-[200] bg-[#003366] flex flex-col items-center justify-center text-white hidden fade-in">
         <div class="bg-white p-3 rounded-full mb-5 shadow-2xl ring-4 ring-white/10">
             <img src="https://portal.ihss.hn/cronicos/assets/dist/img/Recurso%201.png" class="h-20 w-20 object-contain">
         </div>
-        <h2 class="text-3xl font-bold mb-2 tracking-tight">Sesión Finalizada</h2>
-        <p class="text-blue-200 text-sm mb-8 max-w-xs text-center leading-relaxed" id="lock-msg">Por seguridad o inactividad, su sesión ha sido cerrada.</p>
-        <button onclick="forceNavigateLogin()" class="bg-brand-cyan hover:bg-brand-teal text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-transform transform active:scale-95 flex items-center">
-            <i class="fa-solid fa-arrow-left mr-3"></i> Regresar al Acceso
+        <h2 class="text-3xl font-bold mb-2 tracking-tight">Acceso Restringido</h2>
+        <p class="text-blue-200 text-sm mb-8 max-w-xs text-center leading-relaxed" id="lock-msg">Verificando credenciales...</p>
+        <button onclick="forceNavigateLogin()" class="bg-brand-cyan hover:bg-brand-teal text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-transform transform active:scale-95 flex items-center mb-4">
+            <i class="fa-solid fa-arrow-left mr-3"></i> Ir al Login
         </button>
     </div>
 
-    <!-- BLOQUE 1: SIDEBAR -->
+    <!-- SIDEBAR -->
     <aside class="w-full md:w-72 bg-brand-dark text-white flex flex-col shadow-2xl z-20 shrink-0 relative">
         <div class="p-6 border-b border-blue-900/50 flex flex-col items-center text-center">
             <div class="bg-white p-1 rounded-full shadow-lg mb-3 w-16 h-16 flex items-center justify-center ring-2 ring-brand-cyan/50 cursor-pointer hover:scale-105 transition-transform" onclick="switchView('dashboard')">
                 <img src="https://portal.ihss.hn/cronicos/assets/dist/img/Recurso%201.png" class="object-contain h-full w-full p-1">
             </div>
-            <h2 class="font-bold text-lg tracking-wide uppercase">Administración</h2>
-            <div class="flex items-center bg-black/20 px-3 py-1 rounded-full border border-white/10 mt-2">
-                <span id="status-dot" class="w-2 h-2 rounded-full bg-brand-clinical animate-pulse mr-2"></span>
-                <span id="status-text" class="text-[10px] font-bold text-emerald-300 uppercase">Sistema Online</span>
-            </div>
+            <h2 class="font-bold text-lg tracking-wide">IHSS a tu Casa</h2>
+            <p class="text-[10px] text-brand-cyan uppercase tracking-widest font-bold">Administrador</p>
         </div>
         <nav class="flex-1 p-4 space-y-2 overflow-y-auto custom-scroll">
             <button onclick="switchView('dashboard')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-dashboard">
-                <i class="fa-solid fa-house w-5 text-center"></i><span class="font-medium text-sm">Inicio</span>
+                <i class="fa-solid fa-house w-5 text-center"></i><span class="font-medium text-sm text-inherit">Inicio</span>
             </button>
-            <div class="pt-4 pb-2 px-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">Módulos</div>
+            <div class="pt-4 pb-2 px-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">Gestión Principal</div>
             <button onclick="switchView('users')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-users">
-                <i class="fa-solid fa-users-gear w-5 text-center"></i><span class="font-medium text-sm">Personal</span>
+                <i class="fa-solid fa-users-gear w-5 text-center"></i><span class="font-medium text-sm text-inherit">Personal</span>
             </button>
             <button onclick="switchView('beneficiaries')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-beneficiaries">
-                <i class="fa-solid fa-hospital-user w-5 text-center"></i><span class="font-medium text-sm">Derechohabientes</span>
+                <i class="fa-solid fa-hospital-user w-5 text-center"></i><span class="font-medium text-sm text-inherit">Pacientes</span>
             </button>
             <button onclick="switchView('shipments')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-shipments">
-                <i class="fa-solid fa-truck-fast w-5 text-center"></i><span class="font-medium text-sm">Logística</span>
+                <i class="fa-solid fa-truck-fast w-5 text-center"></i><span class="font-medium text-sm text-inherit">Logística</span>
             </button>
         </nav>
         <div class="p-4 bg-black/20 border-t border-white/5">
@@ -95,27 +97,28 @@
         </div>
     </aside>
 
+    <!-- CONTENIDO PRINCIPAL -->
     <main class="flex-1 overflow-hidden flex flex-col bg-slate-50 relative">
         
         <!-- DASHBOARD -->
         <div id="view-dashboard" class="flex-1 flex flex-col h-full overflow-hidden fade-in">
             <header class="bg-white shadow-sm border-b border-slate-200 p-8 shrink-0">
-                <h1 class="text-3xl font-bold text-brand-dark mb-1 tracking-tight">Consola Administrativa</h1>
-                <p class="text-slate-500 text-sm">Sistema Central de IHSS a tu Casa.</p>
+                <h1 class="text-3xl font-bold text-brand-dark mb-1 tracking-tight">Panel de Control</h1>
+                <p class="text-slate-500 text-sm italic">Gestión integral del sistema de dispensación IHSS.</p>
             </header>
             <div class="flex-1 overflow-y-auto p-8 custom-scroll">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div onclick="switchView('users')" class="dash-card bg-white rounded-3xl p-8 border border-slate-100 shadow-sm cursor-pointer group">
+                    <div onclick="switchView('users')" class="dash-card bg-white rounded-3xl p-8 border border-slate-100 shadow-sm cursor-pointer group transition-all">
                         <div class="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-user-shield"></i></div>
                         <h3 class="font-bold text-slate-700 text-lg">Personal</h3>
-                        <p class="text-xs text-slate-400">Directorio y seguridad</p>
+                        <p class="text-xs text-slate-400">Directorio y seguridad de acceso</p>
                     </div>
-                    <div onclick="switchView('beneficiaries')" class="dash-card bg-white rounded-3xl p-8 border border-slate-100 shadow-sm cursor-pointer group">
+                    <div onclick="switchView('beneficiaries')" class="dash-card bg-white rounded-3xl p-8 border border-slate-100 shadow-sm cursor-pointer group transition-all">
                         <div class="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-hospital-user"></i></div>
                         <h3 class="font-bold text-slate-700 text-lg">Pacientes</h3>
-                        <p class="text-xs text-slate-400">Derechohabientes y Carga CSV</p>
+                        <p class="text-xs text-slate-400">Derechohabientes y ciclos de receta</p>
                     </div>
-                    <div onclick="switchView('shipments')" class="dash-card bg-white rounded-3xl p-8 border border-slate-100 shadow-sm cursor-pointer group">
+                    <div onclick="switchView('shipments')" class="dash-card bg-white rounded-3xl p-8 border border-slate-100 shadow-sm cursor-pointer group transition-all">
                         <div class="w-16 h-16 rounded-2xl bg-cyan-50 text-brand-cyan flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-map-location-dot"></i></div>
                         <h3 class="font-bold text-slate-700 text-lg">Logística</h3>
                         <p class="text-xs text-slate-400">Monitoreo de rutas</p>
@@ -124,45 +127,41 @@
             </div>
         </div>
 
-        <!-- GESTIÓN PERSONAL (MODULO USUARIOS) -->
+        <!-- GESTIÓN DE PERSONAL -->
         <div id="view-users" class="hidden-view flex-1 flex flex-col h-full overflow-hidden fade-in">
             <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center shrink-0">
-                <h1 class="text-2xl font-bold text-brand-dark">Colaboradores</h1>
+                <h1 class="text-2xl font-bold text-brand-dark">Directorio de Personal</h1>
                 <div class="flex gap-2">
-                    <button onclick="balanceWorkload()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-200 px-4 py-2 rounded-xl font-bold text-xs">⚖️ Equilibrar Cargas</button>
-                    <button onclick="openUserModal()" class="bg-brand-dark hover:bg-brand-cyan text-white px-6 py-2.5 rounded-xl font-bold shadow-lg text-sm transition-all"><i class="fa-solid fa-user-plus mr-2"></i> Nuevo Usuario</button>
+                    <button onclick="balanceWorkload()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-200 px-4 py-2 rounded-xl font-bold text-xs shadow-sm transition-all">⚖️ Equilibrar Cargas</button>
+                    <button onclick="openUserModal()" class="bg-brand-dark hover:bg-brand-cyan text-white px-6 py-2 rounded-xl font-bold shadow-lg transition-all flex items-center text-sm"><i class="fa-solid fa-user-plus mr-2"></i> Nuevo Usuario</button>
                 </div>
             </header>
             <div class="flex-1 overflow-y-auto p-6 custom-scroll">
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                     <table class="w-full text-left border-collapse">
-                        <thead class="bg-slate-50 text-[10px] uppercase text-slate-500 font-bold">
-                            <tr><th class="p-5 pl-6">Colaborador</th><th class="p-5">Roles</th><th class="p-5">Acceso</th><th class="p-5 text-center">Estatus</th><th class="p-5 pr-6 text-right">Acciones</th></tr>
+                        <thead class="bg-slate-50 text-[10px] uppercase text-slate-500 font-bold tracking-wider">
+                            <tr><th class="p-5 pl-6">Colaborador</th><th class="p-5">Cargos / Funciones</th><th class="p-5">Acceso</th><th class="p-5 text-center">Estatus</th><th class="p-5 pr-6 text-right">Acciones</th></tr>
                         </thead>
-                        <tbody id="user-list" class="divide-y divide-slate-100 text-sm"></tbody>
+                        <tbody id="user-list" class="divide-y divide-slate-100 text-sm text-slate-600"></tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- GESTIÓN DERECHOHABIENTES (MODULO PACIENTES + CSV) -->
+        <!-- GESTIÓN DERECHOHABIENTES -->
         <div id="view-beneficiaries" class="hidden-view flex-1 flex flex-col h-full overflow-hidden fade-in">
             <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center shrink-0">
-                <h1 class="text-2xl font-bold text-brand-dark">Derechohabientes</h1>
+                <h1 class="text-2xl font-bold text-brand-dark tracking-tight">Gestión de Derechohabientes</h1>
                 <div class="flex gap-3">
-                    <div id="csvStatus" class="hidden flex items-center text-xs font-bold text-brand-clinical animate-pulse mr-2"><i class="fa-solid fa-sync fa-spin mr-1"></i> Cargando datos...</div>
-                    <label class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg cursor-pointer flex items-center text-sm transition-all">
-                        <i class="fa-solid fa-file-csv mr-2 text-lg"></i> IMPORTAR CSV
-                        <input type="file" id="csvInput" accept=".csv" class="hidden" onchange="handleCSVUpload(this)">
-                    </label>
-                    <button onclick="openBeneficiaryModal()" class="bg-brand-dark hover:bg-brand-cyan text-white px-5 py-2.5 rounded-xl font-bold shadow-lg flex items-center text-sm transition-all"><i class="fa-solid fa-plus mr-2"></i> Crear Manual</button>
+                    <label class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2 rounded-xl font-bold shadow-lg cursor-pointer flex items-center text-sm"><i class="fa-solid fa-file-csv mr-2"></i> Cargar CSV<input type="file" id="csvInput" accept=".csv" class="hidden" onchange="handleCSVUpload(this)"></label>
+                    <button onclick="openBeneficiaryModal()" class="bg-brand-dark hover:bg-brand-cyan text-white px-5 py-2 rounded-xl font-bold shadow-lg flex items-center text-sm"><i class="fa-solid fa-plus mr-2"></i> Crear Manual</button>
                 </div>
             </header>
             <div class="flex-1 overflow-y-auto p-6 custom-scroll">
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                     <table class="w-full text-left border-collapse text-sm text-slate-600">
                         <thead class="bg-slate-50 text-[10px] uppercase text-slate-500 font-bold">
-                            <tr><th class="p-5 pl-6">Paciente</th><th class="p-5">Tipo</th><th class="p-5">Entrega</th><th class="p-5">Gestores</th><th class="p-5 pr-6 text-right">Acciones</th></tr>
+                            <tr><th class="p-5 pl-6">Paciente</th><th class="p-5">Tipo / Prioridad</th><th class="p-5">Ubicación</th><th class="p-5">Gestores Responsables</th><th class="p-5 pr-6 text-right">Acciones</th></tr>
                         </thead>
                         <tbody id="ben-list" class="divide-y divide-slate-100"></tbody>
                     </table>
@@ -170,7 +169,7 @@
             </div>
         </div>
 
-        <!-- LOGÍSTICA (MODULO ENVÍOS) -->
+        <!-- LOGÍSTICA -->
         <div id="view-shipments" class="hidden-view flex-1 flex flex-col h-full overflow-hidden fade-in">
             <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center shrink-0">
                 <div>
@@ -192,6 +191,7 @@
                 <aside class="w-full md:w-80 bg-white border-l border-slate-200 shadow-xl flex flex-col z-20">
                     <div class="p-5 border-b border-slate-100 bg-brand-light">
                         <h3 class="font-bold text-brand-teal flex items-center text-sm uppercase tracking-wider"><i class="fa-solid fa-robot mr-2 text-brand-cyan"></i> Planificador IA</h3>
+                        <p class="text-[10px] text-slate-500 mt-1">Detección de ciclos de recetas próximas.</p>
                     </div>
                     <div class="flex-1 overflow-y-auto p-4 custom-scroll" id="ai-suggestions-list">
                         <div class="text-center py-10 px-4">
@@ -211,7 +211,7 @@
     <div id="userModal" class="fixed inset-0 modal-backdrop hidden z-[110] flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-3xl flex flex-col max-h-[90vh] shadow-2xl">
             <div class="bg-brand-dark p-6 text-white flex justify-between items-center rounded-t-3xl shrink-0">
-                <h3 class="font-bold text-lg" id="userModalTitle">Perfil de Personal</h3>
+                <h3 class="font-bold text-lg" id="userModalTitle">Gestión de Personal</h3>
                 <button onclick="closeModal()" class="hover:text-red-300 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <div class="p-6 overflow-y-auto custom-scroll">
@@ -240,7 +240,7 @@
                     <div class="bg-blue-50 p-5 rounded-2xl border border-blue-100">
                         <h4 class="text-xs font-bold text-brand-dark uppercase mb-4 flex items-center"><i class="fa-solid fa-shield-halved mr-2"></i> Seguridad</h4>
                         <div class="flex items-center justify-between mb-4 bg-white p-3 rounded-xl border border-blue-100 shadow-sm">
-                             <div class="text-sm font-semibold text-slate-700">Validar IP Nueva</div>
+                             <div class="text-sm font-semibold text-slate-700">Validación Dispositivo/IP Nueva</div>
                              <label class="relative inline-flex items-center cursor-pointer">
                                  <input type="checkbox" id="formIpCheck" class="sr-only peer">
                                  <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-clinical transition-all"></div>
@@ -253,10 +253,12 @@
                             <label class="text-xs bg-white border px-3 py-1.5 rounded-full cursor-pointer hover:border-brand-cyan transition shadow-sm"><input type="checkbox" class="day-check mr-1" value="Miercoles"> X</label>
                             <label class="text-xs bg-white border px-3 py-1.5 rounded-full cursor-pointer hover:border-brand-cyan transition shadow-sm"><input type="checkbox" class="day-check mr-1" value="Jueves"> J</label>
                             <label class="text-xs bg-white border px-3 py-1.5 rounded-full cursor-pointer hover:border-brand-cyan transition shadow-sm"><input type="checkbox" class="day-check mr-1" value="Viernes"> V</label>
+                            <label class="text-xs bg-white border px-3 py-1.5 rounded-full cursor-pointer hover:border-brand-cyan transition shadow-sm"><input type="checkbox" class="day-check mr-2" value="Sabado"> S</label>
+                            <label class="text-xs bg-white border px-3 py-1.5 rounded-full cursor-pointer hover:border-brand-cyan transition shadow-sm"><input type="checkbox" class="day-check mr-2" value="Domingo"> D</label>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
-                            <input type="time" id="formStart" class="w-full border p-2 rounded-xl text-sm bg-white outline-none">
-                            <input type="time" id="formEnd" class="w-full border p-2 rounded-xl text-sm bg-white outline-none">
+                            <input type="time" id="formStart" class="w-full border p-2 rounded-xl text-sm bg-white shadow-sm outline-none">
+                            <input type="time" id="formEnd" class="w-full border p-2 rounded-xl text-sm bg-white shadow-sm outline-none">
                         </div>
                     </div>
                 </form>
@@ -272,7 +274,7 @@
     <div id="benModal" class="fixed inset-0 modal-backdrop hidden z-[110] flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-4xl flex flex-col max-h-[90vh] shadow-2xl">
             <div class="bg-brand-dark p-6 text-white flex justify-between items-center rounded-t-3xl shrink-0">
-                <h3 class="font-bold text-lg" id="benModalTitle">Expediente del Paciente</h3>
+                <h3 class="font-bold text-lg" id="benModalTitle">Expediente de Paciente</h3>
                 <button onclick="document.getElementById('benModal').classList.add('hidden')" class="hover:text-red-300 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <div class="p-6 overflow-y-auto custom-scroll">
@@ -285,18 +287,18 @@
                         <div><label class="text-[10px] font-bold text-blue-700 uppercase ml-1">Próximo Envío</label><input type="date" id="benNextShipment" class="w-full border border-blue-200 p-2 rounded-xl text-sm bg-white outline-none"></div>
                         <div class="flex items-center pt-4">
                              <input type="checkbox" id="benPickup" class="w-6 h-6 text-orange-600 rounded-lg border-gray-300 mr-3 cursor-pointer" onchange="toggleCCAssign()">
-                             <label for="benPickup" class="text-sm font-bold text-slate-700 cursor-pointer uppercase">Ventanilla</label>
+                             <label for="benPickup" class="text-sm font-bold text-slate-700 cursor-pointer uppercase">Entrega en Ventanilla</label>
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-5">
-                        <div><label class="text-xs font-bold text-slate-400 uppercase ml-1">Gestor Farmacia</label><select id="benAssignPharma" class="w-full border p-2.5 rounded-xl bg-white outline-none"></select></div>
-                        <div><label class="text-xs font-bold text-slate-400 uppercase ml-1">Agente CC</label><select id="benAssignCC" class="w-full border p-2.5 rounded-xl bg-white outline-none"></select></div>
+                        <div><label class="text-xs font-bold text-slate-400 uppercase ml-1">Gestor Farmacia</label><select id="benAssignPharma" class="w-full border p-2.5 rounded-xl bg-white outline-none focus:border-emerald-500"></select></div>
+                        <div><label class="text-xs font-bold text-slate-400 uppercase ml-1">Agente Call Center</label><select id="benAssignCC" class="w-full border p-2.5 rounded-xl bg-white outline-none focus:border-blue-500"></select></div>
                     </div>
                 </form>
             </div>
             <div class="p-6 border-t bg-slate-50 flex justify-end rounded-b-3xl gap-3">
-                <button onclick="document.getElementById('benModal').classList.add('hidden')" class="px-5 py-2 text-sm font-bold text-slate-500">Cancelar</button>
-                <button onclick="saveBeneficiary()" id="btnSaveBen" class="bg-brand-dark text-white px-8 py-2.5 rounded-xl font-bold shadow-lg transition-transform active:scale-95">Guardar</button>
+                <button onclick="document.getElementById('benModal').classList.add('hidden')" class="px-5 py-2 text-sm font-bold text-slate-500">Cerrar</button>
+                <button onclick="saveBeneficiary()" id="btnSaveBen" class="bg-brand-dark text-white px-8 py-2.5 rounded-xl font-bold shadow-lg transition-transform active:scale-95">Actualizar Expediente</button>
             </div>
         </div>
     </div>
@@ -312,8 +314,8 @@
                 <button onclick="document.getElementById('dayModal').classList.add('hidden')" class="text-slate-400 hover:text-red-500 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <div class="flex border-b border-slate-100 shrink-0">
-                <button onclick="switchDayTab('route')" id="tab-route" class="w-1/2 py-3 text-xs font-bold tab-btn active uppercase tracking-wider">🚚 Domicilio</button>
-                <button onclick="switchDayTab('pickup')" id="tab-pickup" class="w-1/2 py-3 text-xs font-bold tab-btn uppercase tracking-wider">🏢 Ventanilla</button>
+                <button onclick="switchDayTab('route')" id="tab-route" class="w-1/2 py-3 text-xs font-bold tab-btn active uppercase tracking-wider">🚚 Domicilio (Ruta)</button>
+                <button onclick="switchDayTab('pickup')" id="tab-pickup" class="w-1/2 py-3 text-xs font-bold tab-btn uppercase tracking-wider">🏢 Ventanilla (Retiro)</button>
             </div>
             <div class="p-6 overflow-y-auto custom-scroll bg-slate-50/30 flex-1">
                 <div id="content-route" class="space-y-4"></div>
@@ -340,7 +342,7 @@
         </div>
     </div>
 
-    <!-- SCRIPTS CORE -->
+    <!-- SCRIPTS -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
         import { getAuth, signOut, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
@@ -391,7 +393,10 @@
         /* --- FUNCIONES DE NAVEGACIÓN --- */
 
         function safeNavigate(targetUrl) {
-            try { window.location.href = targetUrl; } catch (e) {
+            try {
+                window.location.href = targetUrl;
+            } catch (e) {
+                console.warn("Redirección bloqueada:", e);
                 if (targetUrl === 'index.html') {
                     document.body.innerHTML = `<div style="height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:sans-serif; background:#003366; color:white; text-align:center;"><h2 style="margin-bottom:20px;">Sesión Finalizada</h2><a href="./index.html" style="background:#06b6d4; color:white; padding:12px 30px; border-radius:8px; text-decoration:none; font-weight:bold;">VOLVER AL LOGIN</a></div>`;
                 }
@@ -439,12 +444,12 @@
         /* --- BLOQUE: GESTIÓN DE PERSONAL --- */
         const roleDefinitions = {
             'farmacia': [{val:'Revisión y Asignación',label:'Revisión y Asignación'},{val:'Despacho de Medicamentos',label:'Despacho'},{val:'Gestión de Inventario',label:'Inventario'},{val:'Supervisor de Farmacia',label:'Supervisor'}],
-            'contact_center': [{val:'Agente Contact Center',label:'Agente Normal'},{val:'Supervisor CC',label:'Supervisor'}],
-            'operaciones': [{val:'Operador',label:'Operador Empaque'},{val:'Supervisor Operaciones',label:'Supervisor'}],
-            'calidad': [{val:'Revisor de Paquetes',label:'Revisor'},{val:'Controlador Observaciones',label:'Controlador'},{val:'Supervisor Calidad',label:'Supervisor'}],
-            'logistica': [{val:'Asignador de Rutas',label:'Asignador Rutas'},{val:'Despachador Delivery',label:'Despachador'},{val:'Supervisor Logística',label:'Supervisor'}],
-            'repartidor': [{val:'Motorista',label:'Motorista'},{val:'Supervisor de Flota',label:'Supervisor'}],
-            'admin': [{val:'Super Admin',label:'Administrador'}]
+            'contact_center': [{val:'Agente Contact Center',label:'Agente Normal'},{val:'Supervisor CC',label:'Supervisor CC'}],
+            'operaciones': [{val:'Operador',label:'Operador de Empaque'},{val:'Supervisor Operaciones',label:'Supervisor Operaciones'}],
+            'calidad': [{val:'Revisor de Paquetes',label:'Revisor de Paquetes'},{val:'Controlador Observaciones',label:'Controlador de Observaciones'},{val:'Supervisor Calidad',label:'Supervisor Calidad'}],
+            'logistica': [{val:'Asignador de Rutas',label:'Asignador de Rutas'},{val:'Despachador Delivery',label:'Despachador Delivery'},{val:'Supervisor Logística',label:'Supervisor Logística'}],
+            'repartidor': [{val:'Motorista',label:'Motorista'},{val:'Supervisor de Flota',label:'Supervisor de Flota'}],
+            'admin': [{val:'Super Admin',label:'Administrador Total'}]
         };
 
         window.updateRoles = function(selectedJobs = []) {
@@ -477,6 +482,7 @@
                 document.getElementById('formIpKey').value = userData.ipUnlockKey || '';
                 document.getElementById('formStart').value = userData.shiftStart || '';
                 document.getElementById('formEnd').value = userData.shiftEnd || '';
+                document.querySelectorAll('.day-check').forEach(cb => { if(userData.allowedDays?.includes(cb.value)) cb.checked = true; });
             } else {
                 document.getElementById('editUid').value = ""; document.getElementById('formUser').disabled = false;
                 window.updateRoles();
@@ -490,6 +496,7 @@
             const btn = document.getElementById('btnSave');
             const uid = document.getElementById('editUid').value;
             const user = document.getElementById('formUser').value.trim().toLowerCase();
+            const pass = document.getElementById('formPass').value;
             const dept = document.getElementById('formDept').value;
             const jobs = Array.from(document.getElementById('formJob').selectedOptions).map(o => o.value);
             if(!user || !dept || jobs.length === 0) return alert("Faltan datos.");
@@ -512,81 +519,36 @@
             } catch(e) { alert("Error: " + e.message); } finally { btn.disabled = false; btn.innerText = "Guardar"; window.isCreatingUser = false; }
         };
 
-        /* --- BLOQUE: GESTIÓN DERECHOHABIENTES Y CSV (ACTUALIZADO AL 100%) --- */
-
-        window.handleCSVUpload = async (input) => {
-            const file = input.files[0];
-            if(!file) return;
-
-            const statusLabel = document.getElementById('csvStatus');
-            statusLabel.classList.remove('hidden');
-            
-            Papa.parse(file, {
-                header: true,
-                skipEmptyLines: true,
-                complete: async (results) => {
-                    const data = results.data;
-                    const batch = writeBatch(db);
-                    let processed = 0;
-
-                    for (const row of data) {
-                        const id = row.ID || row.Id || row.Cédula;
-                        const name = row.Nombre || row.Paciente;
-                        if (!id || !name) continue;
-
-                        const benRef = doc(db, 'artifacts', appId, 'public', 'data', 'beneficiaries', id.toString());
-                        const benData = {
-                            id: id.toString(),
-                            name: name,
-                            pickupCounter: (row.Ventanilla === 'S' || row.Ventanilla === 'Si' || row.Ventanilla === '1'),
-                            nextShipment: row.FechaEnvio || null,
-                            lastDispense: row.UltimaDispensacion || null,
-                            assignedPharma: { uid: row.FarmaciaUID || "", name: row.FarmaciaNombre || "Sin asignar" },
-                            assignedCC: { uid: row.CCUID || "", name: row.CCNombre || "Sin asignar" },
-                            updatedAt: new Date().toISOString(),
-                            status: 'Activo'
-                        };
-
-                        batch.set(benRef, benData, { merge: true });
-
-                        // Sincronizar Calendario si hay fecha
-                        if(benData.nextShipment) {
-                            const shipId = `${id}_${benData.nextShipment}`;
-                            const shipRef = doc(db, 'artifacts', appId, 'public', 'data', 'shipments', shipId);
-                            batch.set(shipRef, {
-                                date: benData.nextShipment,
-                                beneficiaryId: id.toString(),
-                                beneficiaryName: name,
-                                status: 'Nuevo',
-                                pickupCounter: benData.pickupCounter,
-                                assignedPharma: benData.assignedPharma,
-                                assignedCC: benData.assignedCC,
-                                guideNumber: 'PENDIENTE',
-                                createdAt: new Date().toISOString()
-                            });
-                        }
-                        processed++;
-                    }
-
-                    try {
+        window.deleteUser = async (docId, uid, name, role) => {
+            if(!confirm(`¿Dar de baja definitiva a ${name}?`)) return;
+            try {
+                const qAgents = query(collection(db, 'artifacts', appId, 'public', 'data', 'users_directory'), where('role', '==', role), where('uid', '!=', uid));
+                const snapAgents = await getDocs(qAgents);
+                if(!snapAgents.empty) {
+                    const field = role === 'farmacia' ? 'assignedPharma.uid' : 'assignedCC.uid';
+                    const qPatients = query(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries'), where(field, '==', uid));
+                    const snapPatients = await getDocs(qPatients);
+                    if(!snapPatients.empty) {
+                        const batch = writeBatch(db);
+                        const agents = []; snapAgents.forEach(d => agents.push(d.data()));
+                        snapPatients.forEach(p => {
+                            const next = agents[Math.floor(Math.random() * agents.length)];
+                            const update = role === 'farmacia' ? { assignedPharma: { uid: next.uid, name: next.name } } : { assignedCC: { uid: next.uid, name: next.name } };
+                            batch.update(p.ref, update);
+                        });
                         await batch.commit();
-                        alert(`✅ Carga completada: ${processed} pacientes sincronizados.`);
-                    } catch(e) {
-                        alert("Error en la sincronización masiva: " + e.message);
-                    } finally {
-                        statusLabel.classList.add('hidden');
-                        input.value = '';
                     }
-                },
-                error: (err) => {
-                    alert("Error leyendo CSV: " + err.message);
-                    statusLabel.classList.add('hidden');
                 }
-            });
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users_directory', docId));
+                await deleteDoc(doc(db, 'artifacts', appId, 'users', uid, 'profile', 'data'));
+                alert("Eliminado.");
+            } catch(e) { alert("Error al eliminar."); }
         };
 
+        /* --- BLOQUE: DERECHOHABIENTES (100%) --- */
         window.openBeneficiaryModal = (isEdit = false, benData = null) => {
             document.getElementById('benForm').reset();
+            document.getElementById('benModalTitle').innerText = isEdit ? "Editar Derechohabiente" : "Nuevo Derechohabiente";
             if(isEdit && benData) {
                 document.getElementById('benId').value = benData.id; document.getElementById('benId').disabled = true;
                 document.getElementById('benName').value = benData.name;
@@ -599,9 +561,9 @@
 
         window.saveBeneficiary = async () => {
             const id = document.getElementById('benId').value;
+            const name = document.getElementById('benName').value;
             const nextDate = document.getElementById('benNextShipment').value;
             const isPickup = document.getElementById('benPickup').checked;
-            const name = document.getElementById('benName').value;
             if(!id || !name) return alert("Faltan datos.");
             const valP = document.getElementById('benAssignPharma').value;
             const valC = document.getElementById('benAssignCC').value;
@@ -615,7 +577,7 @@
                 if(nextDate) {
                     await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shipments', `${id}_${nextDate}`), { date: nextDate, beneficiaryId: id, beneficiaryName: name, status: 'Nuevo', assignedPharma: ph, assignedCC: cc, pickupCounter: isPickup, createdAt: new Date().toISOString() });
                 }
-                alert("Guardado."); document.getElementById('benModal').classList.add('hidden');
+                alert("Sincronizado."); document.getElementById('benModal').classList.add('hidden');
             } catch(e) { alert("Error."); }
         };
 
@@ -625,13 +587,16 @@
             document.getElementById('ship-months').classList.remove('hidden'); 
             const c = document.getElementById('ship-months'); c.innerHTML = '';
             monthNames.forEach((m, i) => { c.innerHTML += `<div onclick="openMonth(${i})" class="bg-white p-6 rounded-2xl shadow-sm border hover:border-brand-cyan cursor-pointer text-center font-bold text-slate-700 transition-all">${m}</div>`; }); 
+            window.updateBreadcrumb(); 
         };
+
         window.openMonth = function(m) { 
             currentMonth = m; document.getElementById('ship-months').classList.add('hidden'); 
             document.getElementById('ship-days').classList.remove('hidden'); 
             window.renderCalendar(currentYear, currentMonth); 
-            window.updateBreadcrumb();
+            window.updateBreadcrumb(); 
         };
+
         window.renderCalendar = function(y, m) { 
             const g = document.getElementById('calendar-grid'); g.innerHTML = '';
             const dim = new Date(y, m + 1, 0).getDate();
@@ -639,10 +604,11 @@
             for(let i = 0; i < fd; i++) g.innerHTML += `<div></div>`;
             for(let d = 1; d <= dim; d++) {
                 const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                g.innerHTML += `<div onclick="openDayView('${ds}')" class="calendar-day bg-white p-2 relative cursor-pointer hover:shadow-md transition-all"><span class="text-sm font-bold">${d}</span><div id="ship-count-${ds}" class="mt-1"></div></div>`;
+                g.innerHTML += `<div onclick="openDayView('${ds}')" class="calendar-day bg-white border border-slate-100 rounded-xl p-2 relative cursor-pointer hover:shadow-md"><span class="text-sm font-bold text-slate-700">${d}</span><div id="ship-count-${ds}" class="mt-1"></div></div>`;
                 window.loadDayStats(ds);
             }
         };
+
         window.loadDayStats = async function(ds) { 
             const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'shipments'), where('date', '==', ds));
             const s = await getDocs(q);
@@ -652,24 +618,79 @@
             }
         };
 
-        /* --- STARTUP & LISTENERS --- */
-        onAuthStateChanged(auth, async (u) => { if(u){ checkSession(u); resetInactivityTimer(); } else showLockScreen("Inicie sesión."); });
-        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'users_directory'), (s) => {
-            const l = document.getElementById('user-list'); if(l){ l.innerHTML = ''; s.forEach(d => l.innerHTML += window.renderUserRow(d.data(), d.id)); }
-        });
-        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries'), (s) => {
-            const l = document.getElementById('ben-list'); if(l){ l.innerHTML = ''; s.forEach(d => { const b=d.data(); l.innerHTML += `<tr class="hover:bg-slate-50 border-b"><td class="p-4 pl-6 font-bold">${b.name}<br><span class="text-[10px] text-slate-400 font-mono">${b.id}</span></td><td class="p-4 text-xs font-bold ${b.pickupCounter?'text-orange-500':'text-emerald-500'}">${b.pickupCounter?'VENTANILLA':'DOMICILIO'}</td><td class="p-4 text-xs">IHSS</td><td class="p-4 text-[10px] font-bold text-slate-400">P: ${b.assignedPharma?.name||'?'}<br>CC: ${b.assignedCC?.name||'?'}</td><td class="p-4 text-right"><div class="flex justify-end gap-2"><button onclick="openHistory('${b.id}','${b.name}')" class="text-slate-400 hover:text-blue-500"><i class="fa-solid fa-history"></i></button><button onclick="editBeneficiary('${encodeURIComponent(JSON.stringify(b))}')" class="text-blue-600"><i class="fa-solid fa-pen"></i></button></div></td></tr>`; }); }
-        });
+        window.openDayView = async (dateStr) => {
+            selectedDate = dateStr; document.getElementById('dayModalDate').innerText = dateStr;
+            const lr = document.getElementById('content-route'), lp = document.getElementById('content-pickup');
+            lr.innerHTML = '...'; lp.innerHTML = '...'; document.getElementById('dayModal').classList.remove('hidden');
+            const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'shipments'), where('date', '==', dateStr));
+            const snap = await getDocs(q);
+            lr.innerHTML = ''; lp.innerHTML = '';
+            snap.forEach(d => {
+                const s = d.data();
+                const isP = s.pickupCounter || s.assignedCC?.uid === 'ventanilla';
+                const h = window.renderTimelineItem(s);
+                if(isP) lp.innerHTML += h; else lr.innerHTML += h;
+            });
+        };
 
-        /* --- UTILIDADES ADICIONALES --- */
+        window.downloadDayReport = async () => {
+             const d = document.getElementById('dayModalDate').innerText;
+             const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'shipments'), where('date', '==', d));
+             const s = await getDocs(q);
+             let csv = "\uFEFFFecha;Guia;Paciente;ID;Estado;Tipo;Farmacia;CallCenter\n";
+             s.forEach(docSnap => {
+                 const x = docSnap.data();
+                 const type = (x.pickupCounter || x.assignedCC?.uid === 'ventanilla') ? "Ventanilla" : "Ruta";
+                 csv += `${x.date};${x.guideNumber||'PEND'};${x.beneficiaryName};${x.beneficiaryId};${x.status};${type};${x.assignedPharma?.name};${x.assignedCC?.name}\n`;
+             });
+             const link = document.createElement("a"); link.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+             link.setAttribute("download", `Reporte_${d}.csv`); link.click();
+        };
+
+        /* --- BLOQUE: IA PLANNER (RECETAS) --- */
+        window.runAIScheduler = async () => {
+            if(!confirm("¿Planificar envíos para el próximo mes según ciclos de recetas?")) return;
+            const q = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries'));
+            const batch = writeBatch(db); let count = 0;
+            q.forEach(d => {
+                const b = d.data();
+                if(b.lastDispense) {
+                    const next = new Date(b.lastDispense); next.setDate(next.getDate() + 30);
+                    const ds = next.toISOString().split('T')[0];
+                    batch.set(doc(db, 'artifacts', appId, 'public', 'data', 'shipments', `${b.id}_${ds}`), { date: ds, beneficiaryId: b.id, beneficiaryName: b.name, status: 'Nuevo', assignedPharma: b.assignedPharma, assignedCC: b.assignedCC, pickupCounter: b.pickupCounter, createdAt: new Date().toISOString(), isAutoGenerated: true });
+                    count++;
+                }
+            });
+            await batch.commit(); alert(`IA: ${count} envíos planificados.`);
+        };
+
+        /* --- INICIALIZADORES AUXILIARES --- */
+        window.updateBreadcrumb = () => {
+            const b = document.getElementById('ship-breadcrumb');
+            let h = `<span class="cursor-pointer hover:underline" onclick="resetShipView()">Inicio</span>`;
+            if (currentYear) h += ` > <span class="cursor-pointer hover:underline" onclick="openYear(${currentYear})">${currentYear}</span>`;
+            if (currentMonth !== null) h += ` > <span>${monthNames[currentMonth]}</span>`;
+            b.innerHTML = h;
+        };
+        window.resetShipView = () => { currentYear = null; currentMonth = null; document.getElementById('ship-days').classList.add('hidden'); document.getElementById('ship-months').classList.add('hidden'); document.getElementById('ship-years').classList.remove('hidden'); window.updateBreadcrumb(); };
         window.switchDayTab = (t) => {
             const br=document.getElementById('tab-route'), bp=document.getElementById('tab-pickup'), cr=document.getElementById('content-route'), cp=document.getElementById('content-pickup');
             if(t==='route'){ br.classList.add('active'); bp.classList.remove('active'); cr.classList.remove('hidden'); cp.classList.add('hidden'); }
             else { bp.classList.add('active'); br.classList.remove('active'); cp.classList.remove('hidden'); cr.classList.add('hidden'); }
         };
         window.toggleCCAssign = () => { document.getElementById('benAssignCC').disabled = document.getElementById('benPickup').checked; };
-        window.resetShipView = () => { currentYear = null; currentMonth = null; document.getElementById('ship-days').classList.add('hidden'); document.getElementById('ship-months').classList.add('hidden'); document.getElementById('ship-years').classList.remove('hidden'); };
-        window.updateBreadcrumb = () => { const b = document.getElementById('ship-breadcrumb'); if(!b) return; let h = `<span class="cursor-pointer hover:underline" onclick="resetShipView()">Inicio</span>`; if (currentYear) h += ` > <span class="cursor-pointer hover:underline" onclick="openYear(${currentYear})">${currentYear}</span>`; if (currentMonth !== null) h += ` > <span>${monthNames[currentMonth]}</span>`; b.innerHTML = h; };
+        window.editBeneficiary = (s) => window.openBeneficiaryModal(true, JSON.parse(decodeURIComponent(s)));
+
+        window.openHistory = async function(id, name) {
+            const list = document.getElementById('hist-list');
+            list.innerHTML = '<p class="p-4">Cargando...</p>';
+            document.getElementById('historyModal').classList.remove('hidden');
+            const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'shipments'), where('beneficiaryId', '==', id));
+            const snap = await getDocs(q);
+            let h = ''; snap.forEach(d => { const s = d.data(); h += `<tr class="border-b"><td class="p-3">${s.date}</td><td class="p-3 font-mono text-[10px]">${s.guideNumber||'---'}</td><td class="p-3"><span class="bg-slate-100 px-2 py-0.5 rounded text-[10px] font-bold">${s.status}</span></td><td class="p-3 text-right text-[10px] text-slate-400">${new Date(s.createdAt).toLocaleDateString()}</td></tr>`; });
+            list.innerHTML = h || '<tr><td colspan="4" class="p-4 text-center">Sin historial disponible.</td></tr>';
+        };
+
         async function loadAssignableLists(phU, ccU){
             const phS = document.getElementById('benAssignPharma'), ccS = document.getElementById('benAssignCC');
             phS.innerHTML = '<option value="">Farmacia...</option>'; ccS.innerHTML = '<option value="">CC...</option>';
@@ -680,8 +701,16 @@
                 if(u.role === 'contact_center') ccS.innerHTML += opt;
             });
         }
-        function showLockScreen(m) { const lock = document.getElementById('auth-lock'); if(lock) { document.getElementById('lock-msg').innerText = m; lock.classList.remove('hidden'); } }
+        function showLockScreen(m) { document.getElementById('lock-msg').innerText = m; document.getElementById('auth-lock').classList.remove('hidden'); }
 
+        /* --- STARTUP --- */
+        onAuthStateChanged(auth, (u) => { if(u){ checkSession(u); resetInactivityTimer(); } else showLockScreen("Inicie sesión."); });
+        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'users_directory'), (s) => {
+            const l = document.getElementById('user-list'); if(l){ l.innerHTML = ''; s.forEach(d => l.innerHTML += window.renderUserRow(d.data(), d.id)); }
+        });
+        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries'), (s) => {
+            const l = document.getElementById('ben-list'); if(l){ l.innerHTML = ''; s.forEach(d => { const b=d.data(); l.innerHTML += `<tr class="hover:bg-slate-50 border-b"><td class="p-4 pl-6 font-bold">${b.name}<br><span class="text-[10px] text-slate-400 font-mono">${b.id}</span></td><td class="p-4 text-xs font-bold ${b.pickupCounter?'text-orange-600':'text-blue-600'}">${b.pickupCounter?'Ventanilla':'Ruta'}</td><td class="p-4 text-xs">IHSS</td><td class="p-4 text-[10px] font-bold text-slate-400">P: ${b.assignedPharma?.name||'?'}<br>CC: ${b.assignedCC?.name||'?'}</td><td class="p-4 text-right"><div class="flex justify-end gap-2"><button onclick="openHistory('${b.id}','${b.name}')" class="text-slate-400 hover:text-blue-500"><i class="fa-solid fa-history"></i></button><button onclick="editBeneficiary('${encodeURIComponent(JSON.stringify(b))}')" class="text-blue-600"><i class="fa-solid fa-pen"></i></button></div></td></tr>`; }); }
+        });
         window.switchView('dashboard');
     </script>
 </body>
