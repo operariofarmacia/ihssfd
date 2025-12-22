@@ -28,12 +28,8 @@
     <style>
         body { font-family: 'Poppins', sans-serif; background-color: #f8fafc; }
         .fade-in { animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
         .modal-backdrop { background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
-        .toggle-checkbox:checked { right: 0; border-color: #10b981; }
-        .toggle-checkbox:checked + .toggle-label { background-color: #10b981; }
-        .job-check { accent-color: #06b6d4; width: 16px; height: 16px; cursor: pointer; }
-        select { -webkit-appearance: none; -moz-appearance: none; appearance: none; }
         .custom-scroll::-webkit-scrollbar { width: 6px; }
         .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -41,16 +37,14 @@
         .dash-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1); }
         .calendar-day { min-height: 100px; transition: all 0.2s; }
         .calendar-day:hover { background-color: #f0f9ff; border-color: #06b6d4; }
-        
-        /* Timeline Styles */
         .timeline-step { position: relative; z-index: 1; min-width: 50px; }
         .timeline-step::before { content: ''; position: absolute; top: 9px; left: -50%; width: 100%; height: 2px; background: #e2e8f0; z-index: -1; }
         .timeline-step:first-child::before { display: none; }
         .timeline-active .step-dot { background-color: #10b981; color: white; border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); }
         .timeline-active::before { background: #10b981; }
-        /* Tabs Styles */
-        .tab-btn.active { border-bottom: 3px solid #003366; color: #003366; background-color: #f1f5f9; }
-        .tab-btn { color: #64748b; }
+        .toggle-checkbox:checked { right: 0; border-color: #10b981; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #10b981; }
+        .job-check { accent-color: #06b6d4; width: 16px; height: 16px; cursor: pointer; }
     </style>
 </head>
 <body class="flex flex-col md:flex-row h-screen overflow-hidden text-slate-700 bg-slate-50">
@@ -134,12 +128,7 @@
         <div id="view-users" class="hidden-view flex-1 flex flex-col h-full overflow-hidden fade-in">
             <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center z-10 shrink-0">
                 <div><h1 class="text-2xl font-bold text-brand-dark">Directorio de Personal</h1></div>
-                <div class="flex gap-2">
-                    <button onclick="balanceWorkload()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-200 px-4 py-2.5 rounded-xl font-bold transition flex items-center text-sm shadow-sm">
-                        <i class="fa-solid fa-scale-balanced mr-2"></i> Equilibrar Cargas
-                    </button>
-                    <button onclick="openModal()" class="bg-brand-dark hover:bg-brand-cyan text-white px-6 py-2.5 rounded-xl font-bold shadow-lg transition-all flex items-center text-sm"><i class="fa-solid fa-user-plus mr-2"></i> Nuevo Usuario</button>
-                </div>
+                <button onclick="openModal()" class="bg-brand-dark hover:bg-brand-cyan text-white px-6 py-2.5 rounded-xl font-bold shadow-lg transition-all flex items-center text-sm"><i class="fa-solid fa-user-plus mr-2"></i> Nuevo Usuario</button>
             </header>
             <div class="flex-1 overflow-y-auto p-6 md:p-8 custom-scroll">
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
@@ -164,15 +153,33 @@
             </div>
         </div>
 
-        <!-- VISTA ENVÍOS -->
+        <!-- VISTA ENVÍOS CON IA -->
         <div id="view-shipments" class="hidden-view flex-1 flex flex-col h-full overflow-hidden fade-in">
             <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center z-10 shrink-0">
                 <div><h1 class="text-2xl font-bold text-brand-dark flex items-center"><i class="fa-solid fa-truck-ramp-box mr-3 text-brand-cyan"></i> Gestión de Envíos</h1><nav class="flex text-xs text-slate-500 mt-1" id="ship-breadcrumb"><span class="font-bold text-brand-dark">Inicio</span></nav></div>
             </header>
-            <div class="flex-1 overflow-y-auto p-6 md:p-8 custom-scroll bg-slate-50/50">
-                <div id="ship-years" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"><div onclick="openYear(2026)" class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 hover:border-brand-cyan hover:shadow-xl cursor-pointer transition-all group text-center year-card" data-year="2026"><div class="text-4xl font-bold text-brand-dark group-hover:text-brand-cyan mb-2">2026</div><p class="text-xs text-slate-400 uppercase tracking-widest">Año Fiscal</p></div><div onclick="createNewYear()" class="bg-slate-100 p-8 rounded-3xl border-2 border-dashed border-slate-300 hover:border-brand-cyan hover:bg-white cursor-pointer transition-all group text-center flex flex-col items-center justify-center"><div class="w-12 h-12 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center text-xl mb-2 group-hover:bg-brand-cyan group-hover:text-white transition-colors"><i class="fa-solid fa-plus"></i></div><p class="text-xs text-slate-400 font-bold uppercase tracking-widest group-hover:text-brand-cyan">Crear Año</p></div></div>
-                <div id="ship-months" class="hidden grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
-                <div id="ship-days" class="hidden"><div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6"><div class="grid grid-cols-7 gap-2 mb-2 text-center text-xs font-bold text-slate-400 uppercase"><div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div></div><div id="calendar-grid" class="grid grid-cols-7 gap-2"></div></div></div>
+            <div class="flex flex-col md:flex-row h-full overflow-hidden">
+                <div class="flex-1 overflow-y-auto p-6 md:p-8 custom-scroll bg-slate-50/50">
+                    <div id="ship-years" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"><div onclick="openYear(2026)" class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 hover:border-brand-cyan hover:shadow-xl cursor-pointer transition-all group text-center year-card" data-year="2026"><div class="text-4xl font-bold text-brand-dark group-hover:text-brand-cyan mb-2">2026</div><p class="text-xs text-slate-400 uppercase tracking-widest">Año Fiscal</p></div><div onclick="createNewYear()" class="bg-slate-100 p-8 rounded-3xl border-2 border-dashed border-slate-300 hover:border-brand-cyan hover:bg-white cursor-pointer transition-all group text-center flex flex-col items-center justify-center"><div class="w-12 h-12 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center text-xl mb-2 group-hover:bg-brand-cyan group-hover:text-white transition-colors"><i class="fa-solid fa-plus"></i></div><p class="text-xs text-slate-400 font-bold uppercase tracking-widest group-hover:text-brand-cyan">Crear Año</p></div></div>
+                    <div id="ship-months" class="hidden grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+                    <div id="ship-days" class="hidden"><div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6"><div class="grid grid-cols-7 gap-2 mb-2 text-center text-xs font-bold text-slate-400 uppercase"><div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div></div><div id="calendar-grid" class="grid grid-cols-7 gap-2"></div></div></div>
+                </div>
+
+                <!-- Panel IA Planificador -->
+                <div class="w-full md:w-80 bg-white border-l border-slate-200 shadow-xl flex flex-col z-20">
+                    <div class="p-5 border-b border-slate-100 bg-brand-light">
+                        <h3 class="font-bold text-brand-teal flex items-center"><i class="fa-solid fa-robot mr-2"></i> Planificador IA</h3>
+                        <p class="text-[10px] text-slate-500 mt-1">Detección de ciclos de receta.</p>
+                    </div>
+                    <div class="flex-1 overflow-y-auto p-4 custom-scroll" id="ai-suggestions-list">
+                        <div class="text-center py-10">
+                            <button onclick="runAIScheduler()" class="bg-brand-cyan hover:bg-brand-teal text-white px-6 py-2.5 rounded-full font-bold shadow-lg transition-all transform hover:scale-105 text-sm">
+                                <i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Analizar Próximo Mes
+                            </button>
+                            <p class="text-xs text-slate-400 mt-3 px-4">Detecta pacientes por vencer, calcula su próxima receta (Ej: 3 de 6) y genera el envío.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -193,7 +200,7 @@
         </div>
     </div>
 
-    <!-- MODAL BENEFICIARIO (ACTUALIZADO: DOBLE ASIGNACIÓN + VENTANILLA + FECHAS + SINCRONIZACIÓN) -->
+    <!-- MODAL BENEFICIARIO (DOBLE ASIGNACIÓN + VENTANILLA) -->
     <div id="benModal" class="fixed inset-0 modal-backdrop hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl w-full max-w-4xl flex flex-col max-h-[90vh]">
             <div class="bg-brand-dark p-5 text-white flex justify-between"><h3 class="font-bold">Derechohabiente</h3><button onclick="document.getElementById('benModal').classList.add('hidden')"><i class="fa-solid fa-xmark"></i></button></div>
@@ -210,7 +217,6 @@
                         <div><label class="block text-xs font-bold text-blue-700 uppercase mb-1"><i class="fa-solid fa-calendar-check mr-1"></i> Última Dispensación</label><input type="date" id="benLastDispense" class="w-full border border-blue-200 rounded-lg p-2.5 bg-white text-sm"></div>
                         <div><label class="block text-xs font-bold text-blue-700 uppercase mb-1"><i class="fa-solid fa-truck-fast mr-1"></i> Fecha Envío (Admin)</label><input type="date" id="benNextShipment" class="w-full border border-blue-200 rounded-lg p-2.5 bg-white text-sm"></div>
                     </div>
-                    
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 relative">
                         <h4 class="text-xs font-bold text-slate-400 uppercase mb-3 flex items-center"><i class="fa-solid fa-users mr-2"></i> Contacto Familiar</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -218,15 +224,10 @@
                             <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Teléfono Familiar</label><input type="text" id="benFamPhone" class="w-full border rounded-lg p-2.5 bg-white"></div>
                         </div>
                     </div>
-
-                    <!-- OPCIÓN VENTANILLA -->
                     <div class="flex items-center p-3 bg-orange-50 border border-orange-100 rounded-lg">
                         <input type="checkbox" id="benPickup" class="w-5 h-5 text-orange-600 rounded border-gray-300 focus:ring-orange-500 cursor-pointer" onchange="toggleCCAssign()">
-                        <label for="benPickup" class="ml-2 block text-sm font-bold text-slate-700 cursor-pointer">
-                            Entregar en Ventanilla (Omitir Contact Center)
-                        </label>
+                        <label for="benPickup" class="ml-2 block text-sm font-bold text-slate-700 cursor-pointer">Entregar en Ventanilla (Omitir Contact Center)</label>
                     </div>
-
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                         <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Tipo de Afiliado</label><select id="benType" class="w-full border rounded-lg p-2.5 bg-white outline-none"><option>Afiliado Directo</option><option>Jubilado</option><option>Pensionado</option><option>Beneficiaria Padre</option><option>Beneficiaria(o) Compañera(o)</option><option>Beneficiaria(o) Esposa(o)</option><option>Beneficiaria Hijo(a)</option></select></div>
                         <div><label class="block text-xs font-bold text-emerald-600 uppercase mb-1">Gestor Farmacia</label><select id="benAssignPharma" class="w-full border rounded-lg p-2.5 bg-white outline-none border-emerald-200 focus:border-emerald-500"><option value="">-- Seleccionar (Solo Admin) --</option></select></div>
@@ -241,7 +242,15 @@
         </div>
     </div>
 
-    <!-- MODAL DETALLE DE DÍA (VISOR CON PESTAÑAS Y DESCARGA CSV) -->
+    <!-- MODAL HISTORIAL DE ENVÍOS -->
+    <div id="historyModal" class="fixed inset-0 modal-backdrop hidden z-[80] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-3xl flex flex-col max-h-[90vh]">
+            <div class="bg-brand-dark p-5 flex justify-between text-white shrink-0"><h3 class="font-bold text-lg"><i class="fa-solid fa-history mr-2"></i> Historial de Envíos</h3><button onclick="document.getElementById('historyModal').classList.add('hidden')" class="text-white/70 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button></div>
+            <div class="p-6 overflow-y-auto custom-scroll"><table class="w-full text-left border-collapse"><thead class="bg-slate-50 text-[10px] uppercase text-slate-500 font-bold"><tr><th class="p-3">Fecha</th><th class="p-3">Guía</th><th class="p-3">Estado</th><th class="p-3 text-right">Etapa Actual</th></tr></thead><tbody id="hist-list" class="divide-y divide-slate-100 text-sm text-slate-600"><tr><td colspan="4" class="p-6 text-center">Cargando...</td></tr></tbody></table></div>
+        </div>
+    </div>
+
+    <!-- MODAL DETALLE DE DÍA -->
     <div id="dayModal" class="fixed inset-0 modal-backdrop hidden z-[70] flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl w-full max-w-4xl flex flex-col max-h-[90vh]">
             <div class="bg-white border-b p-5 flex justify-between items-center shrink-0">
@@ -251,7 +260,6 @@
                 </div>
                 <button onclick="document.getElementById('dayModal').classList.add('hidden')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
-            <!-- Pestañas -->
             <div class="flex border-b border-slate-100">
                 <button onclick="switchDayTab('route')" id="tab-route" class="w-1/2 py-3 text-sm font-bold text-brand-dark border-b-2 border-brand-dark bg-slate-50 tab-btn active">🚚 En Ruta (Domicilio)</button>
                 <button onclick="switchDayTab('pickup')" id="tab-pickup" class="w-1/2 py-3 text-sm font-bold text-slate-400 hover:text-orange-500 border-b-2 border-transparent tab-btn">🏢 Ventanilla (Retiro)</button>
@@ -269,14 +277,6 @@
             <div class="bg-brand-dark p-5 flex justify-between text-white"><h3 class="font-bold">Nueva Guía</h3><button onclick="document.getElementById('shipmentModal').classList.add('hidden')"><i class="fa-solid fa-xmark"></i></button></div>
             <div class="p-6"><form id="shipForm" class="space-y-4"><input type="hidden" id="shipDate"><p id="shipDateDisplay" class="font-bold text-center"></p><select id="shipBeneficiary" class="border w-full p-2 rounded"><option>Cargando...</option></select><input id="shipGuide" placeholder="Tracking #" class="border w-full p-2 rounded"><select id="shipStatus" class="border w-full p-2 rounded"><option>Nuevo</option><option>En Proceso</option><option>Confirmacion CC</option><option>Retorno Farmacia</option><option>Empaquetado</option><option>Revision Calidad</option><option>Listo Logistica</option><option>En Ruta</option><option>Entregado</option></select></form></div>
             <div class="p-5 border-t flex justify-end gap-3"><button onclick="document.getElementById('shipmentModal').classList.add('hidden')" class="text-slate-500">Cancelar</button><button onclick="saveShipment()" class="bg-brand-cyan text-white px-4 py-2 rounded">Guardar</button></div>
-        </div>
-    </div>
-
-    <!-- MODAL HISTORIAL DE ENVÍOS -->
-    <div id="historyModal" class="fixed inset-0 modal-backdrop hidden z-[80] flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl w-full max-w-3xl flex flex-col max-h-[90vh]">
-            <div class="bg-brand-dark p-5 flex justify-between text-white shrink-0"><h3 class="font-bold text-lg"><i class="fa-solid fa-history mr-2"></i> Historial</h3><button onclick="document.getElementById('historyModal').classList.add('hidden')" class="text-white/70 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button></div>
-            <div class="p-6 overflow-y-auto custom-scroll"><table class="w-full text-left border-collapse"><thead class="bg-slate-50 text-[10px] uppercase text-slate-500 font-bold"><tr><th class="p-3">Fecha</th><th class="p-3">Guía</th><th class="p-3">Estado</th><th class="p-3 text-right">Etapa Actual</th></tr></thead><tbody id="hist-list" class="divide-y divide-slate-100 text-sm text-slate-600"><tr><td colspan="4" class="p-6 text-center">Cargando...</td></tr></tbody></table></div>
         </div>
     </div>
 
@@ -428,7 +428,81 @@
             snap.forEach(d => { const s = d.data(); const date = new Date(s.createdAt).toLocaleDateString(); list.innerHTML += `<tr class="border-b border-slate-50 last:border-0"><td class="p-3 font-mono text-xs text-slate-500">${s.date}</td><td class="p-3 font-bold text-brand-dark">${s.guideNumber}</td><td class="p-3"><span class="bg-blue-50 text-blue-600 px-2 py-0.5 rounded text-[10px] font-bold uppercase">${s.status}</span></td><td class="p-3 text-right text-xs text-slate-400">Creado el ${date}</td></tr>`; });
         };
 
-        // --- GESTIÓN BENEFICIARIOS (SYNC & AUTO CREATE SHIPMENT) ---
+        // --- GESTIÓN BENEFICIARIOS (IA PLANNER - INTEGRADO CON LOGICA DE TRANSICIÓN) ---
+        window.runAIScheduler = async () => {
+            if(!confirm("¿Ejecutar planificación automática?\n\n- Generará envíos para pacientes próximos a vencer.\n- Convertirá pacientes de 'Ventanilla' a 'Domicilio' asignando Call Center.")) return;
+            const listDiv = document.getElementById('ai-suggestions-list');
+            listDiv.innerHTML = '<p class="text-center text-slate-400 py-4"><i class="fa-solid fa-spinner fa-spin"></i> Analizando base de datos...</p>';
+            
+            try {
+                // 1. Cargar Agentes CC
+                const qCC = query(collection(db, 'artifacts', appId, 'public', 'data', 'users_directory'), where('role', '==', 'contact_center'));
+                const snapCC = await getDocs(qCC);
+                const ccAgents = [];
+                snapCC.forEach(d => ccAgents.push({uid: d.data().uid, name: d.data().name}));
+
+                const snap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries'));
+                let scheduled = 0;
+                let html = '';
+                const today = new Date();
+                const nextWeek = new Date(); nextWeek.setDate(today.getDate() + 7);
+
+                for (const docSnap of snap.docs) {
+                    const b = docSnap.data();
+                    if (!b.lastDispense) continue;
+                    
+                    const lastDate = new Date(b.lastDispense);
+                    const nextDueDate = new Date(lastDate);
+                    nextDueDate.setDate(lastDate.getDate() + 30);
+
+                    if (nextDueDate <= nextWeek) {
+                        const dateStr = nextDueDate.toISOString().split('T')[0];
+                        let extraAction = "";
+                        let newAgent = null;
+                        
+                        // TRANSICIÓN VENTANILLA -> DOMICILIO
+                        // Si estaba en ventanilla (pickupCounter) -> asignar CC
+                        if (b.pickupCounter && ccAgents.length > 0) {
+                            newAgent = ccAgents[Math.floor(Math.random() * ccAgents.length)];
+                            extraAction = `<div class="text-[9px] text-orange-500 mt-1"><i class="fa-solid fa-shuffle mr-1"></i>Pasará a Domicilio (${newAgent.name})</div>`;
+                        }
+
+                        const agentData = newAgent ? JSON.stringify(newAgent).replace(/"/g, "&quot;") : "null";
+
+                        html += `<div class="bg-slate-50 p-3 rounded-lg border border-slate-100 mb-2 flex justify-between items-center group hover:border-brand-cyan transition"><div><div class="text-xs font-bold text-slate-700">${b.name}</div><div class="text-[10px] text-slate-500">Fecha: ${dateStr}</div>${extraAction}</div><button onclick="quickCreateShipment('${b.id}', '${b.name}', '${dateStr}', '${b.assignedPharma?.uid||''}', '${b.assignedPharma?.name||''}', ${b.pickupCounter}, ${agentData})" class="bg-brand-cyan text-white px-2 py-1.5 rounded-lg text-[10px] hover:bg-brand-dark shadow-sm transition"><i class="fa-solid fa-plus mr-1"></i> Crear</button></div>`;
+                        scheduled++;
+                    }
+                }
+                if(scheduled === 0) listDiv.innerHTML = '<p class="text-center text-slate-400 py-4">No hay reabastecimientos próximos (7 días).</p>';
+                else listDiv.innerHTML = `<p class="text-xs font-bold text-brand-dark mb-2">${scheduled} Sugerencias Encontradas</p>` + html;
+            } catch(e) { console.error(e); listDiv.innerHTML = '<p class="text-red-400 text-xs">Error en análisis.</p>'; }
+        };
+
+        window.quickCreateShipment = async (bid, bname, date, uidPharma, namePharma, isPickup, newAgentCC) => {
+            try {
+                const batch = writeBatch(db);
+                let shipmentData = { date, beneficiaryId: bid, beneficiaryName: bname, guideNumber: "AUTO-" + Date.now().toString().slice(-6), status: "Nuevo", assignedPharma: {uid: uidPharma, name: namePharma}, createdAt: new Date().toISOString() };
+
+                if (isPickup && newAgentCC) {
+                    shipmentData.assignedCC = newAgentCC;
+                    shipmentData.status = "Nuevo"; 
+                    // Actualizar beneficiario para quitar marca de ventanilla
+                    const benRef = doc(db, 'artifacts', appId, 'public', 'data', 'beneficiaries', bid);
+                    batch.update(benRef, { pickupCounter: false, assignedCC: newAgentCC, status: 'Activo' });
+                } else {
+                     const benSnap = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'beneficiaries', bid));
+                     if(benSnap.exists()) shipmentData.assignedCC = benSnap.data().assignedCC || {uid:'', name:'Sin asignar'};
+                }
+
+                const shipRef = doc(collection(db, 'artifacts', appId, 'public', 'data', 'shipments'));
+                batch.set(shipRef, shipmentData);
+                await batch.commit();
+                alert(isPickup && newAgentCC ? "✅ Envío creado y Beneficiario transferido a Domicilio." : "✅ Envío programado correctamente.");
+                event.target.closest('div').remove();
+            } catch(e) { alert("Error: " + e.message); }
+        };
+
+        // --- GESTIÓN BENEFICIARIOS (MODAL) ---
         async function loadAssignableLists(selectedPharma = null, selectedCC = null) {
             const pharmaSelect = document.getElementById('benAssignPharma');
             const ccSelect = document.getElementById('benAssignCC');
@@ -444,125 +518,11 @@
                 else if(u.role === 'contact_center') { if(selectedCC === u.uid) opt.selected = true; ccSelect.appendChild(opt.cloneNode(true)); }
             });
         }
-        
-        window.toggleCCAssign = () => {
-            const isPickup = document.getElementById('benPickup').checked;
-            const selectCC = document.getElementById('benAssignCC');
-            if(isPickup) { selectCC.value = ""; selectCC.disabled = true; selectCC.classList.add('bg-slate-100', 'text-slate-400'); } 
-            else { selectCC.disabled = false; selectCC.classList.remove('bg-slate-100', 'text-slate-400'); }
-        };
-
-        window.openBeneficiaryModal = (isEdit = false, benData = null) => {
-            document.getElementById('benForm').reset();
-            const modalTitle = document.getElementById('benModal').querySelector('h3');
-            const btnSave = document.getElementById('btnSaveBen');
-            if(isEdit && benData) {
-                modalTitle.innerHTML = `<i class="fa-solid fa-pen-to-square mr-2"></i> Editar Derechohabiente`;
-                btnSave.innerText = "Actualizar Datos";
-                document.getElementById('benId').value = benData.id; document.getElementById('benId').disabled = true;
-                document.getElementById('benName').value = benData.name;
-                document.getElementById('benPhone').value = benData.phone || ''; document.getElementById('benMuni').value = benData.municipality || '';
-                document.getElementById('benAddr').value = benData.address || ''; document.getElementById('benFamName').value = benData.family?.name || '';
-                document.getElementById('benFamPhone').value = benData.family?.phone || ''; document.getElementById('benType').value = benData.type || 'Afiliado Directo';
-                document.getElementById('benLastDispense').value = benData.lastDispense || ''; document.getElementById('benNextShipment').value = benData.nextShipment || '';
-                
-                const isPickup = benData.pickupCounter || false;
-                document.getElementById('benPickup').checked = isPickup;
-                toggleCCAssign();
-                
-                loadAssignableLists(benData.assignedPharma?.uid, benData.assignedCC?.uid);
-            } else {
-                modalTitle.innerHTML = `<i class="fa-solid fa-hospital-user mr-2"></i> Nuevo Derechohabiente`;
-                btnSave.innerText = "Guardar Nuevo";
-                document.getElementById('benId').disabled = false;
-                document.getElementById('benPickup').checked = false; toggleCCAssign();
-                loadAssignableLists();
-            }
-            document.getElementById('benModal').classList.remove('hidden');
-        };
-
+        window.openBeneficiaryModal = (isEdit = false, benData = null) => { document.getElementById('benForm').reset(); const modalTitle = document.getElementById('benModal').querySelector('h3'); if(isEdit && benData) { modalTitle.innerHTML = `<i class="fa-solid fa-pen-to-square mr-2"></i> Editar Derechohabiente`; document.getElementById('benId').value = benData.id; document.getElementById('benId').disabled = true; document.getElementById('benName').value = benData.name; document.getElementById('benPhone').value = benData.phone || ''; document.getElementById('benMuni').value = benData.municipality || ''; document.getElementById('benAddr').value = benData.address || ''; document.getElementById('benFamName').value = benData.family?.name || ''; document.getElementById('benFamPhone').value = benData.family?.phone || ''; document.getElementById('benType').value = benData.type || 'Afiliado Directo'; document.getElementById('benLastDispense').value = benData.lastDispense || ''; document.getElementById('benNextShipment').value = benData.nextShipment || ''; loadAssignableLists(benData.assignedPharma?.uid, benData.assignedCC?.uid); } else { modalTitle.innerHTML = `<i class="fa-solid fa-hospital-user mr-2"></i> Nuevo Derechohabiente`; document.getElementById('benId').disabled = false; loadAssignableLists(); } document.getElementById('benModal').classList.remove('hidden'); };
         window.editBeneficiary = (dataString) => { const data = JSON.parse(decodeURIComponent(dataString)); openBeneficiaryModal(true, data); };
-
-        window.saveBeneficiary = async () => {
-            const id = document.getElementById('benId').value;
-            const name = document.getElementById('benName').value;
-            const valPharma = document.getElementById('benAssignPharma').value;
-            const valCC = document.getElementById('benAssignCC').value;
-            const isPickup = document.getElementById('benPickup').checked;
-            const nextShipment = document.getElementById('benNextShipment').value;
-            
-            if(!id || !name) { alert("ID y Nombre son obligatorios."); return; }
-
-            let pharma = { uid: "", name: "Sin asignar" };
-            let cc = { uid: "", name: "Sin asignar" };
-
-            if(valPharma) { const [uid, n] = valPharma.split("|"); pharma = { uid, name: n }; }
-            
-            if(!isPickup) {
-                if(valCC) { const [uid, n] = valCC.split("|"); cc = { uid, name: n }; }
-            } else {
-                cc = { uid: "ventanilla", name: "ENTREGA EN VENTANILLA" };
-            }
-
-            const data = {
-                id, name, 
-                phone: document.getElementById('benPhone').value,
-                address: document.getElementById('benAddr').value,
-                municipality: document.getElementById('benMuni').value,
-                family: { name: document.getElementById('benFamName').value, phone: document.getElementById('benFamPhone').value },
-                type: document.getElementById('benType').value,
-                assignedPharma: pharma,
-                assignedCC: cc,
-                pickupCounter: isPickup,
-                lastDispense: document.getElementById('benLastDispense').value || null,
-                nextShipment: nextShipment || null,
-                status: 'Activo',
-                updatedAt: new Date().toISOString()
-            };
-
-            try {
-                // 1. Guardar/Actualizar el Derechohabiente
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'beneficiaries', id), data, {merge: true});
-
-                // 2. LOGICA AUTOMÁTICA: Si se definió "Fecha Envío (Admin)", crear la guía en el calendario automáticamente
-                if (nextShipment) {
-                    const shipId = `${id}_${nextShipment}`; // ID único por día/persona
-                    const shipmentData = {
-                        date: nextShipment,
-                        beneficiaryId: id,
-                        beneficiaryName: name,
-                        guideNumber: "PENDIENTE",
-                        status: "Nuevo",
-                        assignedPharma: pharma,
-                        assignedCC: cc,
-                        pickupCounter: isPickup,
-                        createdAt: new Date().toISOString(),
-                        isPlanned: true
-                    };
-                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shipments', shipId), shipmentData);
-                }
-
-                alert("Datos guardados y sincronizados.");
-                document.getElementById('benModal').classList.add('hidden');
-            } catch(e) { alert("Error: " + e.message); }
-        };
-
+        window.saveBeneficiary = async () => { const id = document.getElementById('benId').value; const name = document.getElementById('benName').value; const valPharma = document.getElementById('benAssignPharma').value; const valCC = document.getElementById('benAssignCC').value; if(!id || !name) { alert("ID y Nombre son obligatorios."); return; } let pharma = { uid: "", name: "Sin asignar" }; let cc = { uid: "", name: "Sin asignar" }; if(valPharma) { const [uid, n] = valPharma.split("|"); pharma = { uid, name: n }; } if(valCC) { const [uid, n] = valCC.split("|"); cc = { uid, name: n }; } const data = { id, name, phone: document.getElementById('benPhone').value, address: document.getElementById('benAddr').value, municipality: document.getElementById('benMuni').value, family: { name: document.getElementById('benFamName').value, phone: document.getElementById('benFamPhone').value }, type: document.getElementById('benType').value, assignedPharma: pharma, assignedCC: cc, lastDispense: document.getElementById('benLastDispense').value || null, nextShipment: document.getElementById('benNextShipment').value || null, status: 'Activo', updatedAt: new Date().toISOString() }; try { await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'beneficiaries', id), data, {merge: true}); alert("Derechohabiente guardado."); document.getElementById('benModal').classList.add('hidden'); } catch(e) { alert("Error: " + e.message); } };
         window.handleCSVUpload = (input) => { /* Lógica CSV igual */ alert("Simulando carga CSV..."); };
-
-        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries'), (s) => {
-            const list = document.getElementById('ben-list'); if(!list) return; list.innerHTML = '';
-            if(s.empty) { list.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-slate-400">Sin registros.</td></tr>'; return; }
-            s.forEach(d => {
-                const b = d.data();
-                const jsonString = encodeURIComponent(JSON.stringify(b));
-                let priorityHtml = '';
-                if (b.lastDispense) { const lastDate = new Date(b.lastDispense); const diffTime = Math.abs(new Date() - lastDate); const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); if (diffDays >= 25) priorityHtml = `<span class="block mt-1 text-[9px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded w-fit border border-red-100 animate-pulse">🔴 RENOVAR YA</span>`; else priorityHtml = `<span class="block mt-1 text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded w-fit border border-emerald-100">🟢 AL DÍA</span>`; }
-                let ccDisplay = b.assignedCC?.name || '?';
-                if(b.pickupCounter) ccDisplay = '<span class="text-orange-500 font-bold"><i class="fa-solid fa-store mr-1"></i>VENTANILLA</span>';
-                else ccDisplay = `<span class="text-blue-600 font-bold"><i class="fa-solid fa-headset mr-1"></i>${ccDisplay}</span>`;
-                list.innerHTML += `<tr class="hover:bg-slate-50 border-b border-slate-100 group"><td class="p-4 font-medium"><div>${b.name}</div><div class="text-xs text-slate-400 font-mono">${b.id}</div>${priorityHtml}</td><td class="p-4 text-xs">${b.type || 'N/A'}</td><td class="p-4 text-xs">${b.municipality || ''}</td><td class="p-4 text-xs"><div class="flex flex-col gap-1"><span class="text-emerald-600 font-bold"><i class="fa-solid fa-pills mr-1"></i>${b.assignedPharma?.name || '?'}</span>${ccDisplay}</div></td><td class="p-4 text-right flex justify-end gap-2"><button onclick="openHistory('${b.id}', '${b.name}')" class="text-slate-400 hover:text-orange-500 transition p-2 rounded-full hover:bg-orange-50" title="Ver Historial"><i class="fa-solid fa-clock-rotate-left"></i></button><button onclick="editBeneficiary('${jsonString}')" class="text-slate-400 hover:text-blue-600 transition p-2 rounded-full hover:bg-blue-50" title="Editar"><i class="fa-solid fa-pen-to-square"></i></button></td></tr>`;
-            });
-        });
+        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries'), (s) => { const list = document.getElementById('ben-list'); if(!list) return; list.innerHTML = ''; if(s.empty) { list.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-slate-400">Sin registros.</td></tr>'; return; } s.forEach(d => { const b = d.data(); const jsonString = encodeURIComponent(JSON.stringify(b)); let priorityHtml = ''; if (b.lastDispense) { const lastDate = new Date(b.lastDispense); const diffTime = Math.abs(new Date() - lastDate); const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); if (diffDays >= 25) priorityHtml = `<span class="block mt-1 text-[9px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded w-fit border border-red-100 animate-pulse">🔴 RENOVAR YA</span>`; else priorityHtml = `<span class="block mt-1 text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded w-fit border border-emerald-100">🟢 AL DÍA</span>`; } let ccDisplay = b.assignedCC?.name || '?'; if(b.pickupCounter) ccDisplay = '<span class="text-orange-500 font-bold"><i class="fa-solid fa-store mr-1"></i>VENTANILLA</span>'; else ccDisplay = `<span class="text-blue-600 font-bold"><i class="fa-solid fa-headset mr-1"></i>${ccDisplay}</span>`; list.innerHTML += `<tr class="hover:bg-slate-50 border-b border-slate-100 group"><td class="p-4 font-medium"><div>${b.name}</div><div class="text-xs text-slate-400 font-mono">${b.id}</div>${priorityHtml}</td><td class="p-4 text-xs">${b.type || 'N/A'}</td><td class="p-4 text-xs">${b.municipality || ''}</td><td class="p-4 text-xs"><div class="flex flex-col gap-1"><span class="text-emerald-600 font-bold"><i class="fa-solid fa-pills mr-1"></i>${b.assignedPharma?.name || '?'}</span>${ccDisplay}</div></td><td class="p-4 text-right flex justify-end gap-2"><button onclick="openHistory('${b.id}', '${b.name}')" class="text-slate-400 hover:text-orange-500 transition p-2 rounded-full hover:bg-orange-50" title="Ver Historial"><i class="fa-solid fa-clock-rotate-left"></i></button><button onclick="editBeneficiary('${jsonString}')" class="text-slate-400 hover:text-blue-600 transition p-2 rounded-full hover:bg-blue-50" title="Editar"><i class="fa-solid fa-pen-to-square"></i></button></td></tr>`; }); });
 
         // --- COMMON ---
         window.safeNavigate = (url) => { try { window.location.href = url; } catch (e) { console.warn("Nav blocked:", e); if(url === 'index.html') showLockScreen("Redirección bloqueada. Usa el botón."); } };
