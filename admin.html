@@ -5,10 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - IHSS a tu Casa</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- PapaParse para procesamiento robusto de CSV -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     
     <script>
         tailwind.config = {
@@ -28,7 +27,7 @@
         body { font-family: 'Poppins', sans-serif; background-color: #f8fafc; }
         .fade-in { animation: fadeIn 0.3s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
-        .modal-backdrop { background-color: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); }
+        .modal-backdrop { background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
         .toggle-checkbox:checked { right: 0; border-color: #10b981; }
         .toggle-checkbox:checked + .toggle-label { background-color: #10b981; }
         .job-check { accent-color: #06b6d4; width: 16px; height: 16px; cursor: pointer; }
@@ -40,8 +39,6 @@
         .dash-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1); }
         .calendar-day { min-height: 110px; transition: all 0.2s; border-radius: 12px; border: 1px solid #e2e8f0; position: relative; }
         .calendar-day:hover { background-color: #f0f9ff; border-color: #06b6d4; }
-        
-        /* Timeline Styles */
         .timeline-step { position: relative; z-index: 1; min-width: 50px; }
         .timeline-step::before { content: ''; position: absolute; top: 9px; left: -50%; width: 100%; height: 2px; background: #e2e8f0; z-index: -1; }
         .timeline-step:first-child::before { display: none; }
@@ -49,8 +46,6 @@
         .timeline-active::before { background: #10b981; }
         .tab-btn.active { border-bottom: 3px solid #003366; color: #003366; font-weight: 700; background-color: #f1f5f9; }
         .tab-btn { color: #64748b; transition: all 0.2s; }
-        
-        /* Progreso de Carga */
         .progress-bar-container { background-color: #e2e8f0; border-radius: 9999px; height: 12px; overflow: hidden; }
         .progress-bar-fill { background: linear-gradient(90deg, #06b6d4, #10b981); height: 100%; width: 0%; transition: width 0.3s ease; }
     </style>
@@ -75,34 +70,30 @@
             <div class="bg-white p-1 rounded-full shadow-lg mb-3 w-16 h-16 flex items-center justify-center ring-2 ring-brand-cyan/50 cursor-pointer hover:scale-105 transition-transform" onclick="switchView('dashboard')">
                 <img src="https://portal.ihss.hn/cronicos/assets/dist/img/Recurso%201.png" class="object-contain h-full w-full p-1">
             </div>
-            <h2 class="font-bold text-lg tracking-wide text-white">ADMINISTRACIÓN</h2>
-            <p class="text-[10px] text-brand-cyan uppercase tracking-wider mb-2">Panel de Control</p>
-            <div class="flex items-center bg-black/20 px-3 py-1 rounded-full border border-white/10 mt-2">
-                <span id="status-dot" class="w-2 h-2 rounded-full bg-brand-clinical animate-pulse mr-2"></span>
-                <span id="status-text" class="text-[10px] font-bold text-emerald-300 uppercase">Sistema Online</span>
-            </div>
+            <h2 class="font-bold text-lg tracking-wide">IHSS a tu Casa</h2>
+            <p class="text-[10px] text-brand-cyan uppercase tracking-widest font-bold">Administrador</p>
         </div>
         <nav class="flex-1 p-4 space-y-2 overflow-y-auto custom-scroll">
-            <button onclick="switchView('dashboard')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-dashboard">
-                <i class="fa-solid fa-house w-5"></i><span class="font-medium text-sm">Inicio</span>
+            <button onclick="switchView('dashboard')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-dashboard">
+                <i class="fa-solid fa-house w-5 text-center"></i><span class="font-medium text-sm">Inicio</span>
             </button>
             <div class="pt-4 pb-2 px-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">Gestión</div>
-            <button onclick="switchView('users')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-users">
-                <i class="fa-solid fa-users-gear w-5"></i><span class="font-medium text-sm">Personal</span>
+            <button onclick="switchView('users')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-users">
+                <i class="fa-solid fa-users-gear w-5 text-center"></i><span class="font-medium text-sm">Personal</span>
             </button>
-            <button onclick="switchView('beneficiaries')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-beneficiaries">
-                <i class="fa-solid fa-hospital-user w-5"></i><span class="font-medium text-sm">Derechohabientes</span>
+            <button onclick="switchView('beneficiaries')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-beneficiaries">
+                <i class="fa-solid fa-hospital-user w-5 text-center"></i><span class="font-medium text-sm">Derechohabientes</span>
             </button>
             <div class="pt-4 pb-2 px-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">Operaciones</div>
-            <button onclick="switchView('shipments')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-shipments">
-                <i class="fa-solid fa-truck-fast w-5"></i><span class="font-medium text-sm">Gestión de Envíos</span>
+            <button onclick="switchView('shipments')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-shipments">
+                <i class="fa-solid fa-truck-fast w-5 text-center"></i><span class="font-medium text-sm">Gestión de Envíos</span>
             </button>
-            <button onclick="switchView('reports')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-reports">
-                <i class="fa-solid fa-chart-pie w-5"></i><span class="font-medium text-sm">Reportes</span>
+            <button onclick="switchView('reports')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-reports">
+                <i class="fa-solid fa-chart-pie w-5 text-center"></i><span class="font-medium text-sm">Reportes</span>
             </button>
         </nav>
-        <div class="p-4 bg-black/20 border-t border-white/5 space-y-2">
-            <button onclick="logout()" class="w-full bg-red-500/20 hover:bg-red-600 text-red-100 py-2 rounded-lg text-xs font-bold uppercase transition flex items-center justify-center group">
+        <div class="p-4 bg-black/20 border-t border-white/5">
+            <button onclick="logout()" class="w-full bg-red-500/20 hover:bg-red-600 text-red-100 py-2.5 rounded-lg text-xs font-bold uppercase transition flex items-center justify-center group">
                 <i class="fa-solid fa-power-off mr-2 group-hover:scale-110 transition-transform"></i> Cerrar Sesión
             </button>
         </div>
@@ -111,11 +102,11 @@
     <!-- CONTENIDO PRINCIPAL -->
     <main class="flex-1 overflow-hidden flex flex-col bg-slate-50 relative">
         
-        <!-- VISTA DASHBOARD -->
+        <!-- DASHBOARD -->
         <div id="view-dashboard" class="flex-1 flex flex-col h-full overflow-hidden fade-in">
-            <header class="bg-white shadow-sm border-b border-slate-200 p-8 z-10 shrink-0">
+            <header class="bg-white shadow-sm border-b border-slate-200 p-8 shrink-0">
                 <h1 class="text-3xl font-bold text-brand-dark mb-1">Bienvenido al Sistema</h1>
-                <p class="text-slate-500">Seleccione un módulo de gestión para comenzar.</p>
+                <p class="text-slate-500 text-sm">Seleccione un módulo de gestión para comenzar.</p>
             </header>
             <div class="flex-1 overflow-y-auto p-8 custom-scroll">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -136,11 +127,14 @@
         <div id="view-users" class="hidden-view flex-1 flex flex-col h-full overflow-hidden fade-in">
             <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center z-10 shrink-0">
                 <div><h1 class="text-2xl font-bold text-brand-dark">Directorio de Personal</h1></div>
-                <button onclick="openUserModal()" class="bg-brand-dark hover:bg-brand-cyan text-white px-6 py-2.5 rounded-xl font-bold shadow-lg transition-all flex items-center text-sm"><i class="fa-solid fa-user-plus mr-2"></i> Nuevo Usuario</button>
+                <div class="flex gap-2">
+                    <button onclick="balanceWorkload()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-200 px-4 py-2 rounded-xl font-bold text-xs shadow-sm transition-all">⚖️ Equilibrar Cargas</button>
+                    <button onclick="openUserModal()" class="bg-brand-dark hover:bg-brand-cyan text-white px-6 py-2.5 rounded-xl font-bold shadow-lg transition-all flex items-center text-sm"><i class="fa-solid fa-user-plus mr-2"></i> Nuevo Usuario</button>
+                </div>
             </header>
             <div class="flex-1 overflow-y-auto p-6 md:p-8 custom-scroll">
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead class="bg-slate-50 text-[11px] uppercase text-slate-500 font-semibold tracking-wider"><tr><th class="p-5 pl-6">Colaborador</th><th class="p-5">Cargo</th><th class="p-5">Acceso</th><th class="p-5 text-center">Estatus</th><th class="p-5 pr-6 text-right">Acciones</th></tr></thead><tbody id="user-list" class="divide-y divide-slate-100 text-sm text-slate-600"><tr><td colspan="5" class="p-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando...</td></tr></tbody></table></div>
+                    <div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead class="bg-slate-50 text-[11px] uppercase text-slate-500 font-semibold tracking-wider"><tr><th class="p-5 pl-6">Colaborador</th><th class="p-5">Cargos</th><th class="p-5">Acceso</th><th class="p-5 text-center">Estatus</th><th class="p-5 pr-6 text-right">Acciones</th></tr></thead><tbody id="user-list" class="divide-y divide-slate-100 text-sm text-slate-600"><tr><td colspan="5" class="p-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando...</td></tr></tbody></table></div>
                 </div>
             </div>
         </div>
@@ -150,7 +144,7 @@
             <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center z-10 shrink-0">
                 <div><h1 class="text-2xl font-bold text-brand-dark">Derechohabientes</h1></div>
                 <div class="flex gap-3">
-                    <label class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg cursor-pointer flex items-center text-sm"><i class="fa-solid fa-file-csv mr-2"></i> Importar CSV<input type="file" id="csvInput" accept=".csv" class="hidden" onchange="handleCSVUpload(this)"></label>
+                    <label class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg cursor-pointer flex items-center text-sm"><i class="fa-solid fa-file-csv mr-2"></i> Cargar CSV<input type="file" id="csvInput" accept=".csv" class="hidden" onchange="handleCSVUpload(this)"></label>
                     <button onclick="openBeneficiaryModal()" class="bg-brand-dark hover:bg-brand-cyan text-white px-5 py-2.5 rounded-xl font-bold shadow-lg flex items-center text-sm"><i class="fa-solid fa-plus mr-2"></i> Crear Manual</button>
                 </div>
             </header>
@@ -171,6 +165,20 @@
                 <div id="ship-months" class="hidden grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
                 <div id="ship-days" class="hidden"><div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6"><div class="grid grid-cols-7 gap-2 mb-2 text-center text-xs font-bold text-slate-400 uppercase"><div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div></div><div id="calendar-grid" class="grid grid-cols-7 gap-2"></div></div></div>
             </div>
+            <!-- Panel Lateral IA -->
+            <aside class="w-full md:w-80 bg-white border-l border-slate-200 shadow-xl flex flex-col z-20">
+                <div class="p-5 border-b border-slate-100 bg-brand-light">
+                    <h3 class="font-bold text-brand-teal flex items-center text-sm uppercase tracking-wider"><i class="fa-solid fa-robot mr-2 text-brand-cyan"></i> Planificador IA</h3>
+                    <p class="text-[10px] text-slate-500 mt-1">Detección de ciclos de recetas.</p>
+                </div>
+                <div class="flex-1 overflow-y-auto p-4 custom-scroll" id="ai-suggestions-list">
+                    <div class="text-center py-10 px-4">
+                        <button onclick="runAIScheduler()" class="bg-brand-cyan hover:bg-brand-teal text-white px-6 py-2.5 rounded-full font-bold shadow-lg transition-transform transform active:scale-95 text-xs w-full mb-4">
+                            <i class="fa-solid fa-wand-magic-sparkles mr-2"></i> ANALIZAR PRÓXIMO MES
+                        </button>
+                    </div>
+                </div>
+            </aside>
         </div>
 
         <!-- REPORTES -->
@@ -181,21 +189,16 @@
         </div>
     </main>
 
-    <!-- MODALES Y FORMULARIOS -->
-    
-    <!-- MODAL DE PROGRESO DE CARGA CSV (INTERACTIVO) -->
-    <div id="uploadModal" class="fixed inset-0 modal-backdrop hidden z-[200] flex items-center justify-center p-4 fade-in">
+    <!-- MODALES -->
+
+    <!-- MODAL CSV PROGRESS (NUEVO) -->
+    <div id="csvProgressModal" class="fixed inset-0 modal-backdrop hidden z-[200] flex items-center justify-center p-4 fade-in">
         <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full text-center relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-2 bg-slate-100"><div id="uploadBarTop" class="h-full bg-brand-cyan transition-all duration-300" style="width: 0%"></div></div>
-            <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600 text-2xl animate-bounce">
-                <i class="fa-solid fa-cloud-arrow-up"></i>
-            </div>
+            <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600 text-2xl animate-bounce"><i class="fa-solid fa-cloud-arrow-up"></i></div>
             <h3 class="text-xl font-bold text-brand-dark mb-1">Sincronizando Datos</h3>
-            <p class="text-sm text-slate-500 mb-6" id="uploadStatus">Iniciando conexión con Base de Datos...</p>
-            
-            <div class="bg-slate-100 rounded-full h-4 w-full overflow-hidden mb-2">
-                <div id="uploadBar" class="bg-gradient-to-r from-blue-500 to-cyan-400 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
-            </div>
+            <p class="text-sm text-slate-500 mb-6" id="uploadStatus">Iniciando conexión...</p>
+            <div class="bg-slate-100 rounded-full h-4 w-full overflow-hidden mb-2"><div id="uploadBar" class="bg-gradient-to-r from-blue-500 to-cyan-400 h-full rounded-full transition-all duration-300" style="width: 0%"></div></div>
             <p class="text-xs font-bold text-slate-400" id="uploadCount">0%</p>
         </div>
     </div>
@@ -232,7 +235,7 @@
                     <div class="bg-blue-50 p-5 rounded-2xl border border-blue-100">
                         <h4 class="text-xs font-bold text-brand-dark uppercase mb-4 flex items-center"><i class="fa-solid fa-shield-halved mr-2"></i> Seguridad</h4>
                         <div class="flex items-center justify-between mb-4 bg-white p-3 rounded-xl border border-blue-100 shadow-sm">
-                             <div class="text-sm font-semibold text-slate-700">Validar IP Nueva</div>
+                             <div class="text-sm font-semibold text-slate-700">Validación Dispositivo/IP Nueva</div>
                              <label class="relative inline-flex items-center cursor-pointer">
                                  <input type="checkbox" id="formIpCheck" class="sr-only peer">
                                  <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-clinical transition-all"></div>
@@ -262,7 +265,7 @@
         </div>
     </div>
 
-    <!-- MODAL BENEFICIARIO (ACTUALIZADO: DOBLE ASIGNACIÓN + VENTANILLA + FECHAS + SINCRONIZACIÓN) -->
+    <!-- MODAL BENEFICIARIO (DOBLE ASIGNACIÓN + VENTANILLA) -->
     <div id="benModal" class="fixed inset-0 modal-backdrop hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-4xl flex flex-col max-h-[90vh] shadow-2xl">
             <div class="bg-brand-dark p-6 text-white flex justify-between items-center rounded-t-3xl shrink-0">
@@ -272,41 +275,41 @@
             <div class="p-6 overflow-y-auto custom-scroll">
                 <form id="benForm" class="space-y-6">
                     <div class="grid grid-cols-2 gap-5">
-                        <div><label class="text-xs font-bold text-slate-400 uppercase ml-1">ID (Cédula)</label><input id="benId" class="w-full border p-2.5 rounded-xl bg-slate-50 outline-none focus:border-brand-cyan"></div>
-                        <div><label class="text-xs font-bold text-slate-400 uppercase ml-1">Nombre</label><input id="benName" class="w-full border p-2.5 rounded-xl bg-slate-50 outline-none focus:border-brand-cyan"></div>
-                        <div><label class="text-xs font-bold text-slate-400 uppercase ml-1">Teléfono</label><input type="text" id="benPhone" class="w-full border p-2.5 rounded-xl bg-slate-50 outline-none focus:border-brand-cyan"></div>
-                        <div><label class="text-xs font-bold text-slate-400 uppercase ml-1">Municipio</label><input type="text" id="benMuni" class="w-full border p-2.5 rounded-xl bg-slate-50 outline-none focus:border-brand-cyan"></div>
-                        <div class="col-span-2"><label class="text-xs font-bold text-slate-400 uppercase ml-1">Dirección Exacta</label><input type="text" id="benAddr" class="w-full border p-2.5 rounded-xl bg-slate-50 outline-none focus:border-brand-cyan"></div>
+                        <div><label class="text-xs font-bold text-slate-400 uppercase ml-1">ID (Cédula)</label><input id="benId" class="w-full border p-2.5 rounded-xl bg-slate-50 outline-none focus:border-brand-cyan" required></div>
+                        <div><label class="text-xs font-bold text-slate-400 uppercase ml-1">Nombre Completo</label><input type="text" id="benName" class="w-full border rounded-lg p-2.5 focus:border-brand-cyan outline-none" required></div>
+                        <div><label class="text-xs font-bold text-slate-400 uppercase ml-1">Teléfono</label><input type="text" id="benPhone" class="w-full border rounded-lg p-2.5 focus:border-brand-cyan outline-none" required></div>
+                        <div><label class="text-xs font-bold text-slate-400 uppercase ml-1">Municipio</label><input type="text" id="benMuni" class="w-full border rounded-lg p-2.5 focus:border-brand-cyan outline-none" required></div>
+                        <div class="col-span-2"><label class="text-xs font-bold text-slate-400 uppercase ml-1">Dirección Exacta</label><input type="text" id="benAddr" class="w-full border rounded-lg p-2.5 focus:border-brand-cyan outline-none" required></div>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div><label class="text-[10px] font-bold text-blue-700 uppercase ml-1">Última Dispensación</label><input type="date" id="benLastDispense" class="w-full border border-blue-200 rounded-lg p-2.5 bg-white text-sm" onchange="calculateNextDate()"></div>
+                        <div><label class="text-[10px] font-bold text-blue-700 uppercase ml-1">Próximo Envío (Admin)</label><input type="date" id="benNextShipment" class="w-full border border-blue-200 rounded-lg p-2.5 bg-white text-sm"></div>
                     </div>
                     
-                    <div class="bg-blue-50 p-5 rounded-2xl border border-blue-100 grid grid-cols-2 gap-5">
-                        <div><label class="text-[10px] font-bold text-blue-700 uppercase ml-1">Última Dispensación</label><input type="date" id="benLastDispense" class="w-full border border-blue-200 p-2 rounded-xl text-sm bg-white outline-none" onchange="calculateNextDate()"></div>
-                        <div><label class="text-[10px] font-bold text-blue-700 uppercase ml-1">Próximo Envío</label><input type="date" id="benNextShipment" class="w-full border border-blue-200 p-2 rounded-xl text-sm bg-white outline-none"></div>
-                    </div>
-
+                    <!-- CONTACTO FAMILIAR -->
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 relative">
                         <h4 class="text-xs font-bold text-slate-400 uppercase mb-3 flex items-center"><i class="fa-solid fa-users mr-2"></i> Contacto Familiar</h4>
-                        <div class="grid grid-cols-2 gap-5">
-                            <div><label class="text-[10px] font-bold text-slate-400 uppercase">Nombre Familiar</label><input type="text" id="benFamName" class="w-full border p-2 rounded-lg bg-white outline-none"></div>
-                            <div><label class="text-[10px] font-bold text-slate-400 uppercase">Teléfono Familiar</label><input type="text" id="benFamPhone" class="w-full border p-2 rounded-lg bg-white outline-none"></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div><label class="text-xs font-bold text-slate-500 uppercase mb-1">Nombre Familiar</label><input type="text" id="benFamName" class="w-full border rounded-lg p-2.5 bg-white"></div>
+                            <div><label class="text-xs font-bold text-slate-500 uppercase mb-1">Teléfono Familiar</label><input type="text" id="benFamPhone" class="w-full border rounded-lg p-2.5 bg-white"></div>
                         </div>
                     </div>
 
                     <div class="flex items-center p-3 bg-orange-50 border border-orange-100 rounded-lg">
                         <input type="checkbox" id="benPickup" class="w-5 h-5 text-orange-600 rounded-lg border-gray-300 mr-3 cursor-pointer" onchange="toggleCCAssign()">
-                        <label for="benPickup" class="text-sm font-bold text-slate-700 cursor-pointer uppercase">Entregar en Ventanilla (Omitir CC)</label>
+                        <label for="benPickup" class="text-sm font-bold text-slate-700 cursor-pointer uppercase">Entregar en Ventanilla (Omitir Contact Center)</label>
                     </div>
 
-                    <div class="grid grid-cols-3 gap-5">
-                        <div><label class="text-xs font-bold text-slate-400 uppercase ml-1">Tipo de Afiliado</label><select id="benType" class="w-full border p-2.5 rounded-xl bg-white outline-none"><option>Afiliado Directo</option><option>Jubilado</option><option>Pensionado</option><option>Beneficiaria Padre</option><option>Beneficiaria(o) Compañera(o)</option><option>Beneficiaria(o) Esposa(o)</option><option>Beneficiaria Hijo(a)</option></select></div>
-                        <div><label class="text-xs font-bold text-emerald-600 uppercase ml-1">Gestor Farmacia</label><select id="benAssignPharma" class="w-full border p-2.5 rounded-xl bg-white outline-none focus:border-emerald-500"></select></div>
-                        <div><label class="text-xs font-bold text-blue-600 uppercase ml-1">Gestor CC</label><select id="benAssignCC" class="w-full border p-2.5 rounded-xl bg-white outline-none focus:border-blue-500"></select></div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                        <div><label class="text-xs font-bold text-slate-500 uppercase mb-1">Tipo de Afiliado</label><select id="benType" class="w-full border rounded-lg p-2.5 bg-white outline-none"><option>Afiliado Directo</option><option>Jubilado</option><option>Pensionado</option><option>Beneficiaria Padre</option><option>Beneficiaria(o) Compañera(o)</option><option>Beneficiaria(o) Esposa(o)</option><option>Beneficiaria Hijo(a)</option></select></div>
+                        <div><label class="text-xs font-bold text-emerald-600 uppercase mb-1">Gestor Farmacia</label><select id="benAssignPharma" class="w-full border rounded-lg p-2.5 bg-white outline-none border-emerald-200 focus:border-emerald-500"><option value="">-- Seleccionar (Solo Admin) --</option></select></div>
+                        <div><label class="text-xs font-bold text-blue-600 uppercase mb-1">Gestor CC</label><select id="benAssignCC" class="w-full border rounded-lg p-2.5 bg-white outline-none border-blue-200 focus:border-blue-500"><option value="">-- Seleccionar (Solo Admin) --</option></select></div>
                     </div>
                 </form>
             </div>
-            <div class="p-6 border-t bg-slate-50 flex justify-end rounded-b-3xl gap-3">
-                <button onclick="document.getElementById('benModal').classList.add('hidden')" class="px-5 py-2 text-sm font-bold text-slate-500">Cancelar</button>
-                <button onclick="saveBeneficiary()" id="btnSaveBen" class="bg-brand-dark text-white px-8 py-2.5 rounded-xl font-bold shadow-lg transition-transform active:scale-95">Guardar</button>
+            <div class="p-5 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 shrink-0">
+                <button type="button" onclick="document.getElementById('benModal').classList.add('hidden')" class="px-5 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-700">Cancelar</button>
+                <button type="button" onclick="saveBeneficiary()" id="btnSaveBen" class="bg-brand-dark hover:bg-brand-cyan text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg">Guardar</button>
             </div>
         </div>
     </div>
@@ -333,31 +336,10 @@
     </div>
 
     <!-- MODAL HISTORIAL -->
-    <div id="historyModal" class="fixed inset-0 modal-backdrop hidden z-[120] flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl w-full max-w-3xl flex flex-col shadow-2xl max-h-[85vh] overflow-hidden">
-            <div class="bg-brand-dark p-5 text-white flex justify-between shrink-0 font-bold">
-                <h3>Historial de Envíos</h3>
-                <button onclick="document.getElementById('historyModal').classList.add('hidden')"><i class="fa-solid fa-xmark text-xl"></i></button>
-            </div>
-            <div class="p-6 overflow-y-auto custom-scroll">
-                <table class="w-full text-left text-sm">
-                    <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-[10px]">
-                        <tr><th class="p-3">Fecha</th><th class="p-3">Guía</th><th class="p-3">Estado</th><th class="p-3 text-right">Etapa</th></tr>
-                    </thead>
-                    <tbody id="hist-list" class="divide-y divide-slate-100 text-slate-600"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+    <div id="historyModal" class="fixed inset-0 modal-backdrop hidden z-[120] flex items-center justify-center p-4"><div class="bg-white rounded-3xl w-full max-w-3xl flex flex-col shadow-2xl max-h-[85vh] overflow-hidden"><div class="bg-brand-dark p-5 text-white flex justify-between shrink-0 font-bold"><h3>Historial de Envíos</h3><button onclick="document.getElementById('historyModal').classList.add('hidden')"><i class="fa-solid fa-xmark text-xl"></i></button></div><div class="p-6 overflow-y-auto custom-scroll"><table class="w-full text-left text-sm"><thead class="bg-slate-50 text-slate-500 font-bold uppercase text-[10px]"><tr><th class="p-3">Fecha</th><th class="p-3">Guía</th><th class="p-3">Estado</th><th class="p-3 text-right">Etapa</th></tr></thead><tbody id="hist-list" class="divide-y divide-slate-100 text-slate-600"></tbody></table></div></div></div>
 
     <!-- MODAL NUEVO ENVÍO -->
-    <div id="shipmentModal" class="fixed inset-0 modal-backdrop hidden z-[80] flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl w-full max-w-xl flex flex-col">
-            <div class="bg-brand-dark p-5 flex justify-between text-white"><h3 class="font-bold">Nueva Guía</h3><button onclick="document.getElementById('shipmentModal').classList.add('hidden')"><i class="fa-solid fa-xmark"></i></button></div>
-            <div class="p-6"><form id="shipForm" class="space-y-4"><input type="hidden" id="shipDate"><p id="shipDateDisplay" class="font-bold text-center"></p><select id="shipBeneficiary" class="border w-full p-2 rounded"><option>Cargando...</option></select><input id="shipGuide" placeholder="Tracking #" class="border w-full p-2 rounded"><select id="shipStatus" class="border w-full p-2 rounded"><option>Nuevo</option><option>En Proceso</option><option>Confirmacion CC</option><option>Retorno Farmacia</option><option>Empaquetado</option><option>Revision Calidad</option><option>Listo Logistica</option><option>En Ruta</option><option>Entregado</option></select></form></div>
-            <div class="p-5 border-t flex justify-end gap-3"><button onclick="document.getElementById('shipmentModal').classList.add('hidden')" class="text-slate-500">Cancelar</button><button onclick="saveShipment()" class="bg-brand-cyan text-white px-4 py-2 rounded">Guardar</button></div>
-        </div>
-    </div>
+    <div id="shipmentModal" class="fixed inset-0 modal-backdrop hidden z-[80] flex items-center justify-center p-4"><div class="bg-white rounded-2xl w-full max-w-xl flex flex-col"><div class="bg-brand-dark p-5 flex justify-between text-white"><h3 class="font-bold">Nueva Guía</h3><button onclick="document.getElementById('shipmentModal').classList.add('hidden')"><i class="fa-solid fa-xmark"></i></button></div><div class="p-6"><form id="shipForm" class="space-y-4"><input type="hidden" id="shipDate"><p id="shipDateDisplay" class="font-bold text-center"></p><select id="shipBeneficiary" class="border w-full p-2 rounded"><option>Cargando...</option></select><input id="shipGuide" placeholder="Tracking #" class="border w-full p-2 rounded"><select id="shipStatus" class="border w-full p-2 rounded"><option>Nuevo</option><option>En Proceso</option><option>Confirmacion CC</option><option>Retorno Farmacia</option><option>Empaquetado</option><option>Revision Calidad</option><option>Listo Logistica</option><option>En Ruta</option><option>Entregado</option></select></form></div><div class="p-5 border-t flex justify-end gap-3"><button onclick="document.getElementById('shipmentModal').classList.add('hidden')" class="text-slate-500">Cancelar</button><button onclick="saveShipment()" class="bg-brand-cyan text-white px-4 py-2 rounded">Guardar</button></div></div></div>
 
     <!-- SCRIPTS -->
     <script type="module">
@@ -370,8 +352,6 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const appId = "fdihss-mediflow-v2-modular";
-        const DOMAIN_SUFFIX = "@mediflow.sys"; 
-        
         const secondaryApp = initializeApp(firebaseConfig, "Secondary");
         const secondaryAuth = getAuth(secondaryApp);
 
@@ -398,7 +378,7 @@
         };
 
         window.renderTimelineItem = function(ship) {
-            const statusMap = { 'Nuevo': 1, 'Confirmacion CC': 2, 'Retorno Farmacia': 3, 'Empaquetado': 4, 'Revision Calidad': 5, 'Listo Logistica': 6, 'En Ruta': 7, 'Entregado': 8 };
+            const statusMap = { 'Nuevo': 1, 'En Proceso': 1, 'Confirmacion CC': 2, 'Retorno Farmacia': 3, 'Empaquetado': 4, 'Revision Calidad': 5, 'Listo Logistica': 6, 'En Ruta': 7, 'Entregado': 8 };
             let step = statusMap[ship.status] || 1;
             const stepsHtml = [ {l:'FARM', i:1}, {l:'CC', i:2}, {l:'FARM', i:3}, {l:'OPER', i:4}, {l:'CALI', i:5}, {l:'LOGI', i:6}, {l:'RUTA', i:7}, {l:'ENTR', i:8} ].map(s => { 
                 const active = s.i <= step ? 'timeline-active' : ''; 
@@ -586,7 +566,6 @@
             Papa.parse(file, { header: true, skipEmptyLines: true, complete: async (res) => {
                 const total = res.data.length;
                 let processed = 0;
-                // Procesamiento en lotes de 400 para evitar timeout
                 const chunkSize = 400;
                 for (let i = 0; i < total; i += chunkSize) {
                     const chunk = res.data.slice(i, i + chunkSize);
@@ -604,10 +583,10 @@
                 setTimeout(() => { modal.classList.add('hidden'); alert(`Proceso completado. ${processed} registros.`); }, 500);
             }});
         };
-        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries'), (s) => { const l = document.getElementById('ben-list'); if(!l) return; l.innerHTML = ''; s.forEach(d => { const b=d.data(); l.innerHTML += `<tr class="hover:bg-slate-50 border-b"><td class="p-4 pl-6 font-bold">${b.name}<br><span class="text-[10px] text-slate-400 font-mono">${b.id}</span></td><td class="p-4 text-xs font-bold ${b.pickupCounter?'text-orange-500':'text-emerald-500'}">${b.pickupCounter?'Ventanilla':'Ruta'}</td><td class="p-4 text-xs">IHSS</td><td class="p-4 text-[10px] font-bold text-slate-400">P: ${b.assignedPharma?.name||'?'}<br>CC: ${b.assignedCC?.name||'?'}</td><td class="p-4 text-right"><div class="flex justify-end gap-2"><button onclick="openHistory('${b.id}','${b.name}')" class="text-slate-400 hover:text-blue-500"><i class="fa-solid fa-history"></i></button><button onclick="editBeneficiary('${encodeURIComponent(JSON.stringify(b))}')" class="text-blue-600"><i class="fa-solid fa-pen"></i></button></div></td></tr>`; }); });
+        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries'), (s) => { const l = document.getElementById('ben-list'); if(!l) return; l.innerHTML = ''; s.forEach(d => { const b=d.data(); const j = encodeURIComponent(JSON.stringify(b)); l.innerHTML += `<tr class="hover:bg-slate-50 border-b"><td class="p-4 pl-6 font-bold">${b.name}<br><span class="text-[10px] text-slate-400 font-mono">${b.id}</span></td><td class="p-4 text-xs font-bold ${b.pickupCounter?'text-orange-500':'text-emerald-500'}">${b.pickupCounter?'Ventanilla':'Ruta'}</td><td class="p-4 text-xs">IHSS</td><td class="p-4 text-[10px] font-bold text-slate-400">P: ${b.assignedPharma?.name||'?'}<br>CC: ${b.assignedCC?.name||'?'}</td><td class="p-4 text-right"><div class="flex justify-end gap-2"><button onclick="openHistory('${b.id}','${b.name}')" class="text-slate-400 hover:text-blue-500"><i class="fa-solid fa-history"></i></button><button onclick="editBeneficiary('${j}')" class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-pen"></i></button></div></td></tr>`; }); });
 
-        /* --- BLOQUE: LOGÍSTICA Y ENVÍOS --- */
-        window.openYear = (y) => { currentYear=y; document.getElementById('ship-years').classList.add('hidden'); document.getElementById('ship-months').classList.remove('hidden'); document.getElementById('ship-months').className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 fade-in"; const c=document.getElementById('ship-months'); c.innerHTML=''; monthNames.forEach((m,i)=>{ c.innerHTML+=`<div onclick="openMonth(${i})" class="bg-white p-6 rounded-2xl shadow-sm border hover:border-brand-cyan cursor-pointer text-center font-bold text-slate-700 transition-all">${m}</div>`; }); window.updateBreadcrumb(); };
+        /* --- BLOQUE: LOGÍSTICA --- */
+        window.openYear = (y) => { currentYear=y; document.getElementById('ship-years').classList.add('hidden'); document.getElementById('ship-months').classList.remove('hidden'); const c = document.getElementById('ship-months'); c.innerHTML = ''; monthNames.forEach((m, i) => { c.innerHTML += `<div onclick="openMonth(${i})" class="bg-white p-6 rounded-2xl shadow-sm border hover:border-brand-cyan cursor-pointer text-center font-bold text-slate-700 transition-all">${m}</div>`; }); window.updateBreadcrumb(); };
         window.openMonth = (m) => { currentMonth=m; document.getElementById('ship-months').classList.add('hidden'); document.getElementById('ship-days').classList.remove('hidden'); window.renderCalendar(currentYear, currentMonth); window.updateBreadcrumb(); };
         window.renderCalendar = (y, m) => { const g = document.getElementById('calendar-grid'); g.innerHTML = ''; const dim = new Date(y, m + 1, 0).getDate(); const fd = new Date(y, m, 1).getDay(); for(let i = 0; i < fd; i++) g.innerHTML += `<div></div>`; for(let d = 1; d <= dim; d++) { const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`; g.innerHTML += `<div onclick="openDayView('${ds}')" class="calendar-day bg-white border border-slate-100 rounded-xl p-2 relative cursor-pointer hover:shadow-md"><span class="text-sm font-bold text-slate-700">${d}</span><div id="ship-count-${ds}" class="mt-1"></div></div>`; window.loadDayStats(ds); } };
         window.loadDayStats = async function(ds) { const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'shipments'), where('date', '==', ds)); const s = await getDocs(q); if(!s.empty) { const el = document.getElementById(`ship-count-${ds}`); if(el) el.innerHTML = `<span class="text-[9px] bg-emerald-100 text-emerald-700 px-1.5 rounded font-bold">${s.size} Envíos</span>`; } };
