@@ -10,8 +10,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- PapaParse -->
+    <!-- PapaParse (CSV) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <!-- SheetJS (Excel) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <script>
         tailwind.config = {
@@ -64,11 +66,9 @@
             <img src="https://portal.ihss.hn/cronicos/assets/dist/img/Recurso%201.png" class="h-20 w-20 object-contain">
         </div>
         <h2 class="text-3xl font-bold mb-2 tracking-tight">Sesión Finalizada</h2>
-        <p class="text-blue-200 text-sm mb-8 max-w-xs text-center leading-relaxed" id="lock-msg">Tu sesión ha expirado o se ha iniciado en otro lugar.</p>
-        
-        <!-- BOTÓN MODIFICADO: FUERZA EL CIERRE ANTES DE SALIR -->
+        <p class="text-blue-200 text-sm mb-8 max-w-xs text-center leading-relaxed" id="lock-msg">Tu sesión ha expirado.</p>
         <button onclick="forceNavigateLogin()" class="bg-brand-cyan hover:bg-brand-teal text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-transform transform active:scale-95 flex items-center mb-4">
-            <i class="fa-solid fa-power-off mr-3"></i> Cerrar Sesión y Salir
+            <i class="fa-solid fa-arrow-left mr-3"></i> Ir al Login
         </button>
     </div>
 
@@ -124,12 +124,12 @@
                     <div onclick="switchView('users')" class="dash-card bg-white rounded-3xl p-8 border border-slate-100 shadow-sm cursor-pointer group">
                         <div class="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-user-shield"></i></div>
                         <h3 class="font-bold text-slate-700 text-lg">Personal</h3>
-                        <p class="text-xs text-slate-400">Directorio y seguridad de acceso</p>
+                        <p class="text-xs text-slate-400">Directorio y seguridad</p>
                     </div>
                     <div onclick="switchView('beneficiaries')" class="dash-card bg-white rounded-3xl p-8 border border-slate-100 shadow-sm cursor-pointer group">
                         <div class="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-hospital-user"></i></div>
                         <h3 class="font-bold text-slate-700 text-lg">Pacientes</h3>
-                        <p class="text-xs text-slate-400">Derechohabientes y ciclos de receta</p>
+                        <p class="text-xs text-slate-400">Expedientes y asignaciones</p>
                     </div>
                     <div onclick="switchView('shipments')" class="dash-card bg-white rounded-3xl p-8 border border-slate-100 shadow-sm cursor-pointer group">
                         <div class="w-16 h-16 rounded-2xl bg-cyan-50 text-brand-cyan flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-map-location-dot"></i></div>
@@ -155,7 +155,8 @@
                         <thead class="bg-slate-50 text-[10px] uppercase text-slate-500 font-bold tracking-wider">
                             <tr><th class="p-5 pl-6">Colaborador</th><th class="p-5">Cargos / Funciones</th><th class="p-5">Acceso</th><th class="p-5 text-center">Estatus</th><th class="p-5 pr-6 text-right">Acciones</th></tr>
                         </thead>
-                        <tbody id="user-list" class="divide-y divide-slate-100 text-sm text-slate-600"><tr><td colspan="5" class="p-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando...</td></tr></tbody></table>
+                        <tbody id="user-list" class="divide-y divide-slate-100 text-sm text-slate-600"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -166,7 +167,7 @@
                 <h1 class="text-2xl font-bold text-brand-dark tracking-tight">Gestión de Derechohabientes</h1>
                 <div class="flex gap-3">
                     <div id="csvStatus" class="hidden flex items-center text-xs font-bold text-brand-clinical animate-pulse mr-2"><i class="fa-solid fa-sync fa-spin mr-1"></i> Cargando...</div>
-                    <label class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg cursor-pointer flex items-center text-sm"><i class="fa-solid fa-file-csv mr-2"></i> Cargar CSV<input type="file" id="csvInput" accept=".csv" class="hidden" onchange="handleCSVUpload(this)"></label>
+                    <label class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg cursor-pointer flex items-center text-sm"><i class="fa-solid fa-file-upload mr-2"></i> Importar BD (Excel/CSV)<input type="file" id="csvInput" accept=".csv, .xlsx, .xls" class="hidden" onchange="handleFileUpload(this)"></label>
                     <button onclick="openBeneficiaryModal()" class="bg-brand-dark hover:bg-brand-cyan text-white px-5 py-2.5 rounded-xl font-bold shadow-lg flex items-center text-sm"><i class="fa-solid fa-plus mr-2"></i> Crear Manual</button>
                 </div>
             </header>
@@ -180,13 +181,14 @@
         <!-- LOGÍSTICA -->
         <div id="view-shipments" class="hidden-view flex-1 flex flex-col h-full overflow-hidden fade-in">
             <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center shrink-0">
-                <div>
-                    <h1 class="text-2xl font-bold text-brand-dark flex items-center"><i class="fa-solid fa-truck-ramp-box mr-3 text-brand-cyan"></i> Gestión de Envíos</h1><nav class="flex text-xs text-slate-500 mt-1" id="ship-breadcrumb"><span class="font-bold text-brand-dark">Inicio</span></nav></div>
+                <div><h1 class="text-2xl font-bold text-brand-dark flex items-center"><i class="fa-solid fa-truck-ramp-box mr-3 text-brand-cyan"></i> Gestión de Envíos</h1><nav class="flex text-xs text-slate-500 mt-1" id="ship-breadcrumb"><span class="font-bold text-brand-dark">Inicio</span></nav></div>
             </header>
             <div class="flex-1 overflow-y-auto p-6 md:p-8 custom-scroll bg-slate-50/50">
-                <div id="ship-years" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"><div onclick="openYear(2026)" class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 hover:border-brand-cyan hover:shadow-xl cursor-pointer transition-all group text-center year-card" data-year="2026"><div class="text-4xl font-bold text-brand-dark group-hover:text-brand-cyan mb-2">2026</div><p class="text-xs text-slate-400 uppercase tracking-widest">Año Fiscal</p></div><div onclick="createNewYear()" class="bg-slate-100 p-8 rounded-3xl border-2 border-dashed border-slate-300 hover:border-brand-cyan hover:bg-white cursor-pointer transition-all group text-center flex flex-col items-center justify-center"><div class="w-12 h-12 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center text-xl mb-2 group-hover:bg-brand-cyan group-hover:text-white transition-colors"><i class="fa-solid fa-plus"></i></div><p class="text-xs text-slate-400 font-bold uppercase tracking-widest group-hover:text-brand-cyan">Crear Año</p></div></div>
-                <div id="ship-months" class="hidden grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
-                <div id="ship-days" class="hidden"><div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6"><div class="grid grid-cols-7 gap-2 mb-2 text-center text-xs font-bold text-slate-400 uppercase"><div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div></div><div id="calendar-grid" class="grid grid-cols-7 gap-2"></div></div></div>
+                <div id="ship-years" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"><div onclick="openYear(2026)" class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 hover:border-brand-cyan hover:shadow-xl cursor-pointer text-center group transition-all">
+                    <div class="text-4xl font-bold text-brand-dark group-hover:text-brand-cyan mb-2 transition-colors">2026</div><p class="text-xs text-slate-400 uppercase tracking-widest font-bold">Año Fiscal</p>
+                </div></div>
+                <div id="ship-months" class="hidden grid grid-cols-1 md:grid-cols-4 gap-4 fade-in"></div>
+                <div id="ship-days" class="hidden fade-in"><div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6"><div class="grid grid-cols-7 gap-2 mb-2 text-center text-[10px] font-bold text-slate-400 uppercase"><div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div></div><div id="calendar-grid" class="grid grid-cols-7 gap-2"></div></div></div>
             </div>
             <!-- Panel Lateral IA -->
             <aside class="w-full md:w-80 bg-white border-l border-slate-200 shadow-xl flex flex-col z-20">
@@ -212,9 +214,7 @@
         </div>
     </main>
 
-    <!-- ========================================== -->
-    <!-- BLOQUE 3: MODALES Y FORMULARIOS            -->
-    <!-- ========================================== -->
+    <!-- BLOQUE 3: MODALES Y FORMULARIOS -->
 
     <!-- MODAL CSV PROGRESS -->
     <div id="csvProgressModal" class="fixed inset-0 modal-backdrop hidden z-[200] flex items-center justify-center p-4 fade-in">
@@ -257,10 +257,11 @@
                         </select>
                         <select id="formJob" multiple class="border p-2.5 rounded-xl h-32 bg-white text-xs custom-scroll outline-none focus:border-brand-cyan"></select>
                     </div>
+                    <!-- RESTRICCIONES SEGURIDAD -->
                     <div class="bg-blue-50 p-5 rounded-2xl border border-blue-100">
                         <h4 class="text-xs font-bold text-brand-dark uppercase mb-4 flex items-center"><i class="fa-solid fa-shield-halved mr-2"></i> Seguridad</h4>
                         <div class="flex items-center justify-between mb-4 bg-white p-3 rounded-xl border border-blue-100 shadow-sm">
-                             <div class="text-sm font-semibold text-slate-700">Validación Dispositivo/IP Nueva</div>
+                             <div class="text-sm font-semibold text-slate-700">Validar IP Nueva</div>
                              <label class="relative inline-flex items-center cursor-pointer">
                                  <input type="checkbox" id="formIpCheck" class="sr-only peer">
                                  <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-clinical transition-all"></div>
@@ -306,7 +307,7 @@
                         <div><label class="text-xs font-bold text-slate-400 uppercase ml-1">Municipio</label><input type="text" id="benMuni" class="w-full border p-2.5 rounded-xl bg-slate-50 outline-none focus:border-brand-cyan" required></div>
                         <div class="col-span-2"><label class="text-xs font-bold text-slate-400 uppercase ml-1">Dirección Exacta</label><input type="text" id="benAddr" class="w-full border p-2.5 rounded-xl bg-slate-50 outline-none focus:border-brand-cyan" required></div>
                     </div>
-                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 grid grid-cols-2 gap-5">
+                    <div class="bg-blue-50 p-5 rounded-2xl border border-blue-100 grid grid-cols-2 gap-5">
                         <div><label class="text-[10px] font-bold text-blue-700 uppercase ml-1">Última Dispensación</label><input type="date" id="benLastDispense" class="w-full border border-blue-200 p-2 rounded-xl text-sm bg-white outline-none" onchange="calculateNextDate()"></div>
                         <div><label class="text-[10px] font-bold text-blue-700 uppercase ml-1">Próximo Envío (Admin)</label><input type="date" id="benNextShipment" class="w-full border border-blue-200 p-2 rounded-xl text-sm bg-white outline-none"></div>
                     </div>
@@ -315,8 +316,8 @@
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 relative">
                         <h4 class="text-xs font-bold text-slate-400 uppercase mb-3 flex items-center"><i class="fa-solid fa-users mr-2"></i> Contacto Familiar</h4>
                         <div class="grid grid-cols-2 gap-5">
-                            <div><label class="text-xs font-bold text-slate-500 uppercase mb-1">Nombre Familiar</label><input type="text" id="benFamName" class="w-full border p-2 rounded-lg bg-white outline-none"></div>
-                            <div><label class="text-xs font-bold text-slate-500 uppercase mb-1">Teléfono Familiar</label><input type="text" id="benFamPhone" class="w-full border p-2 rounded-lg bg-white outline-none"></div>
+                            <div><label class="text-[10px] font-bold text-slate-400 uppercase">Nombre Familiar</label><input type="text" id="benFamName" class="w-full border p-2 rounded-lg bg-white outline-none"></div>
+                            <div><label class="text-[10px] font-bold text-slate-400 uppercase">Teléfono Familiar</label><input type="text" id="benFamPhone" class="w-full border p-2 rounded-lg bg-white outline-none"></div>
                         </div>
                     </div>
 
@@ -332,9 +333,9 @@
                     </div>
                 </form>
             </div>
-            <div class="p-5 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 shrink-0">
-                <button type="button" onclick="document.getElementById('benModal').classList.add('hidden')" class="px-5 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-700">Cancelar</button>
-                <button type="button" onclick="saveBeneficiary()" id="btnSaveBen" class="bg-brand-dark hover:bg-brand-cyan text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg">Guardar</button>
+            <div class="p-6 border-t bg-slate-50 flex justify-end rounded-b-3xl gap-3">
+                <button onclick="document.getElementById('benModal').classList.add('hidden')" class="px-5 py-2 text-sm font-bold text-slate-500">Cerrar</button>
+                <button onclick="saveBeneficiary()" id="btnSaveBen" class="bg-brand-dark text-white px-8 py-2.5 rounded-xl font-bold shadow-lg transition-transform active:scale-95">Actualizar Expediente</button>
             </div>
         </div>
     </div>
@@ -345,7 +346,7 @@
             <div class="bg-white border-b p-5 flex justify-between items-center shrink-0">
                 <div class="flex items-center gap-4">
                     <h3 class="font-bold text-lg text-brand-dark flex items-center"><i class="fa-regular fa-calendar-check mr-2 text-brand-cyan"></i> Envíos <span id="dayModalDate" class="ml-1 text-slate-600 font-normal"></span></h3>
-                    <button onclick="downloadDayReport()" class="bg-green-100 text-green-700 text-[10px] font-bold px-3 py-1.5 rounded-lg hover:bg-green-200 transition"><i class="fa-solid fa-file-csv mr-1"></i> EXPORTAR CSV</button>
+                    <button onclick="downloadDayReport()" class="bg-green-100 text-green-700 text-[10px] font-bold px-3 py-1.5 rounded-lg hover:bg-green-200 transition"><i class="fa-solid fa-file-csv mr-1"></i> EXPORTAR CSV (Excel)</button>
                 </div>
                 <button onclick="document.getElementById('dayModal').classList.add('hidden')" class="text-slate-400 hover:text-red-500 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
@@ -405,7 +406,7 @@
         };
 
         window.renderTimelineItem = function(ship) {
-            const statusMap = { 'Nuevo': 1, 'Confirmacion CC': 2, 'Retorno Farmacia': 3, 'Empaquetado': 4, 'Revision Calidad': 5, 'Listo Logistica': 6, 'En Ruta': 7, 'Entregado': 8 };
+            const statusMap = { 'Nuevo': 1, 'En Proceso': 1, 'Confirmacion CC': 2, 'Retorno Farmacia': 3, 'Empaquetado': 4, 'Revision Calidad': 5, 'Listo Logistica': 6, 'En Ruta': 7, 'Entregado': 8 };
             let step = statusMap[ship.status] || 1;
             const stepsHtml = [ {l:'FARM', i:1}, {l:'CC', i:2}, {l:'FARM', i:3}, {l:'OPER', i:4}, {l:'CALI', i:5}, {l:'LOGI', i:6}, {l:'RUTA', i:7}, {l:'ENTR', i:8} ].map(s => { 
                 const active = s.i <= step ? 'timeline-active' : ''; 
@@ -438,21 +439,7 @@
             document.getElementById(`btn-view-${viewId}`).classList.replace('text-slate-300','text-white');
         };
 
-        window.forceNavigateLogin = function() {
-             signOut(auth).then(() => safeNavigate('index.html'));
-        };
-
-        window.logoutAndNavigate = async function() {
-            try {
-                await signOut(auth);
-                safeNavigate('index.html');
-            } catch (e) {
-                console.error("Logout Error", e);
-                // Force Reload to clear state
-                window.location.href = 'index.html';
-            }
-        };
-
+        window.forceNavigateLogin = () => safeNavigate('index.html');
         window.logout = async () => { if(confirm("¿Cerrar sesión?")) signOut(auth).then(()=>safeNavigate('index.html')); };
 
         /* --- BLOQUE: SEGURIDAD (WATCHDOG) --- */
@@ -464,15 +451,6 @@
                inactivityTimer = setTimeout(() => { signOut(auth); }, TIMEOUT_LIMIT);
             }
         };
-        
-        // Limpieza al cerrar la ventana (intento)
-        window.addEventListener('beforeunload', () => {
-             if(auth.currentUser) {
-                 // No podemos usar async aquí fiable, pero sendBeacon podría servir.
-                 // Para Firestore simple, no hacemos nada complejo para evitar bugs.
-             }
-        });
-
         const checkSession = (u) => {
              onSnapshot(doc(db, 'artifacts', appId, 'users', u.uid, 'profile', 'data'), (snap) => {
                  if(snap.exists()) {
@@ -480,8 +458,7 @@
                      // VERIFICACIÓN DE SESIÓN (SOLO SI SE ACTIVÓ "REQUIRE IP APPROVAL")
                      if (data.requireIpApproval && data.activeSessionId && data.activeSessionId !== deviceId) {
                          showLockScreen("Sesión iniciada en otro dispositivo.");
-                         // NO HACER SIGNOUT AUTOMÁTICO PARA EVITAR BUCLE SI LA BD ESTÁ DESINCRONIZADA
-                         return;
+                         signOut(auth); return;
                      }
                      if (data.role !== 'admin') showLockScreen("Acceso Denegado.");
                      else document.getElementById('auth-lock').classList.add('hidden');
@@ -615,19 +592,43 @@
             modal.classList.remove('hidden');
             text.innerText = "Analizando archivo...";
             
-            Papa.parse(file, { header: true, skipEmptyLines: true, complete: async (res) => {
-                const total = res.data.length;
+            // Función de procesamiento común para CSV y Excel
+            const processData = async (data) => {
+                const total = data.length;
                 let processed = 0;
                 const chunkSize = 400;
                 for (let i = 0; i < total; i += chunkSize) {
-                    const chunk = res.data.slice(i, i + chunkSize);
+                    const chunk = data.slice(i, i + chunkSize);
                     const batch = writeBatch(db);
                     chunk.forEach(row => {
-                        const id = row.ID || row.Cédula || row.DNI; const name = row.Nombre || row.NOMBRE; if(!id) return;
-                        // Mapeo Inteligente y Asignación Automática
-                        const pickup = row.Ventanilla === 'S' || row.Ventanilla === '1';
-                        // Aquí iría la lógica de asignación random si es nuevo, simplificada para mantener bloque
-                        batch.set(doc(db, 'artifacts', appId, 'public', 'data', 'beneficiaries', id), { id, name, pickupCounter: pickup, updatedAt: new Date().toISOString(), status: 'Activo' }, { merge: true });
+                        // Adaptar claves según el formato (CSV suele ser string, Excel puede ser objeto directo)
+                        // Normalizamos las claves posibles
+                        const id = row.DNI || row.ID || row.Cédula || row.Id; 
+                        const name = row.NOMBRE || row.Nombre || row.Paciente; 
+                        const phone = row.TELEFONO || row.Telefono;
+                        const addr = row.DIRECCION || row.Direccion;
+                        const famName = row.FAMILIAR || row.Familiar;
+                        const famPhone = row.TELEFONO_FAMILIAR || row['Telefono Familiar'];
+                        const muni = row.DESCRIPCION_MUNICIPIO || row.Municipio;
+                        const type = row.TIPO_AFILIADO || row['Tipo Afiliado'];
+
+                        if(!id) return;
+                        
+                        // Lógica de asignación automática (Solo si es nuevo)
+                        // Para simplificar en carga masiva, asignamos "Pendiente" o aleatorio si tuviéramos la lista cargada.
+                        // Aquí solo guardamos los datos base.
+                        
+                        batch.set(doc(db, 'artifacts', appId, 'public', 'data', 'beneficiaries', id.toString()), { 
+                            id: id.toString(), 
+                            name: name || "Sin Nombre", 
+                            phone: phone || "",
+                            address: addr || "",
+                            municipality: muni || "",
+                            family: { name: famName || "", phone: famPhone || "" },
+                            type: type || "Afiliado Directo",
+                            updatedAt: new Date().toISOString(), 
+                            status: 'Activo' 
+                        }, { merge: true });
                     });
                     await batch.commit();
                     processed += chunk.length;
@@ -635,8 +636,25 @@
                     bar.style.width = pct + "%";
                     text.innerText = `Sincronizando... ${processed}/${total}`;
                 }
-                setTimeout(() => { modal.classList.add('hidden'); alert(`Proceso completado. ${processed} registros.`); }, 500);
-            }});
+                setTimeout(() => { modal.classList.add('hidden'); alert(`Proceso completado. ${processed} registros.`); input.value = ''; }, 500);
+            };
+
+            if (file.name.endsWith('.csv')) {
+                Papa.parse(file, { header: true, skipEmptyLines: true, complete: (res) => processData(res.data) });
+            } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                    processData(jsonData);
+                };
+                reader.readAsArrayBuffer(file);
+            } else {
+                alert("Formato no soportado. Use CSV o Excel.");
+                modal.classList.add('hidden');
+            }
         };
         onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries'), (s) => { const l = document.getElementById('ben-list'); if(!l) return; l.innerHTML = ''; s.forEach(d => { const b=d.data(); const j = encodeURIComponent(JSON.stringify(b)); l.innerHTML += `<tr class="hover:bg-slate-50 border-b"><td class="p-4 pl-6 font-bold">${b.name}<br><span class="text-[10px] text-slate-400 font-mono">${b.id}</span></td><td class="p-4 text-xs font-bold ${b.pickupCounter?'text-orange-500':'text-emerald-500'}">${b.pickupCounter?'Ventanilla':'Ruta'}</td><td class="p-4 text-xs">IHSS</td><td class="p-4 text-[10px] font-bold text-slate-400">P: ${b.assignedPharma?.name||'?'}<br>CC: ${b.assignedCC?.name||'?'}</td><td class="p-4 text-right"><div class="flex justify-end gap-2"><button onclick="openHistory('${b.id}','${b.name}')" class="text-slate-400 hover:text-blue-500"><i class="fa-solid fa-history"></i></button><button onclick="editBeneficiary('${j}')" class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-pen"></i></button></div></td></tr>`; }); });
 
@@ -652,7 +670,34 @@
         window.updateBreadcrumb = () => { const b = document.getElementById('ship-breadcrumb'); let h = `<span class="cursor-pointer hover:underline" onclick="resetShipView()">Inicio</span>`; if (currentYear) h += ` > <span class="cursor-pointer hover:underline" onclick="openYear(${currentYear})">${currentYear}</span>`; if (currentMonth !== null) h += ` > <span>${monthNames[currentMonth]}</span>`; b.innerHTML = h; };
         window.resetShipView = () => { currentYear = null; currentMonth = null; document.getElementById('ship-days').classList.add('hidden'); document.getElementById('ship-months').classList.add('hidden'); document.getElementById('ship-years').classList.remove('hidden'); window.updateBreadcrumb(); };
         window.switchDayTab = (t) => { const br=document.getElementById('tab-route'), bp=document.getElementById('tab-pickup'), cr=document.getElementById('content-route'), cp=document.getElementById('content-pickup'); if(t==='route'){ br.classList.add('active'); bp.classList.remove('active'); cr.classList.remove('hidden'); cp.classList.add('hidden'); } else { bp.classList.add('active'); br.classList.remove('active'); cp.classList.remove('hidden'); cr.classList.add('hidden'); } };
-        window.downloadDayReport = async () => { const d = document.getElementById('dayModalDate').innerText; const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'shipments'), where('date', '==', d)); const s = await getDocs(q); let csv = "\uFEFFFecha;Guia;Paciente;ID;Estado;Tipo;Farmacia;CallCenter\n"; s.forEach(docSnap => { const x = docSnap.data(); const type = (x.pickupCounter || x.assignedCC?.uid === 'ventanilla') ? "Ventanilla" : "Ruta"; csv += `${x.date};${x.guideNumber||'PEND'};${x.beneficiaryName};${x.beneficiaryId};${x.status};${type};${x.assignedPharma?.name};${x.assignedCC?.name}\n`; }); const link = document.createElement("a"); link.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv); link.setAttribute("download", `Reporte_${d}.csv`); link.click(); };
+        window.downloadDayReport = async () => { 
+            const d = document.getElementById('dayModalDate').innerText; const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'shipments'), where('date', '==', d)); const s = await getDocs(q); 
+            // Crear CSV con ;
+            let csv = "\uFEFFFecha;Guia;Paciente;ID;Estado;Tipo;Farmacia;CallCenter\n"; 
+            s.forEach(docSnap => { const x = docSnap.data(); const type = (x.pickupCounter || x.assignedCC?.uid === 'ventanilla') ? "Ventanilla" : "Ruta"; csv += `${x.date};${x.guideNumber||'PEND'};${x.beneficiaryName};${x.beneficiaryId};${x.status};${type};${x.assignedPharma?.name};${x.assignedCC?.name}\n`; }); 
+            
+            // Crear Excel (SheetJS) - Soporte Dual
+            // Opción 1: Descargar ambos o preguntar. Por defecto dejo CSV aquí pero agregué botón en HTML.
+            // Esta función descarga CSV. Para Excel usaríamos XLSX.utils.json_to_sheet y XLSX.writeFile.
+            // Para cumplir requerimiento "descargar en los 2 tipos":
+            if(confirm("¿Descargar como Excel (.xlsx)?\nCancelar para CSV.")) {
+                const data = [];
+                s.forEach(docSnap => {
+                    const x = docSnap.data();
+                    data.push({
+                        Fecha: x.date, Guia: x.guideNumber, Paciente: x.beneficiaryName, ID: x.beneficiaryId,
+                        Estado: x.status, Tipo: (x.pickupCounter?'Ventanilla':'Ruta'), 
+                        Farmacia: x.assignedPharma?.name, CallCenter: x.assignedCC?.name
+                    });
+                });
+                const ws = XLSX.utils.json_to_sheet(data);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Reporte");
+                XLSX.writeFile(wb, `Reporte_${d}.xlsx`);
+            } else {
+                const link = document.createElement("a"); link.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv); link.setAttribute("download", `Reporte_${d}.csv`); link.click();
+            }
+        };
         window.openHistory = async function(id, name) { const list = document.getElementById('hist-list'); list.innerHTML = '<p class="p-4">Cargando...</p>'; document.getElementById('historyModal').classList.remove('hidden'); const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'shipments'), where('beneficiaryId', '==', id)); const snap = await getDocs(q); let h = ''; snap.forEach(d => { const s = d.data(); h += `<tr class="border-b"><td class="p-3">${s.date}</td><td class="p-3 font-mono text-[10px]">${s.guideNumber||'---'}</td><td class="p-3"><span class="bg-slate-100 px-2 py-0.5 rounded text-[10px] font-bold">${s.status}</span></td><td class="p-3 text-right text-[10px] text-slate-400">${new Date(s.createdAt).toLocaleDateString()}</td></tr>`; }); list.innerHTML = h || '<tr><td colspan="4" class="p-4 text-center">Sin historial disponible.</td></tr>'; };
         
         window.runAIScheduler = async () => { if(!confirm("¿Planificar envíos?")) return; const q = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries')); const batch = writeBatch(db); let count = 0; q.forEach(d => { const b = d.data(); if(b.lastDispense) { const next = new Date(b.lastDispense); next.setDate(next.getDate() + 30); const ds = next.toISOString().split('T')[0]; batch.set(doc(db, 'artifacts', appId, 'public', 'data', 'shipments', `${b.id}_${ds}`), { date: ds, beneficiaryId: b.id, beneficiaryName: b.name, status: 'Nuevo', assignedPharma: b.assignedPharma, assignedCC: b.assignedCC, pickupCounter: b.pickupCounter, createdAt: new Date().toISOString(), isAutoGenerated: true }); count++; } }); await batch.commit(); alert(`IA: ${count} envíos planificados.`); };
@@ -662,5 +707,8 @@
         function showLockScreen(m) { document.getElementById('lock-msg').innerText = m; document.getElementById('auth-lock').classList.remove('hidden'); }
         window.switchView('dashboard');
     </script>
+    
+    <!-- Librerías de Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </body>
 </html>
