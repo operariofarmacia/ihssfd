@@ -345,15 +345,27 @@
              
              if(snap.empty) { alert("No hay datos para exportar en esta fecha."); return; }
 
-             let csvContent = "data:text/csv;charset=utf-8,Fecha,Guia,Beneficiario,ID_Ben,Estado,Tipo_Entrega,Farmacia,Call_Center\n";
+             // BOM para que Excel reconozca tildes + Encabezados con ;
+             let csvContent = "data:text/csv;charset=utf-8,\uFEFFFecha;Guia;Beneficiario;ID_Ben;Estado;Tipo_Entrega;Farmacia;Call_Center\n";
              
              snap.forEach(docSnap => {
                  const s = docSnap.data();
                  const type = (s.pickupCounter || (s.assignedCC?.uid === 'ventanilla')) ? "Ventanilla" : "Domicilio";
+                 
+                 // Limpiar datos de posibles puntos y coma en el texto para no romper el CSV
+                 const clean = (text) => (text || '').toString().replace(/;/g, ' ');
+
                  const row = [
-                     s.date, s.guideNumber, s.beneficiaryName, s.beneficiaryId, s.status, type, 
-                     s.assignedPharma?.name || 'S/A', s.assignedCC?.name || 'S/A'
-                 ].join(",");
+                     clean(s.date), 
+                     clean(s.guideNumber), 
+                     clean(s.beneficiaryName), 
+                     clean(s.beneficiaryId), 
+                     clean(s.status), 
+                     clean(type), 
+                     clean(s.assignedPharma?.name || 'S/A'), 
+                     clean(s.assignedCC?.name || 'S/A')
+                 ].join(";"); // Usamos ; como separador
+                 
                  csvContent += row + "\n";
              });
 
