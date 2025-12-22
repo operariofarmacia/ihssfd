@@ -2,29 +2,13 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Farmacia - IHSS a tu Casa</title>
+    <title>Farmacia - IHSS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            dark: '#003366',    // Azul Institucional
-                            clinical: '#10b981', // Verde Farmacia
-                            teal: '#0d9488',    // Verde azulado
-                            light: '#f0fdf4'    // Fondo suave verde
-                        }
-                    }
-                }
-            }
-        }
+        tailwind.config = { theme: { extend: { colors: { brand: { dark: '#003366', clinical: '#10b981', teal: '#0e7490', light: '#f0fdf4' } } } } }
     </script>
-
     <style>
         body { font-family: 'Poppins', sans-serif; background-color: #f0fdf4; }
         .fade-in { animation: fadeIn 0.4s ease-out; }
@@ -32,352 +16,356 @@
         .custom-scroll::-webkit-scrollbar { width: 6px; }
         .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .modal-backdrop { background-color: rgba(6, 78, 59, 0.5); backdrop-filter: blur(4px); }
-        
-        /* Estilos de Tarjetas */
+        .modal-backdrop { background-color: rgba(6, 78, 59, 0.6); backdrop-filter: blur(4px); }
         .task-card { transition: all 0.2s; border-left: 4px solid transparent; }
         .task-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-        .task-new { border-left-color: #3b82f6; } /* Azul para nuevos */
-        .task-return { border-left-color: #f59e0b; } /* Naranja para retornos de CC */
+        .task-new { border-left-color: #3b82f6; } 
+        .task-return { border-left-color: #f59e0b; }
     </style>
 </head>
 <body class="flex flex-col h-screen overflow-hidden text-slate-700">
 
-    <!-- NAVBAR INSTITUCIONAL -->
+    <!-- PANTALLA DE BLOQUEO (Seguridad) -->
+    <div id="auth-lock" class="fixed inset-0 z-[60] bg-[#003366] flex flex-col items-center justify-center text-white fade-in">
+        <div class="bg-white p-3 rounded-full mb-5 shadow-2xl ring-4 ring-white/10">
+            <img src="https://portal.ihss.hn/cronicos/assets/dist/img/Recurso%201.png" class="h-20 w-20 object-contain">
+        </div>
+        <h2 class="text-3xl font-bold mb-2 tracking-tight">Módulo de Farmacia</h2>
+        <p class="text-blue-200 text-sm mb-8 max-w-xs text-center leading-relaxed" id="lock-msg">Inicia sesión para acceder a la dispensación.</p>
+        <button onclick="forceNavigateLogin()" class="bg-brand-clinical hover:bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg transform hover:scale-105 flex items-center mb-4">
+            <i class="fa-solid fa-arrow-left mr-3"></i> Ir al Login
+        </button>
+    </div>
+
+    <!-- NAVBAR -->
     <nav class="bg-white text-slate-800 p-3 px-6 flex justify-between items-center shadow-md border-t-4 border-brand-clinical z-30 shrink-0">
         <div class="flex items-center space-x-4">
             <img src="https://portal.ihss.hn/cronicos/assets/dist/img/Recurso%201.png" class="h-12 w-12 rounded-full border border-green-100 shadow-sm object-contain p-1">
             <div class="border-l border-slate-200 pl-4">
-                <div class="font-bold text-xl text-brand-dark leading-none">Módulo de Farmacia</div>
-                <div class="text-xs text-brand-clinical font-bold uppercase tracking-wider mt-0.5">Revisión y Asignación</div>
+                <div class="font-bold text-xl text-brand-dark leading-none">Farmacia</div>
+                <div class="text-xs text-brand-clinical font-bold uppercase tracking-wider mt-0.5">Control de Recetas</div>
             </div>
         </div>
-        
         <div class="flex items-center space-x-4">
             <div class="hidden md:block text-right">
-                <p class="text-sm font-bold text-slate-700" id="user-name">Cargando...</p>
-                <div class="flex items-center justify-end text-xs text-brand-clinical">
-                    <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-1.5"></span> En Turno
-                </div>
+                <p class="text-sm font-bold text-slate-700" id="user-name">Farmacéutico</p>
+                <div class="flex items-center justify-end text-xs text-brand-clinical"><span class="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-1.5"></span> En Turno</div>
             </div>
-            <button onclick="logout()" class="text-slate-400 hover:text-red-500 transition p-2 bg-slate-50 hover:bg-red-50 rounded-lg" title="Cerrar Sesión">
-                <i class="fa-solid fa-right-from-bracket text-xl"></i>
-            </button>
+            <button onclick="logout()" class="text-slate-400 hover:text-red-500 transition p-2 bg-slate-50 hover:bg-red-50 rounded-lg"><i class="fa-solid fa-right-from-bracket text-xl"></i></button>
         </div>
     </nav>
 
-    <!-- CONTENIDO PRINCIPAL -->
+    <!-- CONTENIDO -->
     <main class="flex-1 overflow-hidden flex flex-col md:flex-row p-6 gap-6">
-        
-        <!-- COLUMNA 1: BANDEJA DE ENTRADA (NUEVOS) -->
+        <!-- COLUMNA 1: NUEVOS -->
         <div class="flex-1 flex flex-col bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden fade-in">
             <div class="p-4 border-b border-slate-100 bg-blue-50/50 flex justify-between items-center">
-                <h3 class="font-bold text-brand-dark flex items-center">
-                    <i class="fa-solid fa-clipboard-list text-blue-500 mr-2"></i> 
-                    Nuevas Solicitudes
-                </h3>
+                <h3 class="font-bold text-brand-dark flex items-center"><i class="fa-solid fa-clipboard-list text-blue-500 mr-2"></i> Nuevas Solicitudes</h3>
                 <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs font-bold" id="count-new">0</span>
             </div>
-            <div class="p-4 overflow-y-auto custom-scroll space-y-3 flex-1 bg-slate-50/30" id="list-new">
-                <!-- Se llena con JS -->
-                <div class="text-center py-10 text-slate-400">
-                    <i class="fa-solid fa-spinner fa-spin mb-2"></i> Cargando...
-                </div>
-            </div>
+            <div class="p-4 overflow-y-auto custom-scroll space-y-3 flex-1 bg-slate-50/30" id="list-new"><div class="text-center py-10 text-slate-400"><i class="fa-solid fa-spinner fa-spin mb-2"></i> Cargando...</div></div>
         </div>
 
-        <!-- COLUMNA 2: CONFIRMACIÓN FINAL (RETORNOS CC) -->
+        <!-- COLUMNA 2: RETORNOS -->
         <div class="flex-1 flex flex-col bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden fade-in" style="animation-delay: 0.1s;">
             <div class="p-4 border-b border-slate-100 bg-orange-50/50 flex justify-between items-center">
-                <h3 class="font-bold text-brand-dark flex items-center">
-                    <i class="fa-solid fa-rotate-left text-orange-500 mr-2"></i> 
-                    Retornos de Call Center
-                </h3>
+                <h3 class="font-bold text-brand-dark flex items-center"><i class="fa-solid fa-rotate-left text-orange-500 mr-2"></i> Retornos Call Center</h3>
                 <span class="bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full text-xs font-bold" id="count-return">0</span>
             </div>
-            <div class="p-4 overflow-y-auto custom-scroll space-y-3 flex-1 bg-slate-50/30" id="list-return">
-                <!-- Se llena con JS -->
-                <div class="text-center py-10 text-slate-400">Sin tareas pendientes.</div>
-            </div>
+            <div class="p-4 overflow-y-auto custom-scroll space-y-3 flex-1 bg-slate-50/30" id="list-return"><div class="text-center py-10 text-slate-400">Sin tareas pendientes.</div></div>
         </div>
-        
     </main>
 
-    <!-- MODAL DE REVISIÓN (Farmacia -> Call Center) -->
+    <!-- MODAL DE REVISIÓN Y ASIGNACIÓN (ACTUALIZADO) -->
     <div id="modalReview" class="fixed inset-0 modal-backdrop hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl w-full max-w-2xl shadow-2xl flex flex-col max-h-[90vh] fade-in">
-            <div class="bg-brand-dark p-5 text-white flex justify-between items-center rounded-t-2xl">
-                <h3 class="font-bold text-lg"><i class="fa-solid fa-prescription mr-2"></i> Revisión Farmacéutica</h3>
+        <div class="bg-white rounded-2xl w-full max-w-3xl shadow-2xl flex flex-col max-h-[95vh] fade-in">
+            <div class="bg-brand-dark p-5 text-white flex justify-between items-center rounded-t-2xl shrink-0">
+                <h3 class="font-bold text-lg flex items-center"><i class="fa-solid fa-pills mr-2"></i> Asignación de Medicamentos</h3>
                 <button onclick="closeModals()" class="hover:text-red-300"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             
             <div class="p-6 overflow-y-auto custom-scroll">
-                <form id="formReview" class="space-y-4">
-                    <input type="hidden" id="reviewId">
+                <input type="hidden" id="reviewId">
+                
+                <!-- Info Paciente -->
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-6 flex justify-between items-center">
+                    <div>
+                        <p class="text-xs text-blue-500 font-bold uppercase">Paciente</p>
+                        <h4 class="text-lg font-bold text-brand-dark" id="reviewPatient">...</h4>
+                        <p class="text-sm text-slate-600" id="reviewIdNum">...</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="bg-white border border-blue-200 text-blue-700 px-3 py-1 rounded-full text-xs font-bold shadow-sm" id="reviewType">Afiliado</span>
+                    </div>
+                </div>
+
+                <!-- Constructor de Medicamentos (Recetas) -->
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-xs font-bold text-brand-clinical uppercase">Detalle de Recetas (Control de Ciclos)</label>
+                        <button type="button" onclick="addMedRow()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-1 rounded transition"><i class="fa-solid fa-plus mr-1"></i> Agregar Fila</button>
+                    </div>
                     
-                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <p class="text-xs text-blue-500 font-bold uppercase">Paciente</p>
-                                <h4 class="text-lg font-bold text-brand-dark" id="reviewPatient">Nombre Paciente</h4>
-                                <p class="text-sm text-slate-600" id="reviewIdNum">ID: 0000</p>
-                            </div>
-                            <div class="text-right">
-                                <span class="bg-white border border-blue-200 text-blue-700 px-2 py-1 rounded text-xs font-bold" id="reviewType">Afiliado</span>
-                            </div>
+                    <div class="border rounded-xl overflow-hidden shadow-sm">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-100 text-xs text-slate-500 uppercase font-bold">
+                                <tr>
+                                    <th class="p-3 w-5/12">Medicamento</th>
+                                    <th class="p-3 w-2/12">Cantidad</th>
+                                    <th class="p-3 w-4/12 text-center">Progreso Receta</th>
+                                    <th class="p-3 w-1/12"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="medsTableBody" class="divide-y divide-slate-100 bg-white">
+                                <!-- Filas dinámicas -->
+                            </tbody>
+                        </table>
+                        <div id="emptyMedsMsg" class="p-8 text-center text-slate-400 italic text-xs bg-slate-50">
+                            No hay medicamentos asignados. Pulse "Agregar Fila".
                         </div>
                     </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Diagnóstico / Receta</label>
-                        <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 text-sm text-slate-700 min-h-[60px]" id="reviewMedsText">
-                            <!-- Aquí va la info original -->
+                    
+                    <!-- Alerta de Renovación Dinámica -->
+                    <div id="renewalAlertBox" class="hidden mt-4 bg-red-50 border border-red-200 p-3 rounded-lg flex items-start animate-pulse">
+                        <i class="fa-solid fa-triangle-exclamation text-red-500 mt-0.5 mr-3"></i>
+                        <div>
+                            <p class="text-sm font-bold text-red-700">¡Alerta de Renovación Detectada!</p>
+                            <p class="text-xs text-red-600">Uno o más medicamentos están en su última receta. Se notificará al Call Center para avisar al paciente.</p>
                         </div>
                     </div>
+                </div>
 
-                    <hr class="border-slate-100">
-
-                    <div>
-                        <label class="block text-xs font-bold text-brand-clinical uppercase mb-1">Asignación de Medicamentos (Desglose)</label>
-                        <textarea id="reviewMedsAssign" class="w-full border border-green-200 rounded-lg p-3 text-sm focus:border-brand-clinical outline-none focus:ring-2 focus:ring-green-100" rows="4" placeholder="Ej: Metformina 850mg - 3 Cajas - Lote 5543&#10;Insulina Glargina - 1 Frasco - Lote 221"></textarea>
-                    </div>
-
-                    <div class="flex items-center gap-2">
-                         <input type="checkbox" id="reviewStockCheck" class="w-4 h-4 text-brand-clinical rounded border-gray-300 focus:ring-brand-clinical">
-                         <label for="reviewStockCheck" class="text-sm text-slate-600 cursor-pointer">He verificado disponibilidad en inventario.</label>
-                    </div>
-                </form>
+                <div class="mt-6 flex items-center gap-2 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                     <input type="checkbox" id="reviewStockCheck" class="w-5 h-5 text-brand-clinical rounded border-gray-300 focus:ring-brand-clinical cursor-pointer">
+                     <label for="reviewStockCheck" class="text-sm text-slate-600 cursor-pointer font-medium">Confirmo disponibilidad de stock y lotes.</label>
+                </div>
             </div>
             
-            <div class="p-5 border-t border-slate-100 flex justify-end gap-3 rounded-b-2xl bg-slate-50">
-                <button onclick="closeModals()" class="px-4 py-2 text-sm font-bold text-slate-500 hover:text-slate-700">Cancelar</button>
-                <button onclick="sendToCallCenter()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-lg transition flex items-center">
-                    <i class="fa-solid fa-headset mr-2"></i> Enviar a Call Center
+            <div class="p-5 border-t border-slate-100 flex justify-end gap-3 rounded-b-2xl bg-slate-50 shrink-0">
+                <button onclick="closeModals()" class="px-4 py-2 text-sm font-bold text-slate-500 hover:text-slate-700 transition">Cancelar</button>
+                <button onclick="sendToCallCenter()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-lg transition flex items-center transform active:scale-95">
+                    <i class="fa-solid fa-paper-plane mr-2"></i> Enviar a Call Center
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL DE IMPRESIÓN (Retorno CC -> Empaquetado) -->
+    <!-- MODAL IMPRESIÓN (Sin cambios mayores) -->
     <div id="modalPrint" class="fixed inset-0 modal-backdrop hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl flex flex-col fade-in border-t-8 border-orange-500">
             <div class="p-6">
                 <h3 class="font-bold text-xl text-slate-800 mb-2">Confirmación Final</h3>
-                <p class="text-sm text-slate-500 mb-6">El Call Center ha confirmado los datos. Verifique la dirección final antes de imprimir.</p>
-                
+                <p class="text-sm text-slate-500 mb-6">El Call Center ha confirmado los datos.</p>
                 <div class="bg-orange-50 p-4 rounded-lg border border-orange-100 mb-4">
-                    <p class="text-xs text-orange-600 font-bold uppercase mb-1">Dirección de Entrega Confirmada</p>
-                    <p class="text-sm font-bold text-slate-800" id="printAddress">Colonia Kennedy, Bloque 4...</p>
-                    <p class="text-xs text-slate-500 mt-2"><i class="fa-solid fa-calendar mr-1"></i> Fecha Envío: <span id="printDate" class="font-bold">20/10/2025</span></p>
+                    <p class="text-xs text-orange-600 font-bold uppercase mb-1">Dirección de Entrega</p>
+                    <p class="text-sm font-bold text-slate-800" id="printAddress">...</p>
                 </div>
-
                 <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
-                    <p class="text-xs text-slate-400 uppercase mb-1">Medicamentos Asignados</p>
-                    <p class="text-sm text-slate-700 font-mono" id="printMeds">...</p>
+                    <p class="text-xs text-slate-400 uppercase mb-1">Detalle Medicamentos</p>
+                    <p class="text-sm text-slate-700 whitespace-pre-wrap font-mono" id="printMeds">...</p>
                 </div>
             </div>
-            
             <div class="p-5 bg-slate-50 rounded-b-2xl flex justify-between items-center">
                 <button onclick="window.print()" class="text-slate-500 hover:text-slate-800 text-sm font-bold flex items-center"><i class="fa-solid fa-print mr-2"></i> Imprimir Guía</button>
-                <button onclick="sendToPacking()" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg transition flex items-center">
-                    <span>A Empaquetado</span> <i class="fa-solid fa-box-open ml-2"></i>
-                </button>
+                <button onclick="sendToPacking()" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg transition flex items-center"><span>A Empaquetado</span> <i class="fa-solid fa-box-open ml-2"></i></button>
             </div>
             <input type="hidden" id="printId">
         </div>
     </div>
 
-    <!-- SCRIPTS -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
         import { getFirestore, collection, query, where, onSnapshot, updateDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-        // CONFIGURACIÓN (Mismas credenciales)
         const firebaseConfig = { apiKey: "AIzaSyC2HWoYjIltPqkysduZ-954-f-kZCFaNdA", authDomain: "fdihss.firebaseapp.com", projectId: "fdihss", storageBucket: "fdihss.firebasestorage.app", messagingSenderId: "1004594046776", appId: "1:1004594046776:web:164dcdb2b023b8719283cd" };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         const appId = "fdihss-mediflow-v2-modular";
-        let currentUserRole = '';
+        let currentUid = '';
 
-        // --- SEGURIDAD Y NAVEGACIÓN ---
-        function goLogin() {
-            try {
-                window.location.href = 'index.html';
-            } catch (e) {
-                console.warn("Redirección bloqueada en preview:", e);
-                // Fallback visual para que el usuario sepa que salió
-                document.body.innerHTML = `
-                    <div class="flex h-screen items-center justify-center bg-slate-50">
-                        <div class="text-center p-8 bg-white rounded-xl shadow-lg">
-                            <i class="fa-solid fa-check-circle text-4xl text-green-500 mb-4"></i>
-                            <h2 class="text-xl font-bold text-slate-700">Sesión Finalizada</h2>
-                            <p class="text-slate-500 mt-2">Has salido del sistema correctamente.</p>
-                            <button onclick="window.location.reload()" class="mt-6 bg-brand-clinical text-white px-6 py-2 rounded-lg font-bold hover:bg-green-600 transition">Recargar Página</button>
-                        </div>
-                    </div>
-                `;
-            }
-        }
+        // --- AUTH ---
+        function forceNavigateLogin() { try { window.location.href = 'index.html'; } catch(e) { alert("Recarga la página"); } }
+        function showLockScreen() { document.getElementById('auth-lock').classList.remove('hidden'); }
         
         onAuthStateChanged(auth, async (user) => {
-            if (!user) goLogin();
+            if (!user) showLockScreen();
             else {
+                currentUid = user.uid;
                 try {
                     const snap = await getDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data'));
-                    if (!snap.exists() || snap.data().role !== 'farmacia') {
-                        // alert("Acceso denegado: Área exclusiva de Farmacia."); // Comentado para evitar bloqueos en preview si el rol tarda en cargar
-                         console.log("Verificando rol farmacia...");
-                    } else {
-                        currentUserRole = snap.data().role;
-                        const uName = document.getElementById('user-name');
-                        if(uName) uName.innerText = snap.data().name || "Farmacéutico";
+                    if (!snap.exists() || snap.data().role !== 'farmacia') showLockScreen();
+                    else {
+                        document.getElementById('auth-lock').classList.add('hidden');
+                        document.getElementById('user-name').innerText = snap.data().name || "Farmacéutico";
+                        initListeners();
                     }
-                } catch(e) { console.error("Error Auth Check", e); }
+                } catch(e) { console.error(e); }
             }
         });
 
-        // --- LISTENERS DE PEDIDOS ---
-        
-        // 1. BANDEJA NUEVOS (Estado: 'Nuevo')
-        // Muestra pedidos recién creados o importados que necesitan revisión inicial
-        // Corrección de ruta: 'data' agregado
-        const qNew = query(collection(db, 'artifacts', appId, 'public', 'data', 'shipments'), where('status', '==', 'Nuevo'));
-        
-        onSnapshot(qNew, (snapshot) => {
-            const list = document.getElementById('list-new');
-            const count = document.getElementById('count-new');
-            if(list && count) {
-                list.innerHTML = '';
-                count.innerText = snapshot.size;
+        // --- GESTIÓN MEDICAMENTOS (NUEVO) ---
+        window.addMedRow = () => {
+            document.getElementById('emptyMedsMsg').classList.add('hidden');
+            const tbody = document.getElementById('medsTableBody');
+            const row = document.createElement('tr');
+            row.className = "border-b border-slate-50 hover:bg-slate-50 transition";
+            row.innerHTML = `
+                <td class="p-2"><input type="text" class="w-full border rounded p-1.5 text-xs med-name" placeholder="Nombre Medicamento"></td>
+                <td class="p-2"><input type="text" class="w-full border rounded p-1.5 text-xs med-qty" placeholder="Ej: 3 cajas"></td>
+                <td class="p-2">
+                    <div class="flex items-center justify-center gap-1">
+                        <span class="text-xs text-slate-500">Receta</span>
+                        <input type="number" min="1" class="w-10 border rounded p-1 text-center text-xs med-current" onchange="checkRenewal(this)">
+                        <span class="text-xs text-slate-500">de</span>
+                        <input type="number" min="1" class="w-10 border rounded p-1 text-center text-xs med-total" onchange="checkRenewal(this)">
+                    </div>
+                </td>
+                <td class="p-2 text-center"><button type="button" onclick="this.closest('tr').remove()" class="text-red-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button></td>
+            `;
+            tbody.appendChild(row);
+        };
 
-                if (snapshot.empty) {
-                    list.innerHTML = '<div class="text-center py-10 text-slate-400 bg-white rounded-lg border border-dashed border-slate-200">Todo al día.</div>';
-                    return;
-                }
+        window.checkRenewal = (input) => {
+            const row = input.closest('tr');
+            const current = parseInt(row.querySelector('.med-current').value) || 0;
+            const total = parseInt(row.querySelector('.med-total').value) || 0;
+            
+            // Lógica de Alerta Visual en la fila
+            if (total > 0 && current >= total) {
+                row.classList.add('bg-red-50');
+                row.querySelector('.med-name').classList.add('text-red-700', 'font-bold');
+            } else {
+                row.classList.remove('bg-red-50');
+                row.querySelector('.med-name').classList.remove('text-red-700', 'font-bold');
+            }
+            updateGlobalAlert();
+        };
 
-                snapshot.forEach(docSnap => {
-                    const d = docSnap.data();
-                    const dataStr = encodeURIComponent(JSON.stringify({...d, id: docSnap.id}));
-                    
-                    list.innerHTML += `
-                        <div class="task-card task-new bg-white p-4 rounded-xl shadow-sm border border-slate-100 cursor-pointer" onclick="openReview('${dataStr}')">
-                            <div class="flex justify-between items-start mb-2">
-                                <span class="bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-0.5 rounded uppercase">Nuevo Ingreso</span>
-                                <span class="text-[10px] text-slate-400">${new Date(d.createdAt).toLocaleDateString()}</span>
-                            </div>
-                            <h4 class="font-bold text-slate-700">${d.beneficiaryName}</h4>
-                            <p class="text-xs text-slate-500 mt-1 line-clamp-2">Guía Pendiente</p>
-                            <div class="mt-3 flex justify-end">
-                                <button class="text-xs font-bold text-white bg-blue-500 hover:bg-blue-600 px-3 py-1.5 rounded-lg transition shadow-sm">
-                                    Revisar y Asignar <i class="fa-solid fa-arrow-right ml-1"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
+        function updateGlobalAlert() {
+            let hasAlert = false;
+            document.querySelectorAll('#medsTableBody tr').forEach(row => {
+                const c = parseInt(row.querySelector('.med-current').value) || 0;
+                const t = parseInt(row.querySelector('.med-total').value) || 0;
+                if(t > 0 && c >= t) hasAlert = true;
+            });
+            
+            const alertBox = document.getElementById('renewalAlertBox');
+            if(hasAlert) alertBox.classList.remove('hidden');
+            else alertBox.classList.add('hidden');
+            return hasAlert;
+        }
+
+        // --- LISTENERS ---
+        function initListeners() {
+            // Bandeja Nuevos
+            const qNew = query(collection(db, 'artifacts', appId, 'public', 'data', 'shipments'), where('status', '==', 'Nuevo'));
+            onSnapshot(qNew, (s) => {
+                const list = document.getElementById('list-new'); list.innerHTML = '';
+                let count = 0;
+                s.forEach(d => {
+                    const data = d.data();
+                    if(data.assignedPharma?.uid === currentUid) {
+                        count++;
+                        const dataStr = encodeURIComponent(JSON.stringify({...data, id: d.id}));
+                        list.innerHTML += `<div class="task-card task-new bg-white p-4 rounded-xl shadow-sm border border-slate-100 cursor-pointer" onclick="openReview('${dataStr}')"><div class="flex justify-between items-start mb-2"><span class="bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-0.5 rounded uppercase">Nuevo</span><span class="text-[10px] text-slate-400">${new Date(data.createdAt).toLocaleDateString()}</span></div><h4 class="font-bold text-slate-700">${data.beneficiaryName}</h4><p class="text-xs text-slate-500 mt-1 line-clamp-2">Guía: ${data.guideNumber}</p><div class="mt-3 flex justify-end"><button class="text-xs font-bold text-white bg-blue-500 hover:bg-blue-600 px-3 py-1.5 rounded-lg transition shadow-sm">Revisar <i class="fa-solid fa-arrow-right ml-1"></i></button></div></div>`;
+                    }
                 });
-            }
-        });
+                document.getElementById('count-new').innerText = count;
+                if(count===0) list.innerHTML = '<div class="text-center py-10 text-slate-400 bg-white rounded-lg border border-dashed border-slate-200">Todo al día.</div>';
+            });
 
-        // 2. BANDEJA RETORNOS (Estado: 'Confirmacion CC')
-        const qReturn = query(collection(db, 'artifacts', appId, 'public', 'data', 'shipments'), where('status', '==', 'Confirmacion CC'));
-        
-        onSnapshot(qReturn, (snapshot) => {
-            const list = document.getElementById('list-return');
-            const count = document.getElementById('count-return');
-            if(list && count) {
-                list.innerHTML = '';
-                count.innerText = snapshot.size;
-
-                if (snapshot.empty) {
-                    list.innerHTML = '<div class="text-center py-10 text-slate-400">Sin retornos pendientes.</div>';
-                    return;
-                }
-
-                snapshot.forEach(docSnap => {
-                    const d = docSnap.data();
-                    const dataStr = encodeURIComponent(JSON.stringify({...d, id: docSnap.id}));
-                    
-                    list.innerHTML += `
-                        <div class="task-card task-return bg-white p-4 rounded-xl shadow-sm border border-slate-100 cursor-pointer" onclick="openPrint('${dataStr}')">
-                            <div class="flex justify-between items-start mb-2">
-                                <span class="bg-orange-50 text-orange-600 text-[10px] font-bold px-2 py-0.5 rounded uppercase">Listo para Imprimir</span>
-                                <span class="text-[10px] text-slate-400 font-mono">${d.guideNumber}</span>
-                            </div>
-                            <h4 class="font-bold text-slate-700">${d.beneficiaryName}</h4>
-                            <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-location-dot mr-1"></i>${d.confirmedAddress || 'Dirección confirmada'}</p>
-                            <div class="mt-3 flex justify-end">
-                                <button class="text-xs font-bold text-white bg-orange-500 hover:bg-orange-600 px-3 py-1.5 rounded-lg transition shadow-sm">
-                                    <i class="fa-solid fa-print mr-1"></i> Procesar
-                                </button>
-                            </div>
-                        </div>
-                    `;
+            // Bandeja Retornos
+            const qRet = query(collection(db, 'artifacts', appId, 'public', 'data', 'shipments'), where('status', '==', 'Retorno Farmacia')); // Nombre exacto del estado
+            onSnapshot(qRet, (s) => {
+                const list = document.getElementById('list-return'); list.innerHTML = '';
+                let count = 0;
+                s.forEach(d => {
+                    const data = d.data();
+                    if(data.assignedPharma?.uid === currentUid) {
+                        count++;
+                        const dataStr = encodeURIComponent(JSON.stringify({...data, id: d.id}));
+                        list.innerHTML += `<div class="task-card task-return bg-white p-4 rounded-xl shadow-sm border border-slate-100 cursor-pointer" onclick="openPrint('${dataStr}')"><div class="flex justify-between items-start mb-2"><span class="bg-orange-50 text-orange-600 text-[10px] font-bold px-2 py-0.5 rounded uppercase">Imprimir</span><span class="text-[10px] text-slate-400">${data.guideNumber}</span></div><h4 class="font-bold text-slate-700">${data.beneficiaryName}</h4><p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-location-dot mr-1"></i>${data.confirmedAddress || 'Confirmada'}</p><div class="mt-3 flex justify-end"><button class="text-xs font-bold text-white bg-orange-500 hover:bg-orange-600 px-3 py-1.5 rounded-lg transition shadow-sm"><i class="fa-solid fa-print mr-1"></i> Procesar</button></div></div>`;
+                    }
                 });
-            }
-        });
+                document.getElementById('count-return').innerText = count;
+                if(count===0) list.innerHTML = '<div class="text-center py-10 text-slate-400">Sin retornos.</div>';
+            });
+        }
 
-        // --- FUNCIONES DE MODALES ---
-        
+        // --- MODALES ---
         window.openReview = (dataStr) => {
             const data = JSON.parse(decodeURIComponent(dataStr));
             document.getElementById('reviewId').value = data.id;
             document.getElementById('reviewPatient').innerText = data.beneficiaryName;
-            document.getElementById('reviewIdNum').innerText = "ID Beneficiario: " + (data.beneficiaryId || '---');
-            document.getElementById('reviewMedsText').innerText = "Solicitud de reabastecimiento mensual estándar."; 
-            document.getElementById('reviewMedsAssign').value = ""; 
+            document.getElementById('reviewIdNum').innerText = "ID: " + data.beneficiaryId;
+            document.getElementById('reviewMedsText').innerText = "Solicitud Recurrente";
+            document.getElementById('medsTableBody').innerHTML = ''; // Limpiar tabla
+            document.getElementById('emptyMedsMsg').classList.remove('hidden');
+            document.getElementById('renewalAlertBox').classList.add('hidden');
             document.getElementById('reviewStockCheck').checked = false;
-            
             document.getElementById('modalReview').classList.remove('hidden');
+            // Agregar una fila vacía por defecto
+            window.addMedRow();
         };
 
         window.sendToCallCenter = async () => {
             const id = document.getElementById('reviewId').value;
-            const meds = document.getElementById('reviewMedsAssign').value;
+            const rows = document.querySelectorAll('#medsTableBody tr');
             const check = document.getElementById('reviewStockCheck').checked;
+            const hasAlert = updateGlobalAlert(); // Verificar si hay alertas de renovacion
 
-            if(!meds.trim()) { alert("Debe detallar los medicamentos asignados."); return; }
-            if(!check) { alert("Debe confirmar la disponibilidad en inventario."); return; }
+            if(rows.length === 0) { alert("Agregue al menos un medicamento."); return; }
+            if(!check) { alert("Confirme disponibilidad."); return; }
+
+            // Construir string legible para el Call Center y la Guía
+            let medsString = "";
+            let medsData = [];
+            
+            rows.forEach(r => {
+                const name = r.querySelector('.med-name').value;
+                const qty = r.querySelector('.med-qty').value;
+                const cur = r.querySelector('.med-current').value;
+                const tot = r.querySelector('.med-total').value;
+                if(name) {
+                    medsString += `- ${name} (${qty}) [Receta ${cur}/${tot}]\n`;
+                    medsData.push({name, qty, current: cur, total: tot});
+                }
+            });
+
+            if(!medsString) { alert("Complete los nombres de medicamentos."); return; }
 
             try {
-                // Corrección de ruta
                 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'shipments', id);
                 await updateDoc(docRef, {
-                    status: 'En Proceso', 
-                    assignedMeds: meds,
+                    status: 'Confirmacion CC', 
+                    assignedMeds: medsString, // Texto para visualización rápida
+                    medsDetails: medsData,    // Datos estructurados
+                    renewalAlert: hasAlert,   // Bandera para el Call Center
                     pharmacyCheck: true,
-                    pharmacyUser: document.getElementById('user-name').innerText,
                     updatedAt: new Date().toISOString()
                 });
-                alert("✅ Enviado al Contact Center para confirmación.");
-                closeModals();
-            } catch(e) { alert("Error: " + e.message); }
+                alert("✅ Enviado al Contact Center.");
+                window.closeModals();
+            } catch(e) { alert(e.message); }
         };
 
         window.openPrint = (dataStr) => {
             const data = JSON.parse(decodeURIComponent(dataStr));
             document.getElementById('printId').value = data.id;
-            document.getElementById('printAddress').innerText = data.confirmedAddress || "Dirección no especificada en sistema";
-            document.getElementById('printDate').innerText = data.deliveryDate || "Pendiente";
-            document.getElementById('printMeds').innerText = data.assignedMeds || "Sin detalles";
-            
+            document.getElementById('printAddress').innerText = data.confirmedAddress || "S/D";
+            document.getElementById('printMeds').innerText = data.assignedMeds || "";
             document.getElementById('modalPrint').classList.remove('hidden');
         };
 
         window.sendToPacking = async () => {
             const id = document.getElementById('printId').value;
-            if(confirm("¿Se ha impreso la guía y viñetas correctamente?")) {
+            if(confirm("¿Enviar a Empaquetado?")) {
                 try {
-                    // Corrección de ruta
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'shipments', id);
-                    await updateDoc(docRef, {
-                        status: 'Empaquetado',
-                        printedAt: new Date().toISOString()
-                    });
-                    alert("✅ Orden enviada a Empaquetado/Operaciones.");
-                    closeModals();
-                } catch(e) { alert("Error: " + e.message); }
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shipments', id), { status: 'Empaquetado' });
+                    alert("✅ Enviado."); window.closeModals();
+                } catch(e){alert(e.message);}
             }
         };
 
@@ -385,10 +373,7 @@
             document.getElementById('modalReview').classList.add('hidden');
             document.getElementById('modalPrint').classList.add('hidden');
         };
-
-        window.logout = () => {
-            if(confirm("¿Cerrar turno?")) signOut(auth).then(() => goLogin());
-        };
+        window.logout = () => { if(confirm("¿Salir?")) signOut(auth).then(()=>goLogin()); };
 
     </script>
 </body>
