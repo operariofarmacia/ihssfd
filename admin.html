@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Administrativo - IHSS a tu Casa</title>
+    <title>Admin - IHSS a tu Casa</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
@@ -50,6 +50,8 @@
         .timeline-step:first-child::before { display: none; }
         .timeline-active .step-dot { background-color: #10b981; color: white; border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); }
         .timeline-active::before { background: #10b981; }
+        
+        /* Tabs Styles */
         .tab-btn.active { border-bottom: 3px solid #003366; color: #003366; font-weight: 700; background-color: #f1f5f9; }
         .tab-btn { color: #64748b; transition: all 0.2s; }
     </style>
@@ -64,8 +66,8 @@
         <h2 class="text-3xl font-bold mb-2 tracking-tight">Sesión Finalizada</h2>
         <p class="text-blue-200 text-sm mb-8 max-w-xs text-center leading-relaxed" id="lock-msg">Tu sesión ha expirado o se ha iniciado en otro lugar.</p>
         
-        <!-- BOTÓN DE SALIDA SEGURA (Rompe el bucle de usuario congelado) -->
-        <button onclick="logoutAndNavigate()" class="bg-brand-cyan hover:bg-brand-teal text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-transform transform active:scale-95 flex items-center mb-4">
+        <!-- BOTÓN MODIFICADO: FUERZA EL CIERRE ANTES DE SALIR -->
+        <button onclick="forceNavigateLogin()" class="bg-brand-cyan hover:bg-brand-teal text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-transform transform active:scale-95 flex items-center mb-4">
             <i class="fa-solid fa-power-off mr-3"></i> Cerrar Sesión y Salir
         </button>
     </div>
@@ -83,25 +85,25 @@
             </div>
         </div>
         <nav class="flex-1 p-4 space-y-2 overflow-y-auto custom-scroll">
-            <button onclick="switchView('dashboard')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-dashboard">
+            <button onclick="switchView('dashboard')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-dashboard">
                 <i class="fa-solid fa-house w-5 text-center"></i><span class="font-medium text-sm">Inicio</span>
             </button>
             <div class="pt-4 pb-2 px-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">Gestión</div>
-            <button onclick="switchView('users')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-users">
+            <button onclick="switchView('users')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-users">
                 <i class="fa-solid fa-users-gear w-5 text-center"></i><span class="font-medium text-sm">Personal</span>
             </button>
-            <button onclick="switchView('beneficiaries')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-beneficiaries">
+            <button onclick="switchView('beneficiaries')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-beneficiaries">
                 <i class="fa-solid fa-hospital-user w-5 text-center"></i><span class="font-medium text-sm">Derechohabientes</span>
             </button>
             <div class="pt-4 pb-2 px-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">Operaciones</div>
-            <button onclick="switchView('shipments')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-shipments">
-                <i class="fa-solid fa-truck-fast w-5 text-center"></i><span class="font-medium text-sm">Logística</span>
+            <button onclick="switchView('shipments')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-shipments">
+                <i class="fa-solid fa-truck-fast w-5 text-center"></i><span class="font-medium text-sm">Gestión de Envíos</span>
             </button>
-            <button onclick="switchView('reports')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-reports">
+            <button onclick="switchView('reports')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-reports">
                 <i class="fa-solid fa-chart-pie w-5 text-center"></i><span class="font-medium text-sm">Reportes</span>
             </button>
         </nav>
-        <div class="p-4 bg-black/20 border-t border-white/5">
+        <div class="p-4 bg-black/20 border-t border-white/5 space-y-2">
             <button onclick="logout()" class="w-full bg-red-500/20 hover:bg-red-600 text-red-100 py-2.5 rounded-lg text-xs font-bold uppercase transition flex items-center justify-center group">
                 <i class="fa-solid fa-power-off mr-2 group-hover:scale-110 transition-transform"></i> Cerrar Sesión
             </button>
@@ -115,24 +117,24 @@
         <div id="view-dashboard" class="flex-1 flex flex-col h-full overflow-hidden fade-in">
             <header class="bg-white shadow-sm border-b border-slate-200 p-8 shrink-0">
                 <h1 class="text-3xl font-bold text-brand-dark mb-1 tracking-tight">Panel de Control</h1>
-                <p class="text-slate-500 text-sm">Gestión integral del sistema de dispensación IHSS.</p>
+                <p class="text-slate-500 text-sm italic">Gestión integral del sistema de dispensación IHSS.</p>
             </header>
             <div class="flex-1 overflow-y-auto p-8 custom-scroll">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div onclick="switchView('users')" class="dash-card bg-white rounded-3xl p-8 border border-slate-100 shadow-sm cursor-pointer group">
                         <div class="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-user-shield"></i></div>
                         <h3 class="font-bold text-slate-700 text-lg">Personal</h3>
-                        <p class="text-xs text-slate-400">Directorio y seguridad</p>
+                        <p class="text-xs text-slate-400">Directorio y seguridad de acceso</p>
                     </div>
                     <div onclick="switchView('beneficiaries')" class="dash-card bg-white rounded-3xl p-8 border border-slate-100 shadow-sm cursor-pointer group">
                         <div class="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-hospital-user"></i></div>
                         <h3 class="font-bold text-slate-700 text-lg">Pacientes</h3>
-                        <p class="text-xs text-slate-400">Expedientes y asignaciones</p>
+                        <p class="text-xs text-slate-400">Derechohabientes y ciclos de receta</p>
                     </div>
                     <div onclick="switchView('shipments')" class="dash-card bg-white rounded-3xl p-8 border border-slate-100 shadow-sm cursor-pointer group">
                         <div class="w-16 h-16 rounded-2xl bg-cyan-50 text-brand-cyan flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-map-location-dot"></i></div>
                         <h3 class="font-bold text-slate-700 text-lg">Logística</h3>
-                        <p class="text-xs text-slate-400">Envíos y rutas</p>
+                        <p class="text-xs text-slate-400">Monitoreo de rutas</p>
                     </div>
                 </div>
             </div>
@@ -144,17 +146,16 @@
                 <h1 class="text-2xl font-bold text-brand-dark">Directorio de Personal</h1>
                 <div class="flex gap-2">
                     <button onclick="balanceWorkload()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-200 px-4 py-2 rounded-xl font-bold text-xs shadow-sm transition-all">⚖️ Equilibrar Cargas</button>
-                    <button onclick="openUserModal()" class="bg-brand-dark hover:bg-brand-cyan text-white px-6 py-2 rounded-xl font-bold shadow-lg transition-all flex items-center text-sm"><i class="fa-solid fa-user-plus mr-2"></i> Nuevo Usuario</button>
+                    <button onclick="openUserModal()" class="bg-brand-dark hover:bg-brand-cyan text-white px-6 py-2.5 rounded-xl font-bold shadow-lg transition-all flex items-center text-sm"><i class="fa-solid fa-user-plus mr-2"></i> Nuevo Usuario</button>
                 </div>
             </header>
-            <div class="flex-1 overflow-y-auto p-6 custom-scroll">
+            <div class="flex-1 overflow-y-auto p-6 md:p-8 custom-scroll">
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                     <table class="w-full text-left border-collapse">
                         <thead class="bg-slate-50 text-[10px] uppercase text-slate-500 font-bold tracking-wider">
-                            <tr><th class="p-5 pl-6">Colaborador</th><th class="p-5">Cargos</th><th class="p-5">Acceso</th><th class="p-5 text-center">Estatus</th><th class="p-5 pr-6 text-right">Acciones</th></tr>
+                            <tr><th class="p-5 pl-6">Colaborador</th><th class="p-5">Cargos / Funciones</th><th class="p-5">Acceso</th><th class="p-5 text-center">Estatus</th><th class="p-5 pr-6 text-right">Acciones</th></tr>
                         </thead>
-                        <tbody id="user-list" class="divide-y divide-slate-100 text-sm text-slate-600"></tbody>
-                    </table>
+                        <tbody id="user-list" class="divide-y divide-slate-100 text-sm text-slate-600"><tr><td colspan="5" class="p-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando...</td></tr></tbody></table>
                 </div>
             </div>
         </div>
@@ -164,8 +165,9 @@
             <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center shrink-0">
                 <h1 class="text-2xl font-bold text-brand-dark tracking-tight">Gestión de Derechohabientes</h1>
                 <div class="flex gap-3">
-                    <label class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2 rounded-xl font-bold shadow-lg cursor-pointer flex items-center text-sm"><i class="fa-solid fa-file-csv mr-2"></i> Cargar CSV<input type="file" id="csvInput" accept=".csv" class="hidden" onchange="handleCSVUpload(this)"></label>
-                    <button onclick="openBeneficiaryModal()" class="bg-brand-dark hover:bg-brand-cyan text-white px-5 py-2 rounded-xl font-bold shadow-lg flex items-center text-sm"><i class="fa-solid fa-plus mr-2"></i> Crear Manual</button>
+                    <div id="csvStatus" class="hidden flex items-center text-xs font-bold text-brand-clinical animate-pulse mr-2"><i class="fa-solid fa-sync fa-spin mr-1"></i> Cargando...</div>
+                    <label class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg cursor-pointer flex items-center text-sm"><i class="fa-solid fa-file-csv mr-2"></i> Cargar CSV<input type="file" id="csvInput" accept=".csv" class="hidden" onchange="handleCSVUpload(this)"></label>
+                    <button onclick="openBeneficiaryModal()" class="bg-brand-dark hover:bg-brand-cyan text-white px-5 py-2.5 rounded-xl font-bold shadow-lg flex items-center text-sm"><i class="fa-solid fa-plus mr-2"></i> Crear Manual</button>
                 </div>
             </header>
             <div class="flex-1 overflow-y-auto p-6 md:p-8 custom-scroll">
@@ -179,35 +181,27 @@
         <div id="view-shipments" class="hidden-view flex-1 flex flex-col h-full overflow-hidden fade-in">
             <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center shrink-0">
                 <div>
-                    <h1 class="text-2xl font-bold text-brand-dark flex items-center"><i class="fa-solid fa-truck-ramp-box mr-3 text-brand-cyan"></i> Logística IHSS</h1>
-                    <nav class="flex text-[10px] text-slate-500 mt-1 font-bold" id="ship-breadcrumb"><span class="cursor-pointer hover:underline" onclick="resetShipView()">Inicio</span></nav>
-                </div>
+                    <h1 class="text-2xl font-bold text-brand-dark flex items-center"><i class="fa-solid fa-truck-ramp-box mr-3 text-brand-cyan"></i> Gestión de Envíos</h1><nav class="flex text-xs text-slate-500 mt-1" id="ship-breadcrumb"><span class="font-bold text-brand-dark">Inicio</span></nav></div>
             </header>
-            <div class="flex flex-col md:flex-row h-full overflow-hidden">
-                <div class="flex-1 overflow-y-auto p-6 custom-scroll bg-slate-50/50">
-                    <div id="ship-years" class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <div onclick="openYear(2026)" class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 hover:border-brand-cyan hover:shadow-xl cursor-pointer text-center group transition-all">
-                            <div class="text-4xl font-bold text-brand-dark group-hover:text-brand-cyan mb-2 transition-colors">2026</div><p class="text-xs text-slate-400 uppercase tracking-widest font-bold">Año Fiscal</p>
-                        </div>
-                    </div>
-                    <div id="ship-months" class="hidden grid grid-cols-1 md:grid-cols-4 gap-4 fade-in"></div>
-                    <div id="ship-days" class="hidden fade-in"><div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6"><div class="grid grid-cols-7 gap-2 mb-2 text-center text-[10px] font-bold text-slate-400 uppercase"><div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div></div><div id="calendar-grid" class="grid grid-cols-7 gap-2"></div></div></div>
-                </div>
-                <!-- Panel Lateral IA -->
-                <aside class="w-full md:w-80 bg-white border-l border-slate-200 shadow-xl flex flex-col z-20">
-                    <div class="p-5 border-b border-slate-100 bg-brand-light">
-                        <h3 class="font-bold text-brand-teal flex items-center text-sm uppercase tracking-wider"><i class="fa-solid fa-robot mr-2 text-brand-cyan"></i> Planificador IA</h3>
-                        <p class="text-[10px] text-slate-500 mt-1">Detección de ciclos de recetas.</p>
-                    </div>
-                    <div class="flex-1 overflow-y-auto p-4 custom-scroll" id="ai-suggestions-list">
-                        <div class="text-center py-10 px-4">
-                            <button onclick="runAIScheduler()" class="bg-brand-cyan hover:bg-brand-teal text-white px-6 py-2.5 rounded-full font-bold shadow-lg transition-transform transform active:scale-95 text-xs w-full mb-4">
-                                <i class="fa-solid fa-wand-magic-sparkles mr-2"></i> ANALIZAR PRÓXIMO MES
-                            </button>
-                        </div>
-                    </div>
-                </aside>
+            <div class="flex-1 overflow-y-auto p-6 md:p-8 custom-scroll bg-slate-50/50">
+                <div id="ship-years" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"><div onclick="openYear(2026)" class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 hover:border-brand-cyan hover:shadow-xl cursor-pointer transition-all group text-center year-card" data-year="2026"><div class="text-4xl font-bold text-brand-dark group-hover:text-brand-cyan mb-2">2026</div><p class="text-xs text-slate-400 uppercase tracking-widest">Año Fiscal</p></div><div onclick="createNewYear()" class="bg-slate-100 p-8 rounded-3xl border-2 border-dashed border-slate-300 hover:border-brand-cyan hover:bg-white cursor-pointer transition-all group text-center flex flex-col items-center justify-center"><div class="w-12 h-12 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center text-xl mb-2 group-hover:bg-brand-cyan group-hover:text-white transition-colors"><i class="fa-solid fa-plus"></i></div><p class="text-xs text-slate-400 font-bold uppercase tracking-widest group-hover:text-brand-cyan">Crear Año</p></div></div>
+                <div id="ship-months" class="hidden grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+                <div id="ship-days" class="hidden"><div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6"><div class="grid grid-cols-7 gap-2 mb-2 text-center text-xs font-bold text-slate-400 uppercase"><div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div></div><div id="calendar-grid" class="grid grid-cols-7 gap-2"></div></div></div>
             </div>
+            <!-- Panel Lateral IA -->
+            <aside class="w-full md:w-80 bg-white border-l border-slate-200 shadow-xl flex flex-col z-20">
+                <div class="p-5 border-b border-slate-100 bg-brand-light">
+                    <h3 class="font-bold text-brand-teal flex items-center text-sm uppercase tracking-wider"><i class="fa-solid fa-robot mr-2 text-brand-cyan"></i> Planificador IA</h3>
+                    <p class="text-[10px] text-slate-500 mt-1">Detección de ciclos de recetas.</p>
+                </div>
+                <div class="flex-1 overflow-y-auto p-4 custom-scroll" id="ai-suggestions-list">
+                    <div class="text-center py-10 px-4">
+                        <button onclick="runAIScheduler()" class="bg-brand-cyan hover:bg-brand-teal text-white px-6 py-2.5 rounded-full font-bold shadow-lg transition-transform transform active:scale-95 text-xs w-full mb-4">
+                            <i class="fa-solid fa-wand-magic-sparkles mr-2"></i> ANALIZAR PRÓXIMO MES
+                        </button>
+                    </div>
+                </div>
+            </aside>
         </div>
 
         <!-- REPORTES -->
@@ -296,7 +290,7 @@
         </div>
     </div>
 
-    <!-- MODAL BENEFICIARIO (DOBLE ASIGNACIÓN + VENTANILLA) -->
+    <!-- MODAL BENEFICIARIO (DOBLE ASIGNACIÓN + VENTANILLA + FECHAS + FAMILIAR) -->
     <div id="benModal" class="fixed inset-0 modal-backdrop hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-4xl flex flex-col max-h-[90vh] shadow-2xl">
             <div class="bg-brand-dark p-6 text-white flex justify-between items-center rounded-t-3xl shrink-0">
@@ -316,18 +310,21 @@
                         <div><label class="text-[10px] font-bold text-blue-700 uppercase ml-1">Última Dispensación</label><input type="date" id="benLastDispense" class="w-full border border-blue-200 p-2 rounded-xl text-sm bg-white outline-none" onchange="calculateNextDate()"></div>
                         <div><label class="text-[10px] font-bold text-blue-700 uppercase ml-1">Próximo Envío (Admin)</label><input type="date" id="benNextShipment" class="w-full border border-blue-200 p-2 rounded-xl text-sm bg-white outline-none"></div>
                     </div>
+                    
                     <!-- CONTACTO FAMILIAR -->
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 relative">
                         <h4 class="text-xs font-bold text-slate-400 uppercase mb-3 flex items-center"><i class="fa-solid fa-users mr-2"></i> Contacto Familiar</h4>
                         <div class="grid grid-cols-2 gap-5">
-                            <div><label class="text-[10px] font-bold text-slate-400 uppercase">Nombre Familiar</label><input type="text" id="benFamName" class="w-full border p-2 rounded-lg bg-white outline-none"></div>
-                            <div><label class="text-[10px] font-bold text-slate-400 uppercase">Teléfono Familiar</label><input type="text" id="benFamPhone" class="w-full border p-2 rounded-lg bg-white outline-none"></div>
+                            <div><label class="text-xs font-bold text-slate-500 uppercase mb-1">Nombre Familiar</label><input type="text" id="benFamName" class="w-full border p-2 rounded-lg bg-white outline-none"></div>
+                            <div><label class="text-xs font-bold text-slate-500 uppercase mb-1">Teléfono Familiar</label><input type="text" id="benFamPhone" class="w-full border p-2 rounded-lg bg-white outline-none"></div>
                         </div>
                     </div>
+
                     <div class="flex items-center p-3 bg-orange-50 border border-orange-100 rounded-lg">
                         <input type="checkbox" id="benPickup" class="w-5 h-5 text-orange-600 rounded-lg border-gray-300 mr-3 cursor-pointer" onchange="toggleCCAssign()">
                         <label for="benPickup" class="text-sm font-bold text-slate-700 cursor-pointer uppercase">Entregar en Ventanilla (Omitir Contact Center)</label>
                     </div>
+
                     <div class="grid grid-cols-3 gap-5">
                         <div><label class="text-xs font-bold text-slate-400 uppercase ml-1">Tipo de Afiliado</label><select id="benType" class="w-full border p-2.5 rounded-xl bg-white outline-none"><option>Afiliado Directo</option><option>Jubilado</option><option>Pensionado</option><option>Beneficiaria Padre</option><option>Beneficiaria(o) Compañera(o)</option><option>Beneficiaria(o) Esposa(o)</option><option>Beneficiaria Hijo(a)</option></select></div>
                         <div><label class="text-xs font-bold text-emerald-600 uppercase ml-1">Gestor Farmacia</label><select id="benAssignPharma" class="w-full border p-2.5 rounded-xl bg-white outline-none border-emerald-200 focus:border-emerald-500"><option value="">-- Seleccionar (Solo Admin) --</option></select></div>
@@ -441,7 +438,21 @@
             document.getElementById(`btn-view-${viewId}`).classList.replace('text-slate-300','text-white');
         };
 
-        window.forceNavigateLogin = () => safeNavigate('index.html');
+        window.forceNavigateLogin = function() {
+             signOut(auth).then(() => safeNavigate('index.html'));
+        };
+
+        window.logoutAndNavigate = async function() {
+            try {
+                await signOut(auth);
+                safeNavigate('index.html');
+            } catch (e) {
+                console.error("Logout Error", e);
+                // Force Reload to clear state
+                window.location.href = 'index.html';
+            }
+        };
+
         window.logout = async () => { if(confirm("¿Cerrar sesión?")) signOut(auth).then(()=>safeNavigate('index.html')); };
 
         /* --- BLOQUE: SEGURIDAD (WATCHDOG) --- */
@@ -453,6 +464,15 @@
                inactivityTimer = setTimeout(() => { signOut(auth); }, TIMEOUT_LIMIT);
             }
         };
+        
+        // Limpieza al cerrar la ventana (intento)
+        window.addEventListener('beforeunload', () => {
+             if(auth.currentUser) {
+                 // No podemos usar async aquí fiable, pero sendBeacon podría servir.
+                 // Para Firestore simple, no hacemos nada complejo para evitar bugs.
+             }
+        });
+
         const checkSession = (u) => {
              onSnapshot(doc(db, 'artifacts', appId, 'users', u.uid, 'profile', 'data'), (snap) => {
                  if(snap.exists()) {
@@ -460,7 +480,8 @@
                      // VERIFICACIÓN DE SESIÓN (SOLO SI SE ACTIVÓ "REQUIRE IP APPROVAL")
                      if (data.requireIpApproval && data.activeSessionId && data.activeSessionId !== deviceId) {
                          showLockScreen("Sesión iniciada en otro dispositivo.");
-                         signOut(auth); return;
+                         // NO HACER SIGNOUT AUTOMÁTICO PARA EVITAR BUCLE SI LA BD ESTÁ DESINCRONIZADA
+                         return;
                      }
                      if (data.role !== 'admin') showLockScreen("Acceso Denegado.");
                      else document.getElementById('auth-lock').classList.add('hidden');
@@ -602,7 +623,7 @@
                     const chunk = res.data.slice(i, i + chunkSize);
                     const batch = writeBatch(db);
                     chunk.forEach(row => {
-                        const id = row.ID || row.Cédula; const name = row.Nombre; if(!id) return;
+                        const id = row.ID || row.Cédula || row.DNI; const name = row.Nombre || row.NOMBRE; if(!id) return;
                         // Mapeo Inteligente y Asignación Automática
                         const pickup = row.Ventanilla === 'S' || row.Ventanilla === '1';
                         // Aquí iría la lógica de asignación random si es nuevo, simplificada para mantener bloque
