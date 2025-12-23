@@ -600,35 +600,38 @@
         window.handleCSVUpload = async (input) => { 
             const file = input.files[0]; if(!file) return;
             const modal = document.getElementById('csvProgressModal');
-            const bar = document.getElementById('csvProgressBar');
-            const text = document.getElementById('csvProgressText');
-            const aiArea = document.getElementById('aiResultArea');
+            
+            // CORRECCIÓN DE IDs
+            const bar = document.getElementById('uploadBar');
+            const text = document.getElementById('uploadStatus');
+            const count = document.getElementById('uploadCount');
+            
             modal.classList.remove('hidden');
             text.innerText = "Analizando archivo...";
             
-            // GEMINI: LLAVE (Hardcoded para demo, idealmente input seguro)
-            const GEMINI_API_KEY = ""; // SE DEBE AGREGAR LA KEY AQUÍ O EN CONFIG
-            
-            const getColValue = (row, possibleNames) => { const keys = Object.keys(row); for (const name of possibleNames) { const foundKey = keys.find(k => k.trim().toUpperCase() === name.toUpperCase()); if (foundKey) return row[foundKey]; } return null; };
+            const getColValue = (row, possibleNames) => {
+                const keys = Object.keys(row);
+                for (const name of possibleNames) {
+                    const foundKey = keys.find(k => k.trim().toUpperCase() === name.toUpperCase());
+                    if (foundKey) return row[foundKey];
+                }
+                return null;
+            };
 
             const processData = async (data) => {
                 const total = data.length;
                 let processed = 0;
-                const chunkSize = 400;
+                const chunkSize = 300; // AJUSTE DE LOTE A 300
 
-                // Pre-cargar agentes
+                if (total === 0) {
+                    alert("El archivo parece vacío o no se pudo leer.");
+                    modal.classList.add('hidden');
+                    return;
+                }
+
                 const qAgents = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'users_directory'));
                 const pharmas = [], ccs = [];
-                qAgents.forEach(d => { 
-                    const u = d.data(); 
-                    // FILTRO DE CARGOS ESPECÍFICOS PARA IA
-                    if(u.jobTitle && u.jobTitle.includes("Revisión y Asignación")) pharmas.push({uid: u.uid, name: u.name}); 
-                    if(u.role === 'contact_center') ccs.push({uid: u.uid, name: u.name}); 
-                });
-
-                // BALANCEO DE CARGA INTELIGENTE (IA LOCAL)
-                let pharmaIndex = 0;
-                let ccIndex = 0;
+                qAgents.forEach(d => { const u = d.data(); if(u.role === 'farmacia') pharmas.push({uid: u.uid, name: u.name}); if(u.role === 'contact_center') ccs.push({uid: u.uid, name: u.name}); });
 
                 for (let i = 0; i < total; i += chunkSize) {
                     const chunk = data.slice(i, i + chunkSize);
@@ -646,69 +649,84 @@
                         const muni = getColValue(row, ['DESCRIPCION_MUNICIPIO', 'MUNICIPIO']) || "";
                         const type = getColValue(row, ['TIPO_AFILIADO', 'TIPO']) || "Afiliado Directo";
 
-                        // ASIGNACIÓN ROUND-ROBIN INTELIGENTE
                         let aPharma = { uid: "", name: "Sin asignar" };
                         let aCC = { uid: "", name: "Sin asignar" };
                         
-                        if (pharmas.length > 0) { 
-                            const p = pharmas[pharmaIndex % pharmas.length]; 
-                            aPharma = { uid: p.uid, name: p.name }; 
-                            pharmaIndex++;
-                        }
-                        if (ccs.length > 0) { 
-                            const c = ccs[ccIndex % ccs.length]; 
-                            aCC = { uid: c.uid, name: c.name }; 
-                            ccIndex++;
-                        }
+                        if (pharmas.length > 0) { const p = pharmas[Math.floor(Math.random() * pharmas.length)]; aPharma = { uid: p.uid, name: p.name }; }
+                        if (ccs.length > 0) { const c = ccs[Math.floor(Math.random() * ccs.length)]; aCC = { uid: c.uid, name: c.name }; }
 
-                        batch.set(doc(db, 'artifacts', appId, 'public', 'data', 'beneficiaries', id.toString().trim()), { 
-                            id: id.toString().trim(), name: name.toString().trim(), phone: phone.toString(), address: addr.toString(), municipality: muni.toString(), family: { name: famName.toString(), phone: famPhone.toString() }, type: type.toString(), assignedPharma: aPharma, assignedCC: aCC, updatedAt: new Date().toISOString(), status: 'Activo' 
-                        }, { merge: true });
+                        const benData = { 
+                            id: id.toString().trim(), 
+                            name: name.toString().trim(), 
+                            phone: phone.toString(), 
+                            address: addr.toString(), 
+                            municipality: muni.toString(), 
+                            family: { name: famName.toString(), phone: famPhone.toString() }, 
+                            type: type.toString(), 
+                            assignedPharma: aPharma, 
+                            assignedCC: aCC, 
+                            updatedAt: new Date().toISOString(), 
+                            status: 'Activo' 
+                        };
+                        
+                        batch.set(doc(db, 'artifacts', appId, 'public', 'data', 'beneficiaries', id.toString().trim()), benData, { merge: true });
                     });
 
                     await batch.commit();
                     processed += chunk.length;
                     const pct = Math.min(Math.round((processed/total)*100), 100);
+                    
+                    // ACTUALIZACIÓN VISUAL
                     bar.style.width = pct + "%";
-                    text.innerText = `Sincronizando... ${processed}/${total}`;
+                    count.innerText = pct + "%";
+                    text.innerText = `Sincronizando ${processed}/${total}`;
+                    
                     await new Promise(r => setTimeout(r, 50));
                 }
-
-                // INFORME GEMINI AL FINALIZAR
-                if (GEMINI_API_KEY) {
-                    text.innerText = "Generando reporte IA...";
-                    try {
-                        const prompt = `Actúa como Analista de Datos Logísticos. Se acaban de cargar ${processed} pacientes. Distribución: ${pharmas.length} farmacéuticos y ${ccs.length} agentes de CC. Genera un resumen ejecutivo breve de 3 líneas sobre la eficiencia de esta carga y una recomendación de balanceo.`;
-                        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview:generateContent?key=${GEMINI_API_KEY}`, {
-                            method: "POST", headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                        });
-                        const data = await response.json();
-                        const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Análisis completado.";
-                        aiArea.innerHTML = `<b>🤖 Análisis Gemini:</b><br>${marked.parse(aiText)}`;
-                        aiArea.classList.remove('hidden');
-                        document.getElementById('btnCloseUpload').classList.remove('hidden');
-                    } catch(e) { console.log("Gemini Error", e); setTimeout(() => { modal.classList.add('hidden'); }, 1000); }
-                } else {
-                    setTimeout(() => { modal.classList.add('hidden'); alert(`✅ Proceso completado. ${processed} registros procesados.`); input.value = ''; }, 500);
-                }
+                
+                setTimeout(() => { 
+                    modal.classList.add('hidden'); 
+                    alert(`✅ Proceso completado. ${processed} registros procesados.`); 
+                    input.value = ''; 
+                }, 500);
             };
 
             if (file.name.endsWith('.csv')) {
-                Papa.parse(file, { header: true, skipEmptyLines: true, complete: (res) => processData(res.data) });
+                Papa.parse(file, { 
+                    header: true, 
+                    skipEmptyLines: true, 
+                    complete: async (res) => {
+                        try {
+                            await processData(res.data);
+                        } catch (e) {
+                            console.error("ERROR CARGA:", e);
+                            alert("Error en carga: " + e.message);
+                            modal.classList.add('hidden');
+                            input.value = "";
+                        }
+                    } 
+                });
             } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
                 const reader = new FileReader();
-                reader.onload = (e) => {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, {type: 'array'});
-                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
-                    processData(jsonData);
+                reader.onload = async (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, {type: 'array'});
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                        await processData(jsonData);
+                    } catch (e) {
+                        console.error("ERROR CARGA:", e);
+                        alert("Error en carga: " + e.message);
+                        modal.classList.add('hidden');
+                        input.value = "";
+                    }
                 };
                 reader.readAsArrayBuffer(file);
             } else {
-                alert("Formato no soportado. Use CSV o Excel (.xlsx).");
+                alert("Formato no soportado. Use CSV o Excel.");
                 modal.classList.add('hidden');
+                input.value = "";
             }
         };
 
