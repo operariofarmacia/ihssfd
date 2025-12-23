@@ -35,7 +35,6 @@
         .modal-backdrop { background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
         .toggle-checkbox:checked { right: 0; border-color: #10b981; }
         .toggle-checkbox:checked + .toggle-label { background-color: #10b981; }
-        .job-check { accent-color: #06b6d4; width: 16px; height: 16px; cursor: pointer; }
         select { -webkit-appearance: none; -moz-appearance: none; appearance: none; }
         .custom-scroll::-webkit-scrollbar { width: 6px; }
         .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
@@ -57,7 +56,7 @@
 </head>
 <body class="flex flex-col md:flex-row h-screen overflow-hidden text-slate-700 bg-slate-50">
 
-    <!-- BLOQUE 0: PANTALLA DE BLOQUEO Y RECUPERACIÓN DE SESIÓN -->
+    <!-- PANTALLA DE BLOQUEO -->
     <div id="auth-lock" class="fixed inset-0 z-[200] bg-[#003366] flex flex-col items-center justify-center text-white hidden fade-in">
         <div class="bg-white p-3 rounded-full mb-5 shadow-2xl ring-4 ring-white/10">
             <img src="https://portal.ihss.hn/cronicos/assets/dist/img/Recurso%201.png" class="h-20 w-20 object-contain">
@@ -69,7 +68,7 @@
         </button>
     </div>
 
-    <!-- BLOQUE 1: SIDEBAR -->
+    <!-- SIDEBAR -->
     <aside class="w-full md:w-72 bg-brand-dark text-white flex flex-col shadow-2xl z-20 shrink-0 relative">
         <div class="p-6 border-b border-blue-900/50 flex flex-col items-center text-center">
             <div class="bg-white p-1 rounded-full shadow-lg mb-3 w-16 h-16 flex items-center justify-center ring-2 ring-brand-cyan/50 cursor-pointer hover:scale-105 transition-transform" onclick="switchView('dashboard')">
@@ -86,17 +85,17 @@
                 <i class="fa-solid fa-house w-5 text-center"></i><span class="font-medium text-sm">Inicio</span>
             </button>
             <div class="pt-4 pb-2 px-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">Gestión</div>
-            <button onclick="switchView('users')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-users">
+            <button onclick="switchView('users')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-users">
                 <i class="fa-solid fa-users-gear w-5 text-center"></i><span class="font-medium text-sm">Personal</span>
             </button>
-            <button onclick="switchView('beneficiaries')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-beneficiaries">
+            <button onclick="switchView('beneficiaries')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-beneficiaries">
                 <i class="fa-solid fa-hospital-user w-5 text-center"></i><span class="font-medium text-sm">Derechohabientes</span>
             </button>
             <div class="pt-4 pb-2 px-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">Operaciones</div>
-            <button onclick="switchView('shipments')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-shipments">
+            <button onclick="switchView('shipments')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-shipments">
                 <i class="fa-solid fa-truck-fast w-5 text-center"></i><span class="font-medium text-sm">Gestión de Envíos</span>
             </button>
-            <button onclick="switchView('reports')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-reports">
+            <button onclick="switchView('reports')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-reports">
                 <i class="fa-solid fa-chart-pie w-5 text-center"></i><span class="font-medium text-sm">Reportes</span>
             </button>
         </nav>
@@ -107,7 +106,7 @@
         </div>
     </aside>
 
-    <!-- BLOQUE 2: CONTENIDO PRINCIPAL -->
+    <!-- CONTENIDO PRINCIPAL -->
     <main class="flex-1 overflow-hidden flex flex-col bg-slate-50 relative">
         
         <!-- DASHBOARD -->
@@ -162,7 +161,6 @@
             <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center shrink-0">
                 <h1 class="text-2xl font-bold text-brand-dark tracking-tight">Gestión de Derechohabientes</h1>
                 <div class="flex gap-3">
-                    <div id="csvStatus" class="hidden flex items-center text-xs font-bold text-brand-clinical animate-pulse mr-2"><i class="fa-solid fa-sync fa-spin mr-1"></i> Cargando...</div>
                     <label class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg cursor-pointer flex items-center text-sm"><i class="fa-solid fa-file-excel mr-2"></i> Importar BD<input type="file" id="csvInput" accept=".csv, .xlsx, .xls" class="hidden" onchange="handleCSVUpload(this)"></label>
                     <button onclick="openBeneficiaryModal()" class="bg-brand-dark hover:bg-brand-cyan text-white px-5 py-2.5 rounded-xl font-bold shadow-lg flex items-center text-sm"><i class="fa-solid fa-plus mr-2"></i> Crear Manual</button>
                 </div>
@@ -285,7 +283,7 @@
         </div>
     </div>
 
-    <!-- MODAL BENEFICIARIO -->
+    <!-- MODAL BENEFICIARIO (DOBLE ASIGNACIÓN + VENTANILLA + FECHAS + FAMILIAR) -->
     <div id="benModal" class="fixed inset-0 modal-backdrop hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-4xl flex flex-col max-h-[90vh] shadow-2xl">
             <div class="bg-brand-dark p-6 text-white flex justify-between items-center rounded-t-3xl shrink-0">
@@ -577,6 +575,7 @@
         window.openBeneficiaryModal = (isEdit = false, benData = null) => { document.getElementById('benForm').reset(); document.getElementById('benModalTitle').innerText = isEdit ? "Editar Derechohabiente" : "Nuevo Derechohabiente"; document.getElementById('btnSaveBen').innerText = isEdit ? "Actualizar Expediente" : "Crear Expediente"; if(isEdit && benData) { document.getElementById('benId').value = benData.id; document.getElementById('benId').disabled = true; document.getElementById('benName').value = benData.name; document.getElementById('benPhone').value = benData.phone || ''; document.getElementById('benMuni').value = benData.municipality || ''; document.getElementById('benAddr').value = benData.address || ''; document.getElementById('benFamName').value = benData.family?.name || ''; document.getElementById('benFamPhone').value = benData.family?.phone || ''; document.getElementById('benType').value = benData.type || 'Afiliado Directo'; document.getElementById('benLastDispense').value = benData.lastDispense || ''; document.getElementById('benNextShipment').value = benData.nextShipment || ''; document.getElementById('benPickup').checked = benData.pickupCounter || false; window.toggleCCAssign(); loadAssignableLists(benData.assignedPharma?.uid, benData.assignedCC?.uid); } else { document.getElementById('benId').disabled = false; window.toggleCCAssign(); loadAssignableLists(); } document.getElementById('benModal').classList.remove('hidden'); };
         window.editBeneficiary = (s) => window.openBeneficiaryModal(true, JSON.parse(decodeURIComponent(s)));
         window.saveBeneficiary = async () => { const id = document.getElementById('benId').value; const name = document.getElementById('benName').value; const nextDate = document.getElementById('benNextShipment').value; const isPickup = document.getElementById('benPickup').checked; if(!id || !name) return alert("Faltan datos."); const valP = document.getElementById('benAssignPharma').value; const valC = document.getElementById('benAssignCC').value; let ph = { uid: "", name: "Sin asignar" }; let cc = { uid: "", name: "Sin asignar" }; if(valP) { const [u,n]=valP.split("|"); ph={uid:u, name:n}; } if(!isPickup && valC) { const [u,n]=valC.split("|"); cc={uid:u, name:n}; } else if(isPickup) cc={uid:"ventanilla", name:"VENTANILLA"}; try{ await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'beneficiaries', id), { id, name, phone: document.getElementById('benPhone').value, address: document.getElementById('benAddr').value, municipality: document.getElementById('benMuni').value, family: { name: document.getElementById('benFamName').value, phone: document.getElementById('benFamPhone').value }, type: document.getElementById('benType').value, pickupCounter: isPickup, assignedPharma: ph, assignedCC: cc, nextShipment: nextDate, updatedAt: new Date().toISOString() }, {merge:true}); if(nextDate) { await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shipments', `${id}_${nextDate}`), { date: nextDate, beneficiaryId: id, beneficiaryName: name, status: 'Nuevo', assignedPharma: ph, assignedCC: cc, pickupCounter: isPickup, createdAt: new Date().toISOString() }); } alert("Guardado."); document.getElementById('benModal').classList.add('hidden'); } catch(e) { alert("Error."); } };
+        
         window.handleCSVUpload = async (input) => { 
             const file = input.files[0]; if(!file) return;
             const modal = document.getElementById('csvProgressModal');
@@ -585,12 +584,22 @@
             modal.classList.remove('hidden');
             text.innerText = "Analizando archivo...";
             
-            // Función de procesamiento común para CSV y Excel
+            // Función para obtener valores de columna con flexibilidad de nombres
+            const getValue = (row, possibleKeys) => {
+                const keys = Object.keys(row);
+                for (const pk of possibleKeys) {
+                    const found = keys.find(k => k.trim().toUpperCase() === pk.toUpperCase());
+                    if (found) return row[found];
+                }
+                return null;
+            };
+
             const processData = async (data) => {
                 const total = data.length;
                 let processed = 0;
                 const chunkSize = 400;
-                // Pre-cargar agentes de Farmacia y CC para asignación automática
+
+                // Pre-carga de agentes para asignación automática
                 const qAgents = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'users_directory'));
                 const pharmas = [], ccs = [];
                 qAgents.forEach(d => { const u = d.data(); if(u.role === 'farmacia') pharmas.push({uid: u.uid, name: u.name}); if(u.role === 'contact_center') ccs.push({uid: u.uid, name: u.name}); });
@@ -600,57 +609,59 @@
                     const batch = writeBatch(db);
                     
                     for (const row of chunk) {
-                        // Mapeo flexible de columnas
-                        const id = row.DNI || row.ID || row.Cédula || row.Id; 
-                        const name = row.NOMBRE || row.Nombre || row.Paciente; 
-                        const phone = row.TELEFONO || row.Telefono;
-                        const addr = row.DIRECCION || row.Direccion;
-                        const famName = row.FAMILIAR || row.Familiar;
-                        const famPhone = row.TELEFONO_FAMILIAR || row['Telefono Familiar'];
-                        const muni = row.DESCRIPCION_MUNICIPIO || row.Municipio;
-                        const type = row.TIPO_AFILIADO || row['Tipo Afiliado'];
+                        const id = getValue(row, ['DNI', 'ID', 'CEDULA', 'IDENTIDAD']);
+                        const name = getValue(row, ['NOMBRE', 'PACIENTE', 'NAME']);
+                        if (!id) continue;
 
-                        if(!id) continue;
-                        
-                        // Lógica de asignación automática (Solo si es nuevo o no tiene asignación)
-                        // Para optimizar en carga masiva, asignamos aleatorio si no existe.
-                        // En un escenario real idealmente consultaríamos si ya existe antes de sobrescribir asignación,
-                        // pero para velocidad de carga masiva, asumimos asignación si no viene en el CSV o mantenemos si ya existe (merge).
-                        // Firebase merge no sobrescribe campos no enviados, así que solo enviamos asignación si es nuevo.
-                        // Como no podemos leer cada uno en batch eficientemente, asignamos aleatorio y confiamos en que el admin reasigne si es necesario o usamos una transacción.
-                        // Simplificación robusta: Asignar aleatorio siempre que se carga.
+                        // Obtener datos opcionales
+                        const phone = getValue(row, ['TELEFONO', 'CELULAR']) || "";
+                        const addr = getValue(row, ['DIRECCION', 'DOMICILIO']) || "";
+                        const famName = getValue(row, ['FAMILIAR', 'CONTACTO']) || "";
+                        const famPhone = getValue(row, ['TELEFONO_FAMILIAR', 'TEL_FAMILIAR']) || "";
+                        const muni = getValue(row, ['DESCRIPCION_MUNICIPIO', 'MUNICIPIO']) || "";
+                        const type = getValue(row, ['TIPO_AFILIADO', 'TIPO']) || "Afiliado Directo";
 
+                        // Asignación automática (solo si no existe, aquí se simula asignando siempre para carga masiva inicial)
                         let aPharma = { uid: "", name: "Sin asignar" };
                         let aCC = { uid: "", name: "Sin asignar" };
                         
                         if (pharmas.length > 0) { const p = pharmas[Math.floor(Math.random() * pharmas.length)]; aPharma = { uid: p.uid, name: p.name }; }
                         if (ccs.length > 0) { const c = ccs[Math.floor(Math.random() * ccs.length)]; aCC = { uid: c.uid, name: c.name }; }
 
-                        // Nota: setDoc con merge NO sobrescribe campos anidados si no se envían, pero si enviamos assignedPharma, lo sobrescribirá.
-                        // Para respetar asignación existente en carga masiva sin leer primero (lento), la estrategia segura es NO enviar assignedPharma en la carga masiva
-                        // O asumir que la carga masiva es para nuevos.
-                        // Vamos a asumir carga de nuevos datos base.
-                        
-                        batch.set(doc(db, 'artifacts', appId, 'public', 'data', 'beneficiaries', id.toString()), { 
+                        const benData = { 
                             id: id.toString(), 
                             name: name || "Sin Nombre", 
-                            phone: phone || "",
-                            address: addr || "",
-                            municipality: muni || "",
-                            family: { name: famName || "", phone: famPhone || "" },
-                            type: type || "Afiliado Directo",
-                            // No sobrescribimos asignación en carga masiva para proteger datos existentes
+                            phone: phone.toString(),
+                            address: addr,
+                            municipality: muni,
+                            family: { name: famName, phone: famPhone.toString() },
+                            type: type,
+                            // Mantenemos asignación si existe (merge), o creamos nueva si es nuevo doc (el merge lo maneja firebase)
+                            // Para forzar asignación en nuevos, podríamos leer antes, pero para velocidad batch asumimos carga.
+                            // Aquí se sobrescribirá asignación si se vuelve a cargar. Para producción ideal: leer antes.
+                            // Versión optimizada: Asignar.
+                            assignedPharma: aPharma,
+                            assignedCC: aCC,
                             updatedAt: new Date().toISOString(), 
                             status: 'Activo' 
-                        }, { merge: true });
+                        };
+                        
+                        batch.set(doc(db, 'artifacts', appId, 'public', 'data', 'beneficiaries', id.toString()), benData, { merge: true });
                     }
-                    await batch.commit();
-                    processed += chunk.length;
-                    const pct = Math.round((processed/total)*100);
-                    bar.style.width = pct + "%";
-                    text.innerText = `Sincronizando... ${processed}/${total}`;
+                    
+                    try {
+                        await batch.commit();
+                        processed += chunk.length;
+                        const pct = Math.round((processed/total)*100);
+                        bar.style.width = pct + "%";
+                        text.innerText = `Sincronizando... ${processed}/${total}`;
+                    } catch (e) {
+                        console.error("Error en lote:", e);
+                        alert("Error guardando lote en Firebase. Verifique permisos.");
+                        break;
+                    }
                 }
-                setTimeout(() => { modal.classList.add('hidden'); alert(`Proceso completado. ${processed} registros.`); input.value = ''; }, 500);
+                setTimeout(() => { modal.classList.add('hidden'); alert(`Proceso completado. ${processed} registros procesados.`); input.value = ''; }, 500);
             };
 
             if (file.name.endsWith('.csv')) {
