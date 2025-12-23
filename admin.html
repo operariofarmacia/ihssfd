@@ -13,6 +13,8 @@
     <!-- Librerías de Datos -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Markdown Parser para respuesta de IA -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     
     <script>
         tailwind.config = {
@@ -20,7 +22,7 @@
                 extend: {
                     colors: {
                         brand: {
-                            dark: '#003366', teal: '#0e7490', cyan: '#06b6d4', clinical: '#10b981', danger: '#ef4444', light: '#f8fafc'
+                            dark: '#003366', teal: '#0e7490', cyan: '#06b6d4', clinical: '#10b981', danger: '#ef4444', light: '#f8fafc', ai: '#8b5cf6'
                         }
                     }
                 }
@@ -51,16 +53,18 @@
         .timeline-step:first-child::before { display: none; }
         .timeline-active .step-dot { background-color: #10b981; color: white; border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); }
         .timeline-active::before { background: #10b981; }
+        
+        /* Tabs Styles */
         .tab-btn.active { border-bottom: 3px solid #003366; color: #003366; font-weight: 700; background-color: #f1f5f9; }
         .tab-btn { color: #64748b; transition: all 0.2s; }
-        /* Progreso */
-        .progress-bar-container { background-color: #e2e8f0; border-radius: 9999px; height: 12px; overflow: hidden; }
-        .progress-bar-fill { background: linear-gradient(90deg, #06b6d4, #10b981); height: 100%; width: 0%; transition: width 0.3s ease; }
+
+        /* AI Glow */
+        .ai-glow { box-shadow: 0 0 15px rgba(139, 92, 246, 0.3); border: 1px solid rgba(139, 92, 246, 0.5); }
     </style>
 </head>
 <body class="flex flex-col md:flex-row h-screen overflow-hidden text-slate-700 bg-slate-50">
 
-    <!-- BLOQUE 0: PANTALLA DE BLOQUEO -->
+    <!-- BLOQUE 0: PANTALLA DE BLOQUEO Y RECUPERACIÓN DE SESIÓN -->
     <div id="auth-lock" class="fixed inset-0 z-[200] bg-[#003366] flex flex-col items-center justify-center text-white hidden fade-in">
         <div class="bg-white p-3 rounded-full mb-5 shadow-2xl ring-4 ring-white/10">
             <img src="https://portal.ihss.hn/cronicos/assets/dist/img/Recurso%201.png" class="h-20 w-20 object-contain">
@@ -124,7 +128,7 @@
                     <div onclick="switchView('users')" class="dash-card bg-white rounded-3xl p-8 border border-slate-100 shadow-sm cursor-pointer group">
                         <div class="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-user-shield"></i></div>
                         <h3 class="font-bold text-slate-700 text-lg">Personal</h3>
-                        <p class="text-xs text-slate-400">Directorio y seguridad</p>
+                        <p class="text-xs text-slate-400">Directorio y seguridad de acceso</p>
                     </div>
                     <div onclick="switchView('beneficiaries')" class="dash-card bg-white rounded-3xl p-8 border border-slate-100 shadow-sm cursor-pointer group">
                         <div class="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-hospital-user"></i></div>
@@ -140,7 +144,7 @@
             </div>
         </div>
 
-        <!-- GESTIÓN PERSONAL -->
+        <!-- GESTIÓN DE PERSONAL -->
         <div id="view-users" class="hidden-view flex-1 flex flex-col h-full overflow-hidden fade-in">
             <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center shrink-0">
                 <h1 class="text-2xl font-bold text-brand-dark">Directorio de Personal</h1>
@@ -155,8 +159,7 @@
                         <thead class="bg-slate-50 text-[10px] uppercase text-slate-500 font-bold tracking-wider">
                             <tr><th class="p-5 pl-6">Colaborador</th><th class="p-5">Cargos</th><th class="p-5">Acceso</th><th class="p-5 text-center">Estatus</th><th class="p-5 pr-6 text-right">Acciones</th></tr>
                         </thead>
-                        <tbody id="user-list" class="divide-y divide-slate-100 text-sm text-slate-600"></tbody>
-                    </table>
+                        <tbody id="user-list" class="divide-y divide-slate-100 text-sm text-slate-600"><tr><td colspan="5" class="p-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando...</td></tr></tbody></table>
                 </div>
             </div>
         </div>
@@ -166,11 +169,18 @@
             <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center shrink-0">
                 <h1 class="text-2xl font-bold text-brand-dark tracking-tight">Gestión de Derechohabientes</h1>
                 <div class="flex gap-3">
-                    <div id="csvStatus" class="hidden flex items-center text-xs font-bold text-brand-clinical animate-pulse mr-2"><i class="fa-solid fa-sync fa-spin mr-1"></i> Cargando...</div>
+                    <!-- BOTÓN CONFIG IA -->
+                    <button onclick="toggleAIKeyInput()" class="text-brand-ai hover:text-purple-700 p-2" title="Configurar Gemini API"><i class="fa-solid fa-robot"></i></button>
+                    
                     <label class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg cursor-pointer flex items-center text-sm"><i class="fa-solid fa-file-excel mr-2"></i> Importar BD<input type="file" id="csvInput" accept=".csv, .xlsx, .xls" class="hidden" onchange="handleCSVUpload(this)"></label>
                     <button onclick="openBeneficiaryModal()" class="bg-brand-dark hover:bg-brand-cyan text-white px-5 py-2.5 rounded-xl font-bold shadow-lg flex items-center text-sm"><i class="fa-solid fa-plus mr-2"></i> Crear Manual</button>
                 </div>
             </header>
+            <div id="ai-key-container" class="hidden bg-purple-50 p-3 border-b border-purple-100 flex items-center justify-end gap-2 px-6">
+                <span class="text-xs text-purple-700 font-bold">API Key Gemini:</span>
+                <input type="password" id="geminiKeyInput" class="border p-1 rounded text-xs w-64" placeholder="Pegar API Key aquí...">
+                <button onclick="saveGeminiKey()" class="bg-purple-600 text-white px-3 py-1 rounded text-xs font-bold">Guardar</button>
+            </div>
             <div class="flex-1 overflow-y-auto p-6 md:p-8 custom-scroll">
                  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                     <div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead class="bg-slate-50 text-[11px] uppercase text-slate-500 font-semibold tracking-wider"><tr><th class="p-5 pl-6">Identidad / Prioridad</th><th class="p-5">Tipo</th><th class="p-5">Ubicación</th><th class="p-5">Gestores</th><th class="p-5 text-right">Acciones</th></tr></thead><tbody id="ben-list" class="divide-y divide-slate-100 text-sm text-slate-600"></tbody></table></div>
@@ -192,8 +202,8 @@
             </div>
             <aside class="w-full md:w-80 bg-white border-l border-slate-200 shadow-xl flex flex-col z-20">
                 <div class="p-5 border-b border-slate-100 bg-brand-light">
-                    <h3 class="font-bold text-brand-teal flex items-center text-sm uppercase tracking-wider"><i class="fa-solid fa-robot mr-2 text-brand-cyan"></i> Planificador IA</h3>
-                    <p class="text-[10px] text-slate-500 mt-1">Detección de ciclos de recetas.</p>
+                    <h3 class="font-bold text-brand-ai flex items-center text-sm uppercase tracking-wider"><i class="fa-solid fa-robot mr-2"></i> Gemini IA</h3>
+                    <p class="text-[10px] text-slate-500 mt-1">Asistente Inteligente.</p>
                 </div>
                 <div class="flex-1 overflow-y-auto p-4 custom-scroll" id="ai-suggestions-list">
                     <div class="text-center py-10 px-4">
@@ -215,16 +225,20 @@
 
     <!-- BLOQUE 3: MODALES Y FORMULARIOS -->
     
-    <!-- MODAL CSV PROGRESS (NUEVO: CON RELOJ Y CONEXIÓN REAL) -->
+    <!-- MODAL CSV PROGRESS + IA RESULT -->
     <div id="csvProgressModal" class="fixed inset-0 modal-backdrop hidden z-[200] flex items-center justify-center p-4 fade-in">
-        <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full text-center relative overflow-hidden border border-slate-100">
+        <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-lg w-full text-center relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-2 bg-slate-100"><div id="uploadBarTop" class="h-full bg-brand-cyan transition-all duration-300" style="width: 0%"></div></div>
-            <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600 text-2xl animate-bounce shadow-inner"><i class="fa-solid fa-cloud-arrow-up"></i></div>
-            <h3 class="text-xl font-bold text-brand-dark mb-1">Cargando Base de Datos</h3>
-            <p class="text-xs text-slate-500 mb-1" id="uploadStatus">Conectando con Firebase...</p>
-            <p class="text-xs font-bold text-brand-teal mb-6" id="uploadTime">Tiempo restante estimado: calculando...</p>
-            <div class="bg-slate-100 rounded-full h-4 w-full overflow-hidden mb-2 shadow-inner"><div id="uploadBar" class="bg-gradient-to-r from-blue-500 to-cyan-400 h-full rounded-full transition-all duration-300" style="width: 0%"></div></div>
-            <p class="text-xs font-bold text-slate-400" id="uploadCount">0%</p>
+            <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600 text-2xl animate-bounce"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+            <h3 class="text-xl font-bold text-brand-dark mb-1" id="uploadTitle">Sincronizando Base de Datos</h3>
+            <p class="text-sm text-slate-500 mb-6" id="uploadStatus">Iniciando conexión...</p>
+            <div id="progressContainer">
+                <div class="bg-slate-100 rounded-full h-4 w-full overflow-hidden mb-2"><div id="uploadBar" class="bg-gradient-to-r from-blue-500 to-cyan-400 h-full rounded-full transition-all duration-300" style="width: 0%"></div></div>
+                <p class="text-xs font-bold text-slate-400" id="uploadCount">0%</p>
+            </div>
+            <!-- ÁREA RESULTADO IA -->
+            <div id="aiResultArea" class="hidden mt-4 text-left bg-purple-50 p-4 rounded-xl border border-purple-100 text-xs text-slate-700 max-h-60 overflow-y-auto custom-scroll"></div>
+            <button id="btnCloseUpload" onclick="document.getElementById('csvProgressModal').classList.add('hidden')" class="hidden mt-4 bg-slate-200 hover:bg-slate-300 text-slate-600 px-6 py-2 rounded-lg text-sm font-bold">Cerrar</button>
         </div>
     </div>
 
@@ -260,7 +274,7 @@
                     <div class="bg-blue-50 p-5 rounded-2xl border border-blue-100">
                         <h4 class="text-xs font-bold text-brand-dark uppercase mb-4 flex items-center"><i class="fa-solid fa-shield-halved mr-2"></i> Seguridad</h4>
                         <div class="flex items-center justify-between mb-4 bg-white p-3 rounded-xl border border-blue-100 shadow-sm">
-                             <div class="text-sm font-semibold text-slate-700">Validar IP Nueva</div>
+                             <div class="text-sm font-semibold text-slate-700">Validación Dispositivo/IP Nueva</div>
                              <label class="relative inline-flex items-center cursor-pointer">
                                  <input type="checkbox" id="formIpCheck" class="sr-only peer">
                                  <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-clinical transition-all"></div>
@@ -290,7 +304,7 @@
         </div>
     </div>
 
-    <!-- MODAL BENEFICIARIO (COMPLETO) -->
+    <!-- MODAL BENEFICIARIO (DOBLE ASIGNACIÓN + VENTANILLA) -->
     <div id="benModal" class="fixed inset-0 modal-backdrop hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-4xl flex flex-col max-h-[90vh] shadow-2xl">
             <div class="bg-brand-dark p-6 text-white flex justify-between items-center rounded-t-3xl shrink-0">
@@ -310,6 +324,8 @@
                         <div><label class="text-[10px] font-bold text-blue-700 uppercase ml-1">Última Dispensación</label><input type="date" id="benLastDispense" class="w-full border border-blue-200 p-2 rounded-xl text-sm bg-white outline-none" onchange="calculateNextDate()"></div>
                         <div><label class="text-[10px] font-bold text-blue-700 uppercase ml-1">Próximo Envío (Admin)</label><input type="date" id="benNextShipment" class="w-full border border-blue-200 p-2 rounded-xl text-sm bg-white outline-none"></div>
                     </div>
+                    
+                    <!-- CONTACTO FAMILIAR -->
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 relative">
                         <h4 class="text-xs font-bold text-slate-400 uppercase mb-3 flex items-center"><i class="fa-solid fa-users mr-2"></i> Contacto Familiar</h4>
                         <div class="grid grid-cols-2 gap-5">
@@ -317,10 +333,12 @@
                             <div><label class="text-[10px] font-bold text-slate-400 uppercase">Teléfono Familiar</label><input type="text" id="benFamPhone" class="w-full border p-2 rounded-lg bg-white outline-none"></div>
                         </div>
                     </div>
+
                     <div class="flex items-center p-3 bg-orange-50 border border-orange-100 rounded-lg">
                         <input type="checkbox" id="benPickup" class="w-5 h-5 text-orange-600 rounded-lg border-gray-300 mr-3 cursor-pointer" onchange="toggleCCAssign()">
                         <label for="benPickup" class="text-sm font-bold text-slate-700 cursor-pointer uppercase">Entregar en Ventanilla (Omitir Contact Center)</label>
                     </div>
+
                     <div class="grid grid-cols-3 gap-5">
                         <div><label class="text-xs font-bold text-slate-400 uppercase ml-1">Tipo de Afiliado</label><select id="benType" class="w-full border p-2.5 rounded-xl bg-white outline-none"><option>Afiliado Directo</option><option>Jubilado</option><option>Pensionado</option><option>Beneficiaria Padre</option><option>Beneficiaria(o) Compañera(o)</option><option>Beneficiaria(o) Esposa(o)</option><option>Beneficiaria Hijo(a)</option></select></div>
                         <div><label class="text-xs font-bold text-emerald-600 uppercase ml-1">Gestor Farmacia</label><select id="benAssignPharma" class="w-full border p-2.5 rounded-xl bg-white outline-none border-emerald-200 focus:border-emerald-500"><option value="">-- Seleccionar (Solo Admin) --</option></select></div>
@@ -341,7 +359,7 @@
             <div class="bg-white border-b p-5 flex justify-between items-center shrink-0">
                 <div class="flex items-center gap-4">
                     <h3 class="font-bold text-lg text-brand-dark flex items-center"><i class="fa-regular fa-calendar-check mr-2 text-brand-cyan"></i> Envíos <span id="dayModalDate" class="ml-1 text-slate-600 font-normal"></span></h3>
-                    <button onclick="downloadDayReport()" class="bg-green-100 text-green-700 text-[10px] font-bold px-3 py-1.5 rounded-lg hover:bg-green-200 transition"><i class="fa-solid fa-file-csv mr-1"></i> EXPORTAR CSV</button>
+                    <button onclick="downloadDayReport()" class="bg-green-100 text-green-700 text-[10px] font-bold px-3 py-1.5 rounded-lg hover:bg-green-200 transition"><i class="fa-solid fa-file-csv mr-1"></i> EXPORTAR CSV / EXCEL</button>
                 </div>
                 <button onclick="document.getElementById('dayModal').classList.add('hidden')" class="text-slate-400 hover:text-red-500 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
@@ -450,7 +468,6 @@
              onSnapshot(doc(db, 'artifacts', appId, 'users', u.uid, 'profile', 'data'), (snap) => {
                  if(snap.exists()) {
                      const data = snap.data();
-                     // VERIFICACIÓN DE SESIÓN (SOLO SI SE ACTIVÓ "REQUIRE IP APPROVAL")
                      if (data.requireIpApproval && data.activeSessionId && data.activeSessionId !== deviceId) {
                          showLockScreen("Sesión iniciada en otro dispositivo.");
                          signOut(auth); return;
@@ -572,97 +589,109 @@
             s.forEach(d => l.innerHTML += window.renderUserRow(d.data(), d.id));
         });
 
-        /* --- BLOQUE: DERECHOHABIENTES Y CSV (ACTUALIZADO: PROGRESO VISUAL) --- */
+        /* --- BLOQUE: DERECHOHABIENTES Y CSV (OPTIMIZADO IA GEMINI) --- */
         window.calculateNextDate = () => { const last = document.getElementById('benLastDispense').value; if(last) { const date = new Date(last); date.setDate(date.getDate() + 30); document.getElementById('benNextShipment').value = date.toISOString().split('T')[0]; } };
         window.toggleCCAssign = () => { const p = document.getElementById('benPickup').checked; document.getElementById('benAssignCC').disabled = p; };
         async function loadAssignableLists(phU, ccU){ const phS = document.getElementById('benAssignPharma'), ccS = document.getElementById('benAssignCC'); phS.innerHTML = '<option value="">Farmacia...</option>'; ccS.innerHTML = '<option value="">CC...</option>'; const q = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'users_directory')); q.forEach(d => { const u = d.data(); const opt = `<option value="${u.uid}|${u.name}" ${u.uid==phU||u.uid==ccU?'selected':''}>${u.name}</option>`; if(u.role === 'farmacia') phS.innerHTML += opt; if(u.role === 'contact_center') ccS.innerHTML += opt; }); }
         window.openBeneficiaryModal = (isEdit = false, benData = null) => { document.getElementById('benForm').reset(); document.getElementById('benModalTitle').innerText = isEdit ? "Editar Derechohabiente" : "Nuevo Derechohabiente"; document.getElementById('btnSaveBen').innerText = isEdit ? "Actualizar Expediente" : "Crear Expediente"; if(isEdit && benData) { document.getElementById('benId').value = benData.id; document.getElementById('benId').disabled = true; document.getElementById('benName').value = benData.name; document.getElementById('benPhone').value = benData.phone || ''; document.getElementById('benMuni').value = benData.municipality || ''; document.getElementById('benAddr').value = benData.address || ''; document.getElementById('benFamName').value = benData.family?.name || ''; document.getElementById('benFamPhone').value = benData.family?.phone || ''; document.getElementById('benType').value = benData.type || 'Afiliado Directo'; document.getElementById('benLastDispense').value = benData.lastDispense || ''; document.getElementById('benNextShipment').value = benData.nextShipment || ''; document.getElementById('benPickup').checked = benData.pickupCounter || false; window.toggleCCAssign(); loadAssignableLists(benData.assignedPharma?.uid, benData.assignedCC?.uid); } else { document.getElementById('benId').disabled = false; window.toggleCCAssign(); loadAssignableLists(); } document.getElementById('benModal').classList.remove('hidden'); };
         window.editBeneficiary = (s) => window.openBeneficiaryModal(true, JSON.parse(decodeURIComponent(s)));
         window.saveBeneficiary = async () => { const id = document.getElementById('benId').value; const name = document.getElementById('benName').value; const nextDate = document.getElementById('benNextShipment').value; const isPickup = document.getElementById('benPickup').checked; if(!id || !name) return alert("Faltan datos."); const valP = document.getElementById('benAssignPharma').value; const valC = document.getElementById('benAssignCC').value; let ph = { uid: "", name: "Sin asignar" }; let cc = { uid: "", name: "Sin asignar" }; if(valP) { const [u,n]=valP.split("|"); ph={uid:u, name:n}; } if(!isPickup && valC) { const [u,n]=valC.split("|"); cc={uid:u, name:n}; } else if(isPickup) cc={uid:"ventanilla", name:"VENTANILLA"}; try{ await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'beneficiaries', id), { id, name, phone: document.getElementById('benPhone').value, address: document.getElementById('benAddr').value, municipality: document.getElementById('benMuni').value, family: { name: document.getElementById('benFamName').value, phone: document.getElementById('benFamPhone').value }, type: document.getElementById('benType').value, pickupCounter: isPickup, assignedPharma: ph, assignedCC: cc, nextShipment: nextDate, updatedAt: new Date().toISOString() }, {merge:true}); if(nextDate) { await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shipments', `${id}_${nextDate}`), { date: nextDate, beneficiaryId: id, beneficiaryName: name, status: 'Nuevo', assignedPharma: ph, assignedCC: cc, pickupCounter: isPickup, createdAt: new Date().toISOString() }); } alert("Guardado."); document.getElementById('benModal').classList.add('hidden'); } catch(e) { alert("Error."); } };
+        
         window.handleCSVUpload = async (input) => { 
             const file = input.files[0]; if(!file) return;
             const modal = document.getElementById('csvProgressModal');
             const bar = document.getElementById('csvProgressBar');
             const text = document.getElementById('csvProgressText');
+            const aiArea = document.getElementById('aiResultArea');
             modal.classList.remove('hidden');
             text.innerText = "Analizando archivo...";
             
-            // Función de procesamiento común para CSV y Excel
+            // GEMINI: LLAVE (Hardcoded para demo, idealmente input seguro)
+            const GEMINI_API_KEY = ""; // SE DEBE AGREGAR LA KEY AQUÍ O EN CONFIG
+            
+            const getColValue = (row, possibleNames) => { const keys = Object.keys(row); for (const name of possibleNames) { const foundKey = keys.find(k => k.trim().toUpperCase() === name.toUpperCase()); if (foundKey) return row[foundKey]; } return null; };
+
             const processData = async (data) => {
                 const total = data.length;
                 let processed = 0;
                 const chunkSize = 400;
 
-                // Pre-carga de agentes para asignación automática
+                // Pre-cargar agentes
                 const qAgents = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'users_directory'));
                 const pharmas = [], ccs = [];
-                qAgents.forEach(d => { const u = d.data(); if(u.role === 'farmacia') pharmas.push({uid: u.uid, name: u.name}); if(u.role === 'contact_center') ccs.push({uid: u.uid, name: u.name}); });
+                qAgents.forEach(d => { 
+                    const u = d.data(); 
+                    // FILTRO DE CARGOS ESPECÍFICOS PARA IA
+                    if(u.jobTitle && u.jobTitle.includes("Revisión y Asignación")) pharmas.push({uid: u.uid, name: u.name}); 
+                    if(u.role === 'contact_center') ccs.push({uid: u.uid, name: u.name}); 
+                });
+
+                // BALANCEO DE CARGA INTELIGENTE (IA LOCAL)
+                let pharmaIndex = 0;
+                let ccIndex = 0;
 
                 for (let i = 0; i < total; i += chunkSize) {
                     const chunk = data.slice(i, i + chunkSize);
                     const batch = writeBatch(db);
                     
-                    for (const row of chunk) {
-                        // Mapeo flexible de columnas
-                        const id = row.DNI || row.ID || row.Cédula || row.Id; 
-                        const name = row.NOMBRE || row.Nombre || row.Paciente; 
-                        const phone = row.TELEFONO || row.Telefono;
-                        const addr = row.DIRECCION || row.Direccion;
-                        const famName = row.FAMILIAR || row.Familiar;
-                        const famPhone = row.TELEFONO_FAMILIAR || row['Telefono Familiar'];
-                        const muni = row.DESCRIPCION_MUNICIPIO || row.Municipio;
-                        const type = row.TIPO_AFILIADO || row['Tipo Afiliado'];
+                    chunk.forEach(row => {
+                        const id = getColValue(row, ['DNI', 'ID', 'IDENTIDAD', 'CÉDULA']);
+                        const name = getColValue(row, ['NOMBRE', 'PACIENTE', 'NAME']);
+                        if(!id) return; 
 
-                        if(!id) continue;
-                        
-                        // Lógica de asignación automática (Solo si es nuevo o no tiene asignación)
-                        // Para optimizar en carga masiva, asignamos aleatorio si no existe.
-                        // En un escenario real idealmente consultaríamos si ya existe antes de sobrescribir asignación,
-                        // pero para velocidad de carga masiva, asumimos asignación si no viene en el CSV o mantenemos si ya existe (merge).
-                        // Firebase merge no sobrescribe campos no enviados, así que solo enviamos asignación si es nuevo.
-                        // Como no podemos leer cada uno en batch eficientemente, asignamos aleatorio y confiamos en que el admin reasigne si es necesario o usamos una transacción.
-                        // Simplificación robusta: Asignar aleatorio siempre que se carga.
+                        const phone = getColValue(row, ['TELEFONO', 'TEL']) || "";
+                        const addr = getColValue(row, ['DIRECCION', 'DIR', 'DOMICILIO']) || "";
+                        const famName = getColValue(row, ['FAMILIAR', 'CONTACTO']) || "";
+                        const famPhone = getColValue(row, ['TELEFONO_FAMILIAR', 'TEL_FAMILIAR']) || "";
+                        const muni = getColValue(row, ['DESCRIPCION_MUNICIPIO', 'MUNICIPIO']) || "";
+                        const type = getColValue(row, ['TIPO_AFILIADO', 'TIPO']) || "Afiliado Directo";
 
+                        // ASIGNACIÓN ROUND-ROBIN INTELIGENTE
                         let aPharma = { uid: "", name: "Sin asignar" };
                         let aCC = { uid: "", name: "Sin asignar" };
                         
-                        if (pharmas.length > 0) { const p = pharmas[Math.floor(Math.random() * pharmas.length)]; aPharma = { uid: p.uid, name: p.name }; }
-                        if (ccs.length > 0) { const c = ccs[Math.floor(Math.random() * ccs.length)]; aCC = { uid: c.uid, name: c.name }; }
+                        if (pharmas.length > 0) { 
+                            const p = pharmas[pharmaIndex % pharmas.length]; 
+                            aPharma = { uid: p.uid, name: p.name }; 
+                            pharmaIndex++;
+                        }
+                        if (ccs.length > 0) { 
+                            const c = ccs[ccIndex % ccs.length]; 
+                            aCC = { uid: c.uid, name: c.name }; 
+                            ccIndex++;
+                        }
 
-                        const benData = { 
-                            id: id.toString(), 
-                            name: name || "Sin Nombre", 
-                            phone: phone.toString(),
-                            address: addr,
-                            municipality: muni,
-                            family: { name: famName, phone: famPhone.toString() },
-                            type: type,
-                            // Mantenemos asignación si existe (merge), o creamos nueva si es nuevo doc (el merge lo maneja firebase)
-                            // Para forzar asignación en nuevos, podríamos leer antes, pero para velocidad batch asumimos carga.
-                            // Aquí se sobrescribirá asignación si se vuelve a cargar. Para producción ideal: leer antes.
-                            // Versión optimizada: Asignar.
-                            assignedPharma: aPharma,
-                            assignedCC: aCC,
-                            updatedAt: new Date().toISOString(), 
-                            status: 'Activo' 
-                        };
-                        
-                        batch.set(doc(db, 'artifacts', appId, 'public', 'data', 'beneficiaries', id.toString()), benData, { merge: true });
-                    }
-                    
-                    try {
-                        await batch.commit();
-                        processed += chunk.length;
-                        const pct = Math.round((processed/total)*100);
-                        bar.style.width = pct + "%";
-                        text.innerText = `Sincronizando... ${processed}/${total} - ${pct}%`;
-                    } catch (e) {
-                        console.error("Error en lote:", e);
-                        alert("Error guardando lote en Firebase. Verifique permisos.");
-                        break;
-                    }
+                        batch.set(doc(db, 'artifacts', appId, 'public', 'data', 'beneficiaries', id.toString().trim()), { 
+                            id: id.toString().trim(), name: name.toString().trim(), phone: phone.toString(), address: addr.toString(), municipality: muni.toString(), family: { name: famName.toString(), phone: famPhone.toString() }, type: type.toString(), assignedPharma: aPharma, assignedCC: aCC, updatedAt: new Date().toISOString(), status: 'Activo' 
+                        }, { merge: true });
+                    });
+
+                    await batch.commit();
+                    processed += chunk.length;
+                    const pct = Math.min(Math.round((processed/total)*100), 100);
+                    bar.style.width = pct + "%";
+                    text.innerText = `Sincronizando... ${processed}/${total}`;
+                    await new Promise(r => setTimeout(r, 50));
                 }
-                setTimeout(() => { modal.classList.add('hidden'); alert(`Proceso completado. ${processed} registros procesados.`); input.value = ''; }, 500);
+
+                // INFORME GEMINI AL FINALIZAR
+                if (GEMINI_API_KEY) {
+                    text.innerText = "Generando reporte IA...";
+                    try {
+                        const prompt = `Actúa como Analista de Datos Logísticos. Se acaban de cargar ${processed} pacientes. Distribución: ${pharmas.length} farmacéuticos y ${ccs.length} agentes de CC. Genera un resumen ejecutivo breve de 3 líneas sobre la eficiencia de esta carga y una recomendación de balanceo.`;
+                        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview:generateContent?key=${GEMINI_API_KEY}`, {
+                            method: "POST", headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                        });
+                        const data = await response.json();
+                        const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Análisis completado.";
+                        aiArea.innerHTML = `<b>🤖 Análisis Gemini:</b><br>${marked.parse(aiText)}`;
+                        aiArea.classList.remove('hidden');
+                        document.getElementById('btnCloseUpload').classList.remove('hidden');
+                    } catch(e) { console.log("Gemini Error", e); setTimeout(() => { modal.classList.add('hidden'); }, 1000); }
+                } else {
+                    setTimeout(() => { modal.classList.add('hidden'); alert(`✅ Proceso completado. ${processed} registros procesados.`); input.value = ''; }, 500);
+                }
             };
 
             if (file.name.endsWith('.csv')) {
@@ -678,10 +707,11 @@
                 };
                 reader.readAsArrayBuffer(file);
             } else {
-                alert("Formato no soportado. Use CSV o Excel.");
+                alert("Formato no soportado. Use CSV o Excel (.xlsx).");
                 modal.classList.add('hidden');
             }
         };
+
         onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries'), (s) => { const l = document.getElementById('ben-list'); if(!l) return; l.innerHTML = ''; s.forEach(d => { const b=d.data(); const j = encodeURIComponent(JSON.stringify(b)); l.innerHTML += `<tr class="hover:bg-slate-50 border-b"><td class="p-4 pl-6 font-bold">${b.name}<br><span class="text-[10px] text-slate-400 font-mono">${b.id}</span></td><td class="p-4 text-xs font-bold ${b.pickupCounter?'text-orange-500':'text-emerald-500'}">${b.pickupCounter?'Ventanilla':'Ruta'}</td><td class="p-4 text-xs">IHSS</td><td class="p-4 text-[10px] font-bold text-slate-400">P: ${b.assignedPharma?.name||'?'}<br>CC: ${b.assignedCC?.name||'?'}</td><td class="p-4 text-right"><div class="flex justify-end gap-2"><button onclick="openHistory('${b.id}','${b.name}')" class="text-slate-400 hover:text-blue-500"><i class="fa-solid fa-history"></i></button><button onclick="editBeneficiary('${j}')" class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-pen"></i></button></div></td></tr>`; }); });
 
         /* --- BLOQUE: LOGÍSTICA --- */
