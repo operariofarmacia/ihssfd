@@ -214,7 +214,7 @@
 
     <!-- BLOQUE 3: MODALES Y FORMULARIOS -->
     
-    <!-- MODAL CSV PROGRESS -->
+    <!-- MODAL CSV PROGRESS (INTERACTIVO Y RÁPIDO) -->
     <div id="csvProgressModal" class="fixed inset-0 modal-backdrop hidden z-[200] flex items-center justify-center p-4 fade-in">
         <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full text-center relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-2 bg-slate-100"><div id="uploadBarTop" class="h-full bg-brand-cyan transition-all duration-300" style="width: 0%"></div></div>
@@ -633,7 +633,7 @@
                         const famName = getColValue(row, ['FAMILIAR', 'CONTACTO']) || "";
                         const famPhone = getColValue(row, ['TELEFONO_FAMILIAR', 'TEL_FAMILIAR']) || "";
                         const muni = getColValue(row, ['DESCRIPCION_MUNICIPIO', 'MUNICIPIO']) || "";
-                        const type = getColValue(row, ['TIPO_AFILIADO', 'TIPO']) || "Afiliado Directo";
+                        const type = getColValue(row, ['TIPOAFILIADO', 'TIPO_AFILIADO', 'TIPO', 'AFILIACION', 'TIPO AFILIADO']) || "Afiliado Directo";
 
                         // Asignación Automática de Carga
                         let aPharma = { uid: "", name: "Sin asignar" };
