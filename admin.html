@@ -20,7 +20,8 @@
                 extend: {
                     colors: {
                         brand: {
-                            dark: '#003366', teal: '#0e7490', cyan: '#06b6d4', clinical: '#10b981', danger: '#ef4444', light: '#f8fafc'
+                            dark: '#003366', teal: '#0e7490', cyan: '#06b6d4', clinical: '#10b981', danger: '#ef4444', light: '#f8fafc',
+                            purple: '#7c3aed', orange: '#f97316'
                         }
                     }
                 }
@@ -44,6 +45,8 @@
         .dash-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1); }
         .calendar-day { min-height: 110px; transition: all 0.2s; border-radius: 12px; border: 1px solid #e2e8f0; position: relative; }
         .calendar-day:hover { background-color: #f0f9ff; border-color: #06b6d4; }
+        .geo-card { transition: all 0.3s ease; }
+        .geo-card:hover { transform: scale(1.02); border-color: #06b6d4; }
         
         /* Timeline Styles */
         .timeline-step { position: relative; z-index: 1; min-width: 50px; }
@@ -53,14 +56,13 @@
         .timeline-active::before { background: #10b981; }
         .tab-btn.active { border-bottom: 3px solid #003366; color: #003366; font-weight: 700; background-color: #f1f5f9; }
         .tab-btn { color: #64748b; transition: all 0.2s; }
-        /* Progreso */
         .progress-bar-container { background-color: #e2e8f0; border-radius: 9999px; height: 12px; overflow: hidden; }
         .progress-bar-fill { background: linear-gradient(90deg, #06b6d4, #10b981); height: 100%; width: 0%; transition: width 0.3s ease; }
     </style>
 </head>
 <body class="flex flex-col md:flex-row h-screen overflow-hidden text-slate-700 bg-slate-50">
 
-    <!-- BLOQUE 0: PANTALLA DE BLOQUEO Y RECUPERACIÓN DE SESIÓN -->
+    <!-- BLOQUE 0: PANTALLA DE BLOQUEO -->
     <div id="auth-lock" class="fixed inset-0 z-[200] bg-[#003366] flex flex-col items-center justify-center text-white hidden fade-in">
         <div class="bg-white p-3 rounded-full mb-5 shadow-2xl ring-4 ring-white/10">
             <img src="https://portal.ihss.hn/cronicos/assets/dist/img/Recurso%201.png" class="h-20 w-20 object-contain">
@@ -95,6 +97,10 @@
             <button onclick="switchView('beneficiaries')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-beneficiaries">
                 <i class="fa-solid fa-hospital-user w-5 text-center"></i><span class="font-medium text-sm">Derechohabientes</span>
             </button>
+            <button onclick="switchView('geographic')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-geographic">
+                <i class="fa-solid fa-map-location-dot w-5 text-center"></i><span class="font-medium text-sm">Gestión Geográfica</span>
+            </button>
+
             <div class="pt-4 pb-2 px-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">Operaciones</div>
             <button onclick="switchView('shipments')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-shipments">
                 <i class="fa-solid fa-truck-fast w-5 text-center"></i><span class="font-medium text-sm">Gestión de Envíos</span>
@@ -120,19 +126,24 @@
                 <p class="text-slate-500 text-sm">Gestión integral del sistema de dispensación IHSS.</p>
             </header>
             <div class="flex-1 overflow-y-auto p-8 custom-scroll">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <div onclick="switchView('users')" class="dash-card bg-white rounded-3xl p-8 border border-slate-100 shadow-sm cursor-pointer group">
                         <div class="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-user-shield"></i></div>
                         <h3 class="font-bold text-slate-700 text-lg">Personal</h3>
-                        <p class="text-xs text-slate-400">Directorio y seguridad de acceso</p>
+                        <p class="text-xs text-slate-400">Directorio y seguridad</p>
                     </div>
                     <div onclick="switchView('beneficiaries')" class="dash-card bg-white rounded-3xl p-8 border border-slate-100 shadow-sm cursor-pointer group">
                         <div class="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-hospital-user"></i></div>
                         <h3 class="font-bold text-slate-700 text-lg">Pacientes</h3>
                         <p class="text-xs text-slate-400">Expedientes y asignaciones</p>
                     </div>
+                    <div onclick="switchView('geographic')" class="dash-card bg-white rounded-3xl p-8 border border-slate-100 shadow-sm cursor-pointer group">
+                        <div class="w-16 h-16 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-map-location-dot"></i></div>
+                        <h3 class="font-bold text-slate-700 text-lg">Geografía</h3>
+                        <p class="text-xs text-slate-400">Zonas y Cobertura</p>
+                    </div>
                     <div onclick="switchView('shipments')" class="dash-card bg-white rounded-3xl p-8 border border-slate-100 shadow-sm cursor-pointer group">
-                        <div class="w-16 h-16 rounded-2xl bg-cyan-50 text-brand-cyan flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-map-location-dot"></i></div>
+                        <div class="w-16 h-16 rounded-2xl bg-cyan-50 text-brand-cyan flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-truck-fast"></i></div>
                         <h3 class="font-bold text-slate-700 text-lg">Logística</h3>
                         <p class="text-xs text-slate-400">Monitoreo de rutas</p>
                     </div>
@@ -172,7 +183,20 @@
             </header>
             <div class="flex-1 overflow-y-auto p-6 md:p-8 custom-scroll">
                  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead class="bg-slate-50 text-[11px] uppercase text-slate-500 font-semibold tracking-wider"><tr><th class="p-5 pl-6">Identidad / Prioridad</th><th class="p-5">Tipo</th><th class="p-5">Ubicación</th><th class="p-5">Gestores</th><th class="p-5 text-right">Acciones</th></tr></thead><tbody id="ben-list" class="divide-y divide-slate-100 text-sm text-slate-600"></tbody></table></div>
+                    <div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead class="bg-slate-50 text-[11px] uppercase text-slate-500 font-semibold tracking-wider"><tr><th class="p-5 pl-6">Identidad / Nombre</th><th class="p-5">Ubicación (Municipio)</th><th class="p-5">Zona Asignada</th><th class="p-5">Gestores</th><th class="p-5 text-right">Acciones</th></tr></thead><tbody id="ben-list" class="divide-y divide-slate-100 text-sm text-slate-600"></tbody></table></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GESTIÓN GEOGRÁFICA -->
+        <div id="view-geographic" class="hidden-view flex-1 flex flex-col h-full overflow-hidden fade-in">
+            <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center shrink-0">
+                <h1 class="text-2xl font-bold text-brand-dark tracking-tight">Gestión Geográfica (Zonas)</h1>
+                <button onclick="createGeoArea()" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg flex items-center text-sm"><i class="fa-solid fa-map-pin mr-2"></i> Nueva Zona</button>
+            </header>
+            <div class="flex-1 overflow-y-auto p-8 custom-scroll">
+                <div id="geo-grid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    <!-- Tarjetas de zonas dinámicas -->
                 </div>
             </div>
         </div>
@@ -336,6 +360,23 @@
             </div>
         </div>
     </div>
+    
+    <!-- MODAL DE ASIGNACIÓN GEOGRÁFICA RÁPIDA -->
+    <div id="geoAssignModal" class="fixed inset-0 modal-backdrop hidden z-[120] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-sm shadow-xl border border-slate-100 p-6">
+            <h3 class="text-lg font-bold text-slate-700 mb-2">Asignar Zona</h3>
+            <p class="text-xs text-slate-400 mb-4" id="geoAssignBenName">...</p>
+            <input type="hidden" id="geoAssignBenId">
+            <select id="geoAssignSelect" class="w-full border p-2 rounded-xl mb-4 bg-slate-50 text-sm outline-none focus:border-brand-cyan">
+                <option value="" disabled selected>Seleccione Zona...</option>
+                <!-- Se llenará dinámicamente -->
+            </select>
+            <div class="flex justify-end gap-2">
+                <button onclick="document.getElementById('geoAssignModal').classList.add('hidden')" class="px-4 py-2 text-xs font-bold text-slate-500">Cancelar</button>
+                <button onclick="saveGeoAssignment()" class="bg-brand-cyan text-white px-4 py-2 rounded-lg text-xs font-bold shadow-lg">Guardar</button>
+            </div>
+        </div>
+    </div>
 
     <!-- MODAL DETALLE DE DÍA -->
     <div id="dayModal" class="fixed inset-0 modal-backdrop hidden z-[110] flex items-center justify-center p-4">
@@ -426,7 +467,7 @@
         }
 
         window.switchView = function(viewId) {
-            ['users','beneficiaries','dashboard','shipments','reports'].forEach(id => {
+            ['users','beneficiaries','dashboard','shipments','reports','geographic'].forEach(id => {
                 const el = document.getElementById(`view-${id}`);
                 const btn = document.getElementById(`btn-view-${id}`);
                 if(el) el.classList.add('hidden-view');
@@ -577,16 +618,84 @@
         window.calculateNextDate = () => { const last = document.getElementById('benLastDispense').value; if(last) { const date = new Date(last); date.setDate(date.getDate() + 30); document.getElementById('benNextShipment').value = date.toISOString().split('T')[0]; } };
         window.toggleCCAssign = () => { const p = document.getElementById('benPickup').checked; document.getElementById('benAssignCC').disabled = p; };
         async function loadAssignableLists(phU, ccU){ const phS = document.getElementById('benAssignPharma'), ccS = document.getElementById('benAssignCC'); phS.innerHTML = '<option value="">Farmacia...</option>'; ccS.innerHTML = '<option value="">CC...</option>'; const q = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'users_directory')); q.forEach(d => { const u = d.data(); const opt = `<option value="${u.uid}|${u.name}" ${u.uid==phU||u.uid==ccU?'selected':''}>${u.name}</option>`; if(u.role === 'farmacia') phS.innerHTML += opt; if(u.role === 'contact_center') ccS.innerHTML += opt; }); }
-        window.openBeneficiaryModal = (isEdit = false, benData = null) => { document.getElementById('benForm').reset(); document.getElementById('benModalTitle').innerText = isEdit ? "Editar Derechohabiente" : "Nuevo Derechohabiente"; document.getElementById('btnSaveBen').innerText = isEdit ? "Actualizar Expediente" : "Crear Expediente"; if(isEdit && benData) { document.getElementById('benId').value = benData.id; document.getElementById('benId').disabled = true; document.getElementById('benName').value = benData.name; document.getElementById('benPhone').value = benData.phone || ''; document.getElementById('benMuni').value = benData.municipality || ''; document.getElementById('benAddr').value = benData.address || ''; document.getElementById('benFamName').value = benData.family?.name || ''; document.getElementById('benFamPhone').value = benData.family?.phone || ''; document.getElementById('benType').value = benData.type || 'Afiliado Directo'; document.getElementById('benLastDispense').value = benData.lastDispense || ''; document.getElementById('benNextShipment').value = benData.nextShipment || ''; document.getElementById('benPickup').checked = benData.pickupCounter || false; 
+        
+        window.openBeneficiaryModal = (isEdit = false, benData = null) => { 
+            document.getElementById('benForm').reset(); 
+            document.getElementById('benModalTitle').innerText = isEdit ? "Editar Derechohabiente" : "Nuevo Derechohabiente"; 
+            document.getElementById('btnSaveBen').innerText = isEdit ? "Actualizar Expediente" : "Crear Expediente"; 
             
-            // CORRECCION DE ASIGNACIÓN: Seleccionar opción en el select
-            const typeSelect = document.getElementById('benType');
-            const savedType = benData.type || 'Afiliado Directo';
-            [...typeSelect.options].forEach(opt => { opt.selected = opt.value === savedType; });
+            if(isEdit && benData) { 
+                document.getElementById('benId').value = benData.id; 
+                document.getElementById('benId').disabled = true; 
+                document.getElementById('benName').value = benData.name; 
+                document.getElementById('benPhone').value = benData.phone || ''; 
+                document.getElementById('benMuni').value = benData.municipality || ''; 
+                document.getElementById('benAddr').value = benData.address || ''; 
+                document.getElementById('benFamName').value = benData.family?.name || ''; 
+                document.getElementById('benFamPhone').value = benData.family?.phone || ''; 
+                
+                // Cargar Tipo de Afiliado (Corrección: Selección Programática)
+                const typeSelect = document.getElementById('benType');
+                const savedType = benData.type || 'Afiliado Directo';
+                [...typeSelect.options].forEach(opt => { opt.selected = opt.value === savedType; });
 
-            window.toggleCCAssign(); loadAssignableLists(benData.assignedPharma?.uid, benData.assignedCC?.uid); } else { document.getElementById('benId').disabled = false; window.toggleCCAssign(); loadAssignableLists(); } document.getElementById('benModal').classList.remove('hidden'); };
+                document.getElementById('benLastDispense').value = benData.lastDispense || ''; 
+                document.getElementById('benNextShipment').value = benData.nextShipment || ''; 
+                document.getElementById('benPickup').checked = benData.pickupCounter || false; 
+                
+                window.toggleCCAssign(); 
+                loadAssignableLists(benData.assignedPharma?.uid, benData.assignedCC?.uid); 
+            } else { 
+                document.getElementById('benId').disabled = false; 
+                window.toggleCCAssign(); 
+                loadAssignableLists(); 
+            } 
+            document.getElementById('benModal').classList.remove('hidden'); 
+        };
+        
         window.editBeneficiary = (s) => window.openBeneficiaryModal(true, JSON.parse(decodeURIComponent(s)));
-        window.saveBeneficiary = async () => { const id = document.getElementById('benId').value; const name = document.getElementById('benName').value; const nextDate = document.getElementById('benNextShipment').value; const isPickup = document.getElementById('benPickup').checked; if(!id || !name) return alert("Faltan datos."); const valP = document.getElementById('benAssignPharma').value; const valC = document.getElementById('benAssignCC').value; let ph = { uid: "", name: "Sin asignar" }; let cc = { uid: "", name: "Sin asignar" }; if(valP) { const [u,n]=valP.split("|"); ph={uid:u, name:n}; } if(!isPickup && valC) { const [u,n]=valC.split("|"); cc={uid:u, name:n}; } else if(isPickup) cc={uid:"ventanilla", name:"VENTANILLA"}; try{ await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'beneficiaries', id), { id, name, phone: document.getElementById('benPhone').value, address: document.getElementById('benAddr').value, municipality: document.getElementById('benMuni').value, family: { name: document.getElementById('benFamName').value, phone: document.getElementById('benFamPhone').value }, type: document.getElementById('benType').value, pickupCounter: isPickup, assignedPharma: ph, assignedCC: cc, nextShipment: nextDate, updatedAt: new Date().toISOString() }, {merge:true}); if(nextDate) { await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shipments', `${id}_${nextDate}`), { date: nextDate, beneficiaryId: id, beneficiaryName: name, status: 'Nuevo', assignedPharma: ph, assignedCC: cc, pickupCounter: isPickup, createdAt: new Date().toISOString() }); } alert("Guardado."); document.getElementById('benModal').classList.add('hidden'); } catch(e) { alert("Error."); } };
+        
+        window.saveBeneficiary = async () => { 
+            const id = document.getElementById('benId').value; 
+            const name = document.getElementById('benName').value; 
+            if(!id || !name) return alert("Faltan datos."); 
+            
+            const valP = document.getElementById('benAssignPharma').value; 
+            const valC = document.getElementById('benAssignCC').value; 
+            const isPickup = document.getElementById('benPickup').checked;
+            const nextDate = document.getElementById('benNextShipment').value;
+            
+            let ph = { uid: "", name: "Sin asignar" }; 
+            let cc = { uid: "", name: "Sin asignar" }; 
+            
+            if(valP) { const [u,n]=valP.split("|"); ph={uid:u, name:n}; } 
+            if(!isPickup && valC) { const [u,n]=valC.split("|"); cc={uid:u, name:n}; } 
+            else if(isPickup) cc={uid:"ventanilla", name:"VENTANILLA"}; 
+            
+            try{ 
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'beneficiaries', id), { 
+                    id, name, 
+                    phone: document.getElementById('benPhone').value, 
+                    address: document.getElementById('benAddr').value, 
+                    municipality: document.getElementById('benMuni').value, 
+                    family: { name: document.getElementById('benFamName').value, phone: document.getElementById('benFamPhone').value }, 
+                    type: document.getElementById('benType').value, 
+                    pickupCounter: isPickup, 
+                    assignedPharma: ph, 
+                    assignedCC: cc, 
+                    nextShipment: nextDate, 
+                    lastDispense: document.getElementById('benLastDispense').value,
+                    updatedAt: new Date().toISOString(),
+                    status: 'Activo'
+                }, {merge:true}); 
+                
+                if(nextDate) { 
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shipments', `${id}_${nextDate}`), { date: nextDate, beneficiaryId: id, beneficiaryName: name, status: 'Nuevo', assignedPharma: ph, assignedCC: cc, pickupCounter: isPickup, createdAt: new Date().toISOString() }); 
+                } 
+                alert("Guardado."); 
+                document.getElementById('benModal').classList.add('hidden'); 
+            } catch(e) { alert("Error."); } 
+        };
         
         window.handleCSVUpload = async (input) => { 
             const file = input.files[0]; if(!file) return;
@@ -724,7 +833,7 @@
             }
         };
 
-        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries'), (s) => { const l = document.getElementById('ben-list'); if(!l) return; l.innerHTML = ''; s.forEach(d => { const b=d.data(); const j = encodeURIComponent(JSON.stringify(b)); l.innerHTML += `<tr class="hover:bg-slate-50 border-b"><td class="p-4 pl-6 font-bold">${b.name}<br><span class="text-[10px] text-slate-400 font-mono">${b.id}</span></td><td class="p-4 text-xs font-bold ${b.pickupCounter?'text-orange-500':'text-emerald-500'}">${b.pickupCounter?'Ventanilla':'Ruta'}</td><td class="p-4 text-xs">IHSS</td><td class="p-4 text-[10px] font-bold text-slate-400">P: ${b.assignedPharma?.name||'?'}<br>CC: ${b.assignedCC?.name||'?'}</td><td class="p-4 text-right"><div class="flex justify-end gap-2"><button onclick="openHistory('${b.id}','${b.name}')" class="text-slate-400 hover:text-blue-500"><i class="fa-solid fa-history"></i></button><button onclick="editBeneficiary('${j}')" class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-pen"></i></button></div></td></tr>`; }); });
+        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries'), (s) => { const l = document.getElementById('ben-list'); if(!l) return; l.innerHTML = ''; s.forEach(d => { const b=d.data(); const j = encodeURIComponent(JSON.stringify(b)); l.innerHTML += `<tr class="hover:bg-slate-50 border-b"><td class="p-4 pl-6 font-bold">${b.name}<br><span class="text-[10px] text-slate-400 font-mono">${b.id}</span></td><td class="p-4 text-xs font-bold ${b.pickupCounter?'text-orange-500':'text-emerald-500'}">${b.pickupCounter?'Ventanilla':'Ruta'}</td><td class="p-4 text-xs">${b.municipality || 'S/D'}</td><td class="p-4 text-[10px] font-bold text-slate-400">P: ${b.assignedPharma?.name||'?'}<br>CC: ${b.assignedCC?.name||'?'}</td><td class="p-4 text-right"><div class="flex justify-end gap-2"><button onclick="openHistory('${b.id}','${b.name}')" class="text-slate-400 hover:text-blue-500"><i class="fa-solid fa-history"></i></button><button onclick="window.openGeoAssign('${b.id}', '${b.name}')" class="text-orange-500 hover:text-orange-700" title="Mapa"><i class="fa-solid fa-map-location-dot"></i></button><button onclick="editBeneficiary('${j}')" class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-pen"></i></button></div></td></tr>`; }); });
 
         /* --- BLOQUE: LOGÍSTICA --- */
         window.openYear = (y) => { currentYear=y; document.getElementById('ship-years').classList.add('hidden'); document.getElementById('ship-months').classList.remove('hidden'); const c = document.getElementById('ship-months'); c.innerHTML = ''; monthNames.forEach((m, i) => { c.innerHTML += `<div onclick="openMonth(${i})" class="bg-white p-6 rounded-2xl shadow-sm border hover:border-brand-cyan cursor-pointer text-center font-bold text-slate-700 transition-all">${m}</div>`; }); window.updateBreadcrumb(); };
@@ -766,9 +875,86 @@
         
         window.runAIScheduler = async () => { if(!confirm("¿Planificar envíos?")) return; const q = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries')); const batch = writeBatch(db); let count = 0; q.forEach(d => { const b = d.data(); if(b.lastDispense) { const next = new Date(b.lastDispense); next.setDate(next.getDate() + 30); const ds = next.toISOString().split('T')[0]; batch.set(doc(db, 'artifacts', appId, 'public', 'data', 'shipments', `${b.id}_${ds}`), { date: ds, beneficiaryId: b.id, beneficiaryName: b.name, status: 'Nuevo', assignedPharma: b.assignedPharma, assignedCC: b.assignedCC, pickupCounter: b.pickupCounter, createdAt: new Date().toISOString(), isAutoGenerated: true }); count++; } }); await batch.commit(); alert(`IA: ${count} envíos planificados.`); };
         
+        /* --- GESTIÓN GEOGRÁFICA (NUEVO BLOQUE) --- */
+        window.openGeoAssign = (id, name) => {
+            document.getElementById('geoAssignBenId').value = id;
+            document.getElementById('geoAssignBenName').innerText = name;
+            const select = document.getElementById('geoAssignSelect');
+            select.innerHTML = '<option disabled selected>Cargando...</option>';
+            document.getElementById('geoAssignModal').classList.remove('hidden');
+            
+            getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'geographic_areas')).then(snap => {
+                select.innerHTML = '<option value="" disabled selected>Seleccione Zona...</option>';
+                snap.forEach(d => {
+                    const area = d.data();
+                    select.innerHTML += `<option value="${d.id}">${area.name}</option>`;
+                });
+            });
+        };
+
+        window.saveGeoAssignment = async () => {
+            const benId = document.getElementById('geoAssignBenId').value;
+            const areaId = document.getElementById('geoAssignSelect').value;
+            if(!areaId) return alert("Seleccione una zona.");
+            
+            try {
+                // Actualizar beneficiario
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'beneficiaries', benId), { geoAreaId: areaId });
+                alert("Zona asignada correctamente.");
+                document.getElementById('geoAssignModal').classList.add('hidden');
+            } catch(e) { alert("Error: " + e.message); }
+        };
+
+        window.createGeoArea = async () => {
+            const name = prompt("Nombre de la Nueva Zona (ej: San Pedro Sula):");
+            if(name) {
+                try {
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'geographic_areas'), { name, createdAt: new Date().toISOString() });
+                    alert("Zona creada.");
+                    // Recargar vista si estamos ahí (simple reload por ahora)
+                    if(!document.getElementById('view-geographic').classList.contains('hidden-view')) loadGeographicView();
+                } catch(e) { alert("Error: " + e.message); }
+            }
+        };
+
+        // Función para cargar la vista geográfica
+        async function loadGeographicView() {
+            const grid = document.getElementById('geo-grid');
+            grid.innerHTML = '<p class="text-slate-400">Cargando mapa...</p>';
+            
+            const areasSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'geographic_areas'));
+            grid.innerHTML = '';
+            
+            areasSnap.forEach(async (areaDoc) => {
+                const area = areaDoc.data();
+                // Contar pacientes en esta zona
+                const qBen = query(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries'), where('geoAreaId', '==', areaDoc.id));
+                const benSnap = await getDocs(qBen);
+                const count = benSnap.size;
+
+                grid.innerHTML += `
+                    <div class="geo-card bg-white p-6 rounded-3xl border border-slate-100 shadow-sm cursor-pointer hover:shadow-md transition-all relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 bg-brand-cyan text-white text-xs font-bold px-3 py-1 rounded-bl-xl">${count} Pacientes</div>
+                        <div class="w-12 h-12 bg-orange-50 text-orange-500 rounded-full flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-map-location"></i></div>
+                        <h3 class="font-bold text-slate-700 text-lg">${area.name}</h3>
+                        <p class="text-xs text-slate-400 mt-1">Zona de Cobertura</p>
+                    </div>
+                `;
+            });
+        }
+
+        // Hook para cargar geografía al cambiar vista
+        const originalSwitchView = window.switchView;
+        window.switchView = (viewId) => {
+            originalSwitchView(viewId);
+            if(viewId === 'geographic') loadGeographicView();
+        };
+
         /* --- STARTUP --- */
         onAuthStateChanged(auth, async (u) => { if(u){ checkSession(u); resetInactivityTimer(); } else showLockScreen("Inicie sesión."); });
         function showLockScreen(m) { document.getElementById('lock-msg').innerText = m; document.getElementById('auth-lock').classList.remove('hidden'); }
+        
+        // Inicializar vista
         window.switchView('dashboard');
     </script>
 </body>
