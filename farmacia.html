@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Farmacia - IHSS a tu Casa</title>
+    <title>Farmacia - Menú Principal</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
@@ -17,396 +17,105 @@
                 extend: {
                     colors: {
                         brand: {
-                            dark: '#003366', teal: '#0e7490', cyan: '#06b6d4', clinical: '#10b981', danger: '#ef4444', warning: '#f59e0b', light: '#f8fafc'
+                            dark: '#003366', teal: '#0e7490', cyan: '#06b6d4', clinical: '#10b981', danger: '#ef4444', light: '#f8fafc'
                         }
                     }
                 }
             }
         }
     </script>
-
     <style>
         body { font-family: 'Poppins', sans-serif; background-color: #f8fafc; }
-        .fade-in { animation: fadeIn 0.3s ease-out; }
+        .fade-in { animation: fadeIn 0.5s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .modal-backdrop { background-color: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); }
-        .custom-scroll::-webkit-scrollbar { width: 6px; }
-        .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .hidden-view { display: none !important; }
         
-        /* Dashboard Cards */
-        .dash-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid transparent; }
-        .dash-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); border-color: #e2e8f0; }
+        /* Tarjetas de Menú */
+        .menu-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid transparent; }
+        .menu-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); border-color: #e2e8f0; }
         
-        /* Calendar Styles */
-        .calendar-day { min-height: 100px; transition: all 0.2s; border-radius: 12px; border: 1px solid #e2e8f0; position: relative; }
-        .calendar-day:hover { border-color: #06b6d4; transform: scale(1.02); z-index: 10; background-color: #f0f9ff; }
-        .status-green { background-color: #f0fdf4; border-color: #bbf7d0; } /* Todo listo */
-        .status-yellow { background-color: #fffbeb; border-color: #fde68a; } /* Pendiente */
-        .status-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
-        
-        /* Card Styles */
-        .med-card { transition: all 0.2s; border-left: 4px solid transparent; }
-        .med-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-        .med-dispatch { border-left-color: #10b981; }
-        
-        /* Toggle Switch */
-        .toggle-checkbox:checked { right: 0; border-color: #10b981; }
-        .toggle-checkbox:checked + .toggle-label { background-color: #10b981; }
-
-        /* Sidebar Transition */
-        #sidebar { transition: width 0.3s ease-in-out; }
-        .sidebar-text { transition: opacity 0.2s ease-in-out; white-space: nowrap; overflow: hidden; }
-        .collapsed .sidebar-text { opacity: 0; width: 0; display: none; }
-        .collapsed .sidebar-header-text { display: none; }
-        .collapsed #sidebar-logo { width: 40px; height: 40px; margin-bottom: 10px; }
+        /* Sidebar Link Activo */
+        .nav-link:hover { background-color: rgba(255,255,255,0.1); }
     </style>
 </head>
-<body class="flex flex-col md:flex-row h-screen overflow-hidden text-slate-700 bg-slate-50">
+<body class="flex flex-col h-screen overflow-hidden bg-slate-50 text-slate-700">
 
-    <!-- BLOQUE 0: SEGURIDAD -->
-    <div id="auth-lock" class="fixed inset-0 z-[200] bg-[#003366] flex flex-col items-center justify-center text-white hidden fade-in">
-        <div class="bg-white p-4 rounded-full mb-6 shadow-2xl ring-4 ring-white/10">
-            <img src="https://portal.ihss.hn/cronicos/assets/dist/img/Recurso%201.png" class="h-24 w-24 object-contain">
-        </div>
-        <h2 class="text-3xl font-bold mb-2 tracking-tight">Módulo de Farmacia</h2>
-        <p class="text-blue-200 text-sm mb-8 max-w-xs text-center leading-relaxed" id="lock-msg">Inicie sesión para continuar.</p>
-        <button onclick="forceNavigateLogin()" class="bg-brand-cyan hover:bg-brand-teal text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-transform transform active:scale-95 flex items-center mb-4">
-            <i class="fa-solid fa-arrow-left mr-3"></i> Ir al Login
-        </button>
+    <!-- PANTALLA DE CARGA -->
+    <div id="loader" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-brand-dark mb-4"></div>
+        <p class="text-sm font-bold text-slate-500 animate-pulse">Verificando credenciales...</p>
     </div>
 
-    <!-- BLOQUE 1: SIDEBAR DE NAVEGACIÓN (MEJORADO) -->
-    <aside id="sidebar" class="w-72 bg-white border-r border-slate-200 flex flex-col shadow-xl z-20 shrink-0 relative transition-all duration-300">
-        <button onclick="toggleSidebar()" class="absolute -right-3 top-8 bg-brand-cyan text-white w-6 h-6 rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition z-50 border border-white">
-            <i class="fa-solid fa-chevron-left text-[10px]" id="sidebar-toggle-icon"></i>
-        </button>
-
-        <div class="p-6 border-b border-slate-100 flex flex-col items-center text-center bg-slate-50 overflow-hidden">
-            <div id="sidebar-logo" class="bg-white p-2 rounded-xl shadow-sm mb-3 w-16 h-16 flex items-center justify-center border border-slate-100 transition-all cursor-pointer" onclick="switchView('dashboard')">
-                <img src="https://portal.ihss.hn/cronicos/assets/dist/img/Recurso%201.png" class="object-contain h-full w-full">
-            </div>
-            <div class="sidebar-header-text">
-                <h2 class="font-bold text-lg text-brand-dark">FARMACIA</h2>
-                <p class="text-[10px] text-brand-cyan font-bold uppercase tracking-widest" id="user-role-display">Cargando...</p>
-            </div>
-        </div>
+    <div class="flex h-full w-full fade-in hidden" id="main-layout">
         
-        <nav class="flex-1 p-4 space-y-2 overflow-y-auto custom-scroll" id="sidebar-nav">
-            <!-- Botón Dashboard (Inicio) -->
-            <button onclick="switchView('dashboard')" id="btn-dashboard" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-500 hover:bg-slate-100 hover:text-brand-dark transition group">
-                <div class="w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-house text-lg"></i></div>
-                <span class="font-medium text-sm sidebar-text">Inicio</span>
-            </button>
-
-            <div class="my-2 border-t border-slate-100"></div>
-
-            <!-- Módulos Operativos -->
-            <button onclick="switchView('revision')" id="btn-revision" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition group hidden">
-                <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition"><i class="fa-solid fa-calendar-check"></i></div>
-                <span class="font-medium text-sm sidebar-text">Revisión y Asig.</span>
-            </button>
-
-            <button onclick="switchView('dispatch')" id="btn-dispatch" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-500 hover:bg-emerald-50 hover:text-emerald-600 transition group hidden">
-                <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition"><i class="fa-solid fa-box-open"></i></div>
-                <span class="font-medium text-sm sidebar-text">Despacho</span>
-            </button>
-
-            <button onclick="switchView('inventory')" id="btn-inventory" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-500 hover:bg-purple-50 hover:text-purple-600 transition group hidden">
-                <div class="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center group-hover:bg-purple-600 group-hover:text-white transition"><i class="fa-solid fa-pills"></i></div>
-                <span class="font-medium text-sm sidebar-text">Inventario</span>
-            </button>
-            
-            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-2 mt-4 sidebar-text">Administración</div>
-            
-            <button onclick="switchView('reports')" id="btn-reports" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-500 hover:bg-orange-50 hover:text-orange-600 transition group">
-                <div class="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center group-hover:bg-orange-600 group-hover:text-white transition"><i class="fa-solid fa-chart-pie"></i></div>
-                <span class="font-medium text-sm sidebar-text">Reportes</span>
-            </button>
-        </nav>
-
-        <div class="p-4 border-t border-slate-100">
-            <button onclick="logout()" class="w-full bg-red-50 text-red-600 hover:bg-red-100 py-2.5 rounded-lg text-xs font-bold uppercase transition flex items-center justify-center group">
-                <i class="fa-solid fa-power-off text-lg group-hover:scale-110 transition-transform"></i>
-                <span class="ml-2 sidebar-text">Salir</span>
-            </button>
-        </div>
-    </aside>
-
-    <!-- CONTENEDOR PRINCIPAL -->
-    <main class="flex-1 overflow-hidden flex flex-col bg-slate-50 relative">
-
-        <!-- ======================================================= -->
-        <!-- VISTA 0: DASHBOARD (HOME)                               -->
-        <!-- ======================================================= -->
-        <div id="view-dashboard" class="flex-1 flex flex-col h-full overflow-hidden fade-in">
-            <header class="bg-white shadow-sm border-b border-slate-200 p-8 shrink-0">
-                <h1 class="text-3xl font-bold text-brand-dark mb-1">Panel de Farmacia</h1>
-                <p class="text-slate-500 text-sm">Seleccione un módulo operativo para comenzar.</p>
-            </header>
-            <div class="flex-1 overflow-y-auto p-8 custom-scroll">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <!-- Tarjeta Revisión -->
-                    <div onclick="switchView('revision')" class="dash-card bg-white rounded-3xl p-8 shadow-sm cursor-pointer group relative overflow-hidden hidden" id="card-revision">
-                        <div class="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110"></div>
-                        <div class="relative z-10">
-                            <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:rotate-6 transition-transform">
-                                <i class="fa-solid fa-calendar-check"></i>
-                            </div>
-                            <h3 class="text-lg font-bold text-slate-800 group-hover:text-blue-600 transition-colors">Revisión y Asignación</h3>
-                            <p class="text-sm text-slate-500 mt-2">Gestione la cartera de pacientes, asigne fechas y prepare líneas de envío.</p>
-                        </div>
-                    </div>
-
-                    <!-- Tarjeta Despacho -->
-                    <div onclick="switchView('dispatch')" class="dash-card bg-white rounded-3xl p-8 shadow-sm cursor-pointer group relative overflow-hidden hidden" id="card-dispatch">
-                        <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110"></div>
-                        <div class="relative z-10">
-                            <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:rotate-6 transition-transform">
-                                <i class="fa-solid fa-box-open"></i>
-                            </div>
-                            <h3 class="text-lg font-bold text-slate-800 group-hover:text-emerald-600 transition-colors">Despacho</h3>
-                            <p class="text-sm text-slate-500 mt-2">Prepare y empaquete medicamentos de órdenes confirmadas.</p>
-                        </div>
-                    </div>
-
-                    <!-- Tarjeta Inventario -->
-                    <div onclick="switchView('inventory')" class="dash-card bg-white rounded-3xl p-8 shadow-sm cursor-pointer group relative overflow-hidden hidden" id="card-inventory">
-                        <div class="absolute top-0 right-0 w-32 h-32 bg-purple-50 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110"></div>
-                        <div class="relative z-10">
-                            <div class="w-14 h-14 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:rotate-6 transition-transform">
-                                <i class="fa-solid fa-pills"></i>
-                            </div>
-                            <h3 class="text-lg font-bold text-slate-800 group-hover:text-purple-600 transition-colors">Inventario</h3>
-                            <p class="text-sm text-slate-500 mt-2">Control de stock, grupos de medicamentos y existencias.</p>
-                        </div>
-                    </div>
+        <!-- SIDEBAR -->
+        <aside class="w-72 bg-brand-dark text-white flex flex-col shadow-2xl z-20 shrink-0 relative">
+            <div class="p-6 border-b border-white/10 flex flex-col items-center text-center">
+                <div class="bg-white p-2 rounded-full shadow-lg mb-3 w-16 h-16 flex items-center justify-center ring-2 ring-brand-cyan/50">
+                    <img src="https://portal.ihss.hn/cronicos/assets/dist/img/Recurso%201.png" class="object-contain h-full w-full p-1">
                 </div>
+                <h2 class="font-bold text-lg tracking-wide">FARMACIA</h2>
+                <div id="user-role-badge" class="mt-2 flex flex-wrap justify-center gap-1"></div>
             </div>
-        </div>
-
-        <!-- ======================================================= -->
-        <!-- BLOQUE: ROL REVISIÓN Y ASIGNACIÓN (El Cerebro)          -->
-        <!-- ======================================================= -->
-        <div id="view-revision" class="hidden-view flex-1 flex flex-col h-full overflow-hidden fade-in">
-            <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center shrink-0">
-                <div>
-                    <h1 class="text-2xl font-bold text-brand-dark">Revisión y Asignación</h1>
-                    <p class="text-xs text-slate-500">Planificación y gestión de recetas. Solo pacientes asignados.</p>
-                </div>
-                <div class="flex gap-2">
-                    <span class="flex items-center text-xs text-slate-500 bg-white border px-3 py-1 rounded-full"><div class="status-dot bg-amber-400"></div> Pendiente</span>
-                    <span class="flex items-center text-xs text-slate-500 bg-white border px-3 py-1 rounded-full"><div class="status-dot bg-emerald-500"></div> Listo</span>
-                </div>
-            </header>
             
-            <!-- SUB-NAVEGACIÓN -->
-            <div class="bg-white border-b border-slate-200 flex px-6 space-x-6 shrink-0">
-                <button onclick="switchSubView('rev-calendar')" id="btn-sub-rev-calendar" class="py-3 text-sm text-brand-dark border-b-2 border-brand-dark transition font-bold">
-                    <i class="fa-solid fa-calendar-days mr-2"></i>Calendario & Flujo
-                </button>
-                <button onclick="switchSubView('rev-portfolio')" id="btn-sub-rev-portfolio" class="py-3 text-sm text-slate-500 hover:text-brand-dark border-b-2 border-transparent transition">
-                    <i class="fa-solid fa-address-book mr-2"></i>Mi Cartera
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto custom-scroll">
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">Navegación</div>
+                
+                <!-- Links Dinámicos -->
+                <a href="farmacia3.html" id="link-revision" class="hidden w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 transition nav-link">
+                    <i class="fa-solid fa-calendar-check w-6 text-center"></i>
+                    <span class="font-medium text-sm">Revisión y Asig.</span>
+                </a>
+
+                <a href="farmacia4.html" id="link-despacho" class="hidden w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 transition nav-link">
+                    <i class="fa-solid fa-box-open w-6 text-center"></i>
+                    <span class="font-medium text-sm">Despacho</span>
+                </a>
+
+                <a href="farmacia2.html" id="link-inventario" class="hidden w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 transition nav-link">
+                    <i class="fa-solid fa-pills w-6 text-center"></i>
+                    <span class="font-medium text-sm">Inventario</span>
+                </a>
+                
+                <a href="farmacia1.html" id="link-reportes" class="hidden w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 transition nav-link mt-4 border-t border-white/10 pt-4">
+                    <i class="fa-solid fa-chart-pie w-6 text-center"></i>
+                    <span class="font-medium text-sm">Reportes (Admin)</span>
+                </a>
+            </nav>
+
+            <div class="p-4 border-t border-white/10 bg-black/20">
+                <div class="mb-4 text-center">
+                    <p class="text-xs text-slate-400">Usuario Conectado</p>
+                    <p class="font-bold text-sm text-white" id="user-name">...</p>
+                </div>
+                <button onclick="logout()" class="w-full bg-red-500/20 hover:bg-red-600 text-red-100 py-2.5 rounded-lg text-xs font-bold uppercase transition flex items-center justify-center group">
+                    <i class="fa-solid fa-power-off mr-2 group-hover:scale-110 transition-transform"></i> Cerrar Sesión
                 </button>
             </div>
+        </aside>
 
-            <div class="flex-1 overflow-hidden relative bg-slate-50/50">
-                
-                <!-- SUB-VISTA: CALENDARIO (Vista Principal) -->
-                <div id="sub-rev-calendar" class="absolute inset-0 overflow-y-auto p-6 custom-scroll">
-                    <!-- Selector de Mes Simulado -->
-                    <div class="flex justify-between items-center mb-4">
-                        <button class="text-slate-400 hover:text-brand-dark p-2"><i class="fa-solid fa-chevron-left"></i></button>
-                        <h2 class="text-lg font-bold text-slate-700 uppercase tracking-widest">Mayo 2026</h2>
-                        <button class="text-slate-400 hover:text-brand-dark p-2"><i class="fa-solid fa-chevron-right"></i></button>
-                    </div>
-                    <!-- Grid Calendario -->
-                    <div class="grid grid-cols-7 gap-3 mb-2 text-center text-[10px] font-bold text-slate-400 uppercase">
-                        <div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div>
-                    </div>
-                    <div id="calendar-grid" class="grid grid-cols-7 gap-3"></div>
-                </div>
-
-                <!-- SUB-VISTA: MI CARTERA (Histórico y Búsqueda) -->
-                <div id="sub-rev-portfolio" class="absolute inset-0 overflow-y-auto p-6 custom-scroll hidden-view">
-                    <div class="mb-6 flex gap-4">
-                        <input type="text" id="portfolioSearch" placeholder="Buscar por Nombre o DNI..." class="w-full border p-3 rounded-xl shadow-sm outline-none focus:border-brand-cyan" onkeyup="filterPortfolio()">
-                    </div>
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                        <table class="w-full text-left text-sm">
-                            <thead class="bg-slate-50 text-[10px] uppercase text-slate-500 font-bold">
-                                <tr>
-                                    <th class="p-4 pl-6">Paciente</th>
-                                    <th class="p-4">Ubicación</th>
-                                    <th class="p-4">Última Receta</th>
-                                    <th class="p-4 text-right pr-6">Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody id="portfolio-list" class="divide-y divide-slate-100"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-        <!-- ======================================================= -->
-        <!-- BLOQUE: ROL DESPACHO (La Ejecución)                     -->
-        <!-- ======================================================= -->
-        <div id="view-dispatch" class="hidden-view flex-1 flex flex-col h-full overflow-hidden fade-in">
-            <header class="bg-white shadow-sm border-b border-slate-200 p-6 shrink-0">
-                <h1 class="text-2xl font-bold text-brand-dark">Despacho de Medicamentos</h1>
-                <p class="text-xs text-slate-500">Recetas impresas listas para preparación.</p>
+        <!-- DASHBOARD CENTRAL -->
+        <main class="flex-1 overflow-y-auto p-8 bg-slate-50 flex flex-col">
+            <header class="mb-8">
+                <h1 class="text-3xl font-bold text-brand-dark mb-2">Panel de Control</h1>
+                <p class="text-slate-500">Seleccione un módulo operativo habilitado para su perfil.</p>
             </header>
-            <div class="flex-1 overflow-y-auto p-6 custom-scroll">
-                <div id="dispatch-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-            </div>
-        </div>
 
-        <!-- ======================================================= -->
-        <!-- BLOQUE: ROL INVENTARIO                                  -->
-        <!-- ======================================================= -->
-        <div id="view-inventory" class="hidden-view flex-1 flex flex-col h-full overflow-hidden fade-in">
-            <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center shrink-0">
-                <h1 class="text-2xl font-bold text-brand-dark">Gestión de Inventario</h1>
-                <button onclick="openAddGroupModal()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-lg"><i class="fa-solid fa-layer-group mr-2"></i> Nuevo Grupo</button>
-            </header>
-            <div class="flex-1 overflow-y-auto p-6 custom-scroll">
-                <div id="inventory-container" class="space-y-6"></div>
-            </div>
-        </div>
-
-        <!-- VISTA REPORTES -->
-        <div id="view-reports" class="hidden-view flex-1 flex flex-col h-full overflow-hidden fade-in items-center justify-center">
-            <div class="bg-white p-10 rounded-full shadow-lg mb-6 ring-8 ring-slate-100"><i class="fa-solid fa-chart-pie text-6xl text-slate-300"></i></div>
-            <h2 class="text-3xl font-bold text-slate-700 mb-2">Reportes de Farmacia</h2>
-            <p class="text-slate-500 max-w-md text-center">Módulo de estadísticas para Supervisor.</p>
-        </div>
-
-    </main>
-
-    <!-- ================= MODALES ================= -->
-
-    <!-- MODAL DETALLE DEL DÍA (REVISIÓN) -->
-    <div id="dayDetailModal" class="fixed inset-0 modal-backdrop hidden z-[100] flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl w-full max-w-5xl flex flex-col max-h-[90vh] shadow-2xl overflow-hidden">
-            <div class="bg-white border-b p-5 flex justify-between items-center shrink-0">
-                <h3 class="font-bold text-lg text-brand-dark">Asignaciones del Día: <span id="modalDateDisplay" class="text-slate-500"></span></h3>
-                <button onclick="document.getElementById('dayDetailModal').classList.add('hidden')" class="text-slate-400 hover:text-red-500 text-xl"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="flex border-b border-slate-100 shrink-0">
-                <button onclick="switchTab('route')" id="tab-route" class="w-1/2 py-3 text-xs font-bold text-brand-dark border-b-2 border-brand-dark bg-slate-50">🚚 RUTA DOMICILIO</button>
-                <button onclick="switchTab('pickup')" id="tab-pickup" class="w-1/2 py-3 text-xs font-bold text-slate-400 hover:text-orange-500 border-b-2 border-transparent">🏢 VENTANILLA</button>
-            </div>
-            <div class="p-6 overflow-y-auto custom-scroll bg-slate-50/30 flex-1">
-                <div id="content-route" class="space-y-3"></div>
-                <div id="content-pickup" class="space-y-3 hidden"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL CREAR LÍNEA DE ENVÍO -->
-    <div id="createLineModal" class="fixed inset-0 modal-backdrop hidden z-[110] flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl w-full max-w-4xl flex flex-col max-h-[95vh] shadow-2xl">
-            <div class="bg-brand-dark p-6 text-white flex justify-between items-center rounded-t-3xl shrink-0">
-                <div>
-                    <h3 class="font-bold text-lg">Nueva Línea de Envío</h3>
-                    <p class="text-xs text-blue-200 opacity-80" id="linePatientName">...</p>
-                </div>
-                <button onclick="document.getElementById('createLineModal').classList.add('hidden')" class="hover:text-red-300"><i class="fa-solid fa-xmark text-xl"></i></button>
-            </div>
-            <div class="p-6 overflow-y-auto custom-scroll bg-slate-50">
-                
-                <!-- FECHA Y TIPO (NUEVO CONTROL DE FECHA) -->
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <h4 class="text-xs font-bold text-slate-500 uppercase mb-2">Fecha de Envío</h4>
-                        <input type="date" id="lineDateInput" class="w-full border p-2 rounded-lg text-sm bg-slate-50 outline-none focus:border-brand-cyan">
-                    </div>
-                    <div>
-                        <h4 class="text-xs font-bold text-slate-500 uppercase mb-2">Método de Entrega</h4>
-                        <div class="flex gap-2">
-                            <label class="flex-1 cursor-pointer">
-                                <input type="radio" name="deliveryType" value="route" class="peer sr-only" checked onchange="toggleDeliveryType()">
-                                <div class="p-2 rounded-lg border border-slate-200 peer-checked:border-brand-cyan peer-checked:bg-cyan-50 transition text-center hover:bg-slate-50">
-                                    <span class="text-xs font-bold text-slate-600 peer-checked:text-brand-cyan">Domicilio (CC)</span>
-                                </div>
-                            </label>
-                            <label class="flex-1 cursor-pointer">
-                                <input type="radio" name="deliveryType" value="pickup" class="peer sr-only" onchange="toggleDeliveryType()">
-                                <div class="p-2 rounded-lg border border-slate-200 peer-checked:border-orange-500 peer-checked:bg-orange-50 transition text-center hover:bg-slate-50">
-                                    <span class="text-xs font-bold text-slate-600 peer-checked:text-orange-500">Ventanilla</span>
-                                </div>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- LISTA DE MEDICAMENTOS -->
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mb-4">
-                    <div class="flex justify-between items-center mb-4">
-                        <h4 class="text-sm font-bold text-slate-700">Selección de Medicamentos</h4>
-                        <div class="text-xs bg-slate-100 px-3 py-1 rounded-full font-bold text-slate-500" id="medCounter">0/0</div>
-                    </div>
-                    <table class="w-full text-left text-sm">
-                        <thead class="bg-slate-50 text-[10px] text-slate-500 uppercase font-bold">
-                            <tr><th class="p-3 w-10 text-center"><input type="checkbox" checked disabled></th><th class="p-3">Medicamento</th><th class="p-3 w-1/3">Observación</th></tr>
-                        </thead>
-                        <tbody id="medSelectionList" class="divide-y divide-slate-100"></tbody>
-                    </table>
-                </div>
-
-                <div id="printConfirmationBox" class="bg-orange-50 border border-orange-100 p-4 rounded-xl flex items-center gap-3 hidden">
-                    <input type="checkbox" id="printCheck" class="w-5 h-5 text-orange-600 rounded border-gray-300 cursor-pointer">
-                    <label for="printCheck" class="text-sm font-bold text-slate-800 cursor-pointer select-none">Confirmar que he impreso la receta (Ventanilla)</label>
-                </div>
-                 <div id="routeConfirmationBox" class="bg-blue-50 border border-blue-100 p-4 rounded-xl flex items-center gap-3">
-                    <i class="fa-solid fa-headset text-blue-500 text-xl"></i>
-                    <p class="text-xs text-blue-700">Esta solicitud se enviará al <b>Contact Center</b> para confirmación de dirección y fecha.</p>
-                </div>
-
-            </div>
-            <div class="p-5 border-t bg-white rounded-b-3xl flex justify-end gap-3 shrink-0">
-                <button onclick="document.getElementById('createLineModal').classList.add('hidden')" class="px-5 py-2 text-sm font-bold text-slate-500 hover:text-slate-700">Cancelar</button>
-                <button onclick="saveShipmentLine()" class="bg-brand-dark hover:bg-blue-800 text-white px-6 py-2 rounded-xl font-bold shadow-lg transition text-sm">Procesar Línea</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL IMPRESIÓN / DESPACHO -->
-    <div id="modalPrint" class="fixed inset-0 modal-backdrop hidden z-[100] flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl w-full max-w-lg shadow-2xl flex flex-col fade-in border-t-8 border-brand-warning">
-            <div class="p-8">
-                <h3 class="font-bold text-2xl text-slate-800 mb-1">Confirmación de Pedido</h3>
-                <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100 mb-6 mt-4">
-                    <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Paciente</p>
-                    <p class="text-base font-bold text-brand-dark mb-3" id="printName">...</p>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Dirección</p>
-                    <p class="text-sm text-slate-700 leading-snug" id="printAddress">...</p>
-                </div>
-                <div class="bg-white border border-slate-200 rounded-xl p-4 max-h-40 overflow-y-auto custom-scroll">
-                    <div class="text-sm text-slate-600 font-mono whitespace-pre-line leading-relaxed" id="printMeds">...</div>
-                </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="cards-container">
+                <!-- Las tarjetas se inyectarán aquí -->
             </div>
             
-            <div class="p-6 bg-slate-50 rounded-b-3xl flex justify-between items-center border-t border-slate-200">
-                <button onclick="window.print()" class="text-slate-500 hover:text-brand-dark text-sm font-bold flex items-center px-4 py-2 hover:bg-slate-200 rounded-lg transition"><i class="fa-solid fa-print mr-2"></i> Imprimir</button>
-                <button onclick="sendToPacking()" class="bg-brand-warning hover:bg-orange-600 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg transition-transform transform active:scale-95 flex items-center"><span>A Empaquetado</span> <i class="fa-solid fa-box-open ml-2"></i></button>
+            <div id="no-access-msg" class="hidden flex-col items-center justify-center h-64 text-slate-400">
+                <i class="fa-solid fa-lock text-4xl mb-4"></i>
+                <p>No tiene módulos asignados. Contacte al administrador.</p>
             </div>
-            <input type="hidden" id="printId">
-        </div>
+        </main>
+
     </div>
 
-    <!-- OTROS MODALES (Despacho, Inventario) -->
-    <div id="dispatchModal" class="fixed inset-0 modal-backdrop hidden z-[110] flex items-center justify-center p-4"><div class="bg-white rounded-3xl w-full max-w-2xl flex flex-col max-h-[90vh] shadow-2xl border-t-8 border-brand-clinical"><div class="p-6 shrink-0"><h3 class="font-bold text-2xl text-slate-800">Despacho</h3><p class="text-sm text-slate-500" id="dispatchPatient">...</p></div><div class="px-6 pb-6 overflow-y-auto custom-scroll flex-1"><div class="space-y-3" id="dispatchList"></div></div><div class="p-6 bg-slate-50 border-t flex justify-end gap-3 rounded-b-3xl"><button onclick="document.getElementById('dispatchModal').classList.add('hidden')" class="px-5 py-2 text-sm font-bold text-slate-500">Cerrar</button><button onclick="finalizeDispatch()" class="bg-brand-clinical text-white px-8 py-2.5 rounded-xl font-bold shadow-lg">Finalizar</button></div><input type="hidden" id="dispatchId"></div></div>
-    <div id="groupModal" class="fixed inset-0 modal-backdrop hidden z-[120] flex items-center justify-center p-4"><div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl"><h3 class="font-bold text-lg mb-4">Nuevo Grupo</h3><input id="newGroupName" class="w-full border p-2 rounded-lg mb-4" placeholder="Nombre..."><div class="flex justify-end gap-2"><button onclick="document.getElementById('groupModal').classList.add('hidden')" class="text-slate-500 text-sm font-bold px-4 py-2">Cancelar</button><button onclick="saveGroup()" class="bg-purple-600 text-white text-sm font-bold px-4 py-2 rounded-lg">Guardar</button></div></div></div>
-
-    <!-- SCRIPT -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-        import { getFirestore, collection, query, where, onSnapshot, updateDoc, doc, getDoc, addDoc, getDocs, setDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyC2HWoYjIltPqkysduZ-954-f-kZCFaNdA", authDomain: "fdihss.firebaseapp.com", projectId: "fdihss", storageBucket: "fdihss.firebasestorage.app", messagingSenderId: "1004594046776", appId: "1:1004594046776:web:164dcdb2b023b8719283cd" };
         const app = initializeApp(firebaseConfig);
@@ -415,293 +124,126 @@
         const appId = "fdihss-mediflow-v2-modular";
         
         let deviceId = localStorage.getItem('mediflow_device_id') || (()=>{ const id=crypto.randomUUID(); localStorage.setItem('mediflow_device_id',id); return id; })();
-        let currentUserRole = '';
-        let currentUserId = '';
-        let userRoles = [];
 
-        /* --- NAVEGACIÓN SEGURA --- */
+        // --- NAVEGACIÓN SEGURA ---
         function safeNavigate(targetUrl) {
             try { window.location.href = targetUrl; } catch (e) {
-                if (targetUrl === 'index.html') { document.body.innerHTML = `<div style="height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:sans-serif; background:#003366; color:white; text-align:center;"><h2 style="margin-bottom:20px;">Sesión Finalizada</h2><a href="./index.html" style="background:#06b6d4; color:white; padding:12px 30px; border-radius:8px; text-decoration:none; font-weight:bold;">VOLVER AL LOGIN</a></div>`; }
+                document.body.innerHTML = `<div style="height:100vh;display:flex;align-items:center;justify-content:center;background:#003366;color:white;text-align:center;"><h2>Redireccionando...</h2><a href="./${targetUrl}" style="background:#06b6d4;color:white;padding:10px 20px;border-radius:5px;text-decoration:none;margin-top:10px;display:inline-block;">Click aquí si no avanza</a></div>`;
             }
         }
-        window.forceNavigateLogin = () => safeNavigate('index.html');
-        window.logout = async () => { if(confirm("¿Cerrar sesión?")) signOut(auth).then(()=>safeNavigate('index.html')); };
-        window.enablePreviewMode = () => { 
-            document.getElementById('auth-lock').classList.add('hidden'); 
-            userRoles = ['Revisión y Asignación', 'Supervisor de Farmacia'];
-            setupSidebar(userRoles); 
-            switchView('revision'); 
-        };
 
-        /* --- SEGURIDAD Y SESIÓN --- */
+        // --- LÓGICA PRINCIPAL ---
         onAuthStateChanged(auth, async (u) => {
-            if(!u) document.getElementById('auth-lock').classList.remove('hidden');
+            if(!u) safeNavigate('index.html');
             else {
-                currentUserId = u.uid;
+                // Escuchar cambios en el perfil para expulsión remota o cambio de roles
                 onSnapshot(doc(db, 'artifacts', appId, 'users', u.uid, 'profile', 'data'), (snap) => {
                     if(snap.exists()){
                         const d = snap.data();
-                        if(d.requireIpApproval && d.activeSessionId !== deviceId) { alert("Sesión duplicada."); signOut(auth); return; }
-                        userRoles = d.jobTitle || [];
-                        document.getElementById('user-role-display').innerText = userRoles.join(', ').toUpperCase();
-                        document.getElementById('auth-lock').classList.add('hidden');
-                        setupSidebar(userRoles);
-                        // Lógica de Redirección Inteligente
-                        if(userRoles.includes('Revisión y Asignación') || userRoles.includes('Supervisor de Farmacia')) switchView('revision');
-                        else if(userRoles.includes('Despacho de Medicamentos')) switchView('dispatch');
-                        else if(userRoles.includes('Gestión de Inventario')) switchView('inventory');
-                        else switchView('dashboard');
+                        
+                        // 1. Verificar Sesión Única
+                        if(d.requireIpApproval && d.activeSessionId && d.activeSessionId !== deviceId) {
+                            alert("Se ha iniciado sesión en otro dispositivo.");
+                            signOut(auth).then(() => safeNavigate('index.html'));
+                            return;
+                        }
+
+                        // 2. Verificar Departamento
+                        if(d.role !== 'farmacia') {
+                            alert("Acceso denegado: Este usuario no pertenece a Farmacia.");
+                            signOut(auth).then(() => safeNavigate('index.html'));
+                            return;
+                        }
+
+                        renderDashboard(d);
+                    } else {
+                        // Usuario borrado o error
+                        signOut(auth).then(() => safeNavigate('index.html'));
                     }
                 });
             }
         });
 
-        function setupSidebar(roles) {
-            const btnRev = document.getElementById('btn-revision');
-            const btnDisp = document.getElementById('btn-dispatch');
-            const btnInv = document.getElementById('btn-inventory');
+        function renderDashboard(userData) {
+            const roles = userData.jobTitle || [];
+            const userName = userData.name || "Usuario";
             const isSuper = roles.includes('Supervisor de Farmacia');
-            
-            if(!isSuper && !roles.includes('Revisión y Asignación')) btnRev.classList.add('hidden'); else btnRev.classList.remove('hidden');
-            if(!isSuper && !roles.includes('Despacho de Medicamentos')) btnDisp.classList.add('hidden'); else btnDisp.classList.remove('hidden');
-            if(!isSuper && !roles.includes('Gestión de Inventario')) btnInv.classList.add('hidden'); else btnInv.classList.remove('hidden');
-        }
 
-        /* --- VISTAS --- */
-        window.switchView = (id) => {
-            ['dashboard','revision','dispatch','inventory','reports'].forEach(v => {
-                document.getElementById(`view-${v}`).classList.add('hidden-view');
-                const btn = document.getElementById(`btn-${v}`);
-                if(btn) { btn.classList.remove('bg-blue-50','text-blue-600','bg-emerald-50','text-emerald-600','bg-purple-50','text-purple-600','bg-orange-50','text-orange-600'); btn.classList.add('text-slate-500'); }
-            });
-            document.getElementById(`view-${id}`).classList.remove('hidden-view');
-            
-            const activeBtn = document.getElementById(`btn-${id}`);
-            if(activeBtn) {
-                activeBtn.classList.remove('text-slate-500');
-                if(id==='revision') activeBtn.classList.add('bg-blue-50','text-blue-600');
-                if(id==='dispatch') activeBtn.classList.add('bg-emerald-50','text-emerald-600');
-                if(id==='inventory') activeBtn.classList.add('bg-purple-50','text-purple-600');
-                if(id==='reports') activeBtn.classList.add('bg-orange-50','text-orange-600');
-                if(id==='dashboard') activeBtn.classList.add('bg-slate-100','text-brand-dark');
+            // Actualizar Info Usuario
+            document.getElementById('user-name').innerText = userName;
+            const badgeContainer = document.getElementById('user-role-badge');
+            badgeContainer.innerHTML = roles.map(r => `<span class="bg-brand-cyan text-white text-[9px] px-2 py-0.5 rounded font-bold">${r}</span>`).join('');
+
+            // Elementos del DOM
+            const grid = document.getElementById('cards-container');
+            const linkRev = document.getElementById('link-revision');
+            const linkDisp = document.getElementById('link-despacho');
+            const linkInv = document.getElementById('link-inventario');
+            const linkRep = document.getElementById('link-reportes');
+
+            grid.innerHTML = ''; // Limpiar grid
+            let modulesCount = 0;
+
+            // --- LÓGICA DE RENDERIZADO POR CARGO ---
+
+            // 1. REVISIÓN Y ASIGNACIÓN (farmacia3.html)
+            if (isSuper || roles.includes('Revisión y Asignación')) {
+                grid.innerHTML += createCard('Revisión y Asignación', 'Planificación de envíos, calendario y gestión de cartera.', 'farmacia3.html', 'fa-calendar-check', 'text-blue-600', 'bg-blue-50');
+                linkRev.classList.remove('hidden');
+                modulesCount++;
             }
-            if(id === 'revision') { switchSubView('rev-calendar'); loadCalendar(); } 
-            if(id === 'dispatch') loadDispatchList();
-        };
 
-        window.toggleSidebar = () => {
-            const sb = document.getElementById('sidebar');
-            const icon = document.getElementById('sidebar-toggle-icon');
-            if(sb.classList.contains('w-72')) { sb.classList.remove('w-72'); sb.classList.add('w-20', 'collapsed'); icon.classList.remove('fa-chevron-left'); icon.classList.add('fa-chevron-right'); } 
-            else { sb.classList.remove('w-20', 'collapsed'); sb.classList.add('w-72'); icon.classList.remove('fa-chevron-right'); icon.classList.add('fa-chevron-left'); }
-        };
-
-        /* === BLOQUE: REVISIÓN Y ASIGNACIÓN === */
-        let currentSubView = 'rev-calendar';
-        window.switchSubView = (subId) => {
-            currentSubView = subId;
-            ['rev-new', 'rev-portfolio', 'rev-calendar'].forEach(id => {
-                document.getElementById(`btn-sub-${id}`).classList.remove('tab-active', 'text-brand-dark');
-                document.getElementById(`sub-${id}`).classList.add('hidden-view');
-                if(id === subId) { document.getElementById(`btn-sub-${id}`).classList.add('tab-active', 'text-brand-dark'); document.getElementById(`sub-${id}`).classList.remove('hidden-view'); }
-            });
-            if(subId === 'rev-portfolio') loadPortfolio();
-            if(subId === 'rev-calendar') loadCalendar();
-        };
-
-        // 1. MI CARTERA
-        let portfolioData = [];
-        function loadPortfolio() {
-            const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries'), where('assignedPharma.uid', '==', currentUserId));
-            onSnapshot(q, (snap) => {
-                portfolioData = [];
-                snap.forEach(d => portfolioData.push(d.data()));
-                renderPortfolio(portfolioData);
-            });
-        }
-        function renderPortfolio(data) {
-            const tbody = document.getElementById('portfolio-list'); tbody.innerHTML = '';
-            if(data.length === 0) tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-400">No tiene pacientes asignados.</td></tr>';
-            data.forEach(b => {
-                tbody.innerHTML += `<tr class="hover:bg-slate-50 border-b"><td class="p-4 font-bold text-slate-700">${b.name}<br><span class="text-[10px] font-normal text-slate-400">${b.id}</span></td><td class="p-4 text-xs">${b.municipality || 'S/D'}</td><td class="p-4 text-xs text-slate-500">${b.lastDispense || 'Nunca'}</td><td class="p-4 text-right"><button onclick="prepareShipment('${b.id}', '${b.name}')" class="bg-blue-50 text-blue-600 px-3 py-1 rounded text-xs font-bold hover:bg-blue-100">Nueva Línea</button></td></tr>`;
-            });
-        }
-        window.filterPortfolio = () => {
-            const term = document.getElementById('portfolioSearch').value.toLowerCase();
-            const filtered = portfolioData.filter(b => b.name.toLowerCase().includes(term) || b.id.includes(term));
-            renderPortfolio(filtered);
-        };
-
-        // 2. CALENDARIO
-        let currentYear = 2026; let currentMonth = 4; 
-        function loadCalendar() {
-            const grid = document.getElementById('calendar-grid'); grid.innerHTML = '';
-            const dim = new Date(currentYear, currentMonth + 1, 0).getDate();
-            const startDay = new Date(currentYear, currentMonth, 1).getDay();
-            for(let i=0; i<startDay; i++) grid.innerHTML += `<div></div>`;
-            for(let d=1; d<=dim; d++) {
-                const dateStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-                grid.innerHTML += `<div id="day-${dateStr}" onclick="openDayDetail('${dateStr}')" class="calendar-day bg-white p-2 cursor-pointer relative overflow-hidden group"><span class="text-sm font-bold text-slate-700">${d}</span><div class="mt-2 space-y-1" id="stats-${dateStr}"></div></div>`;
-                checkDayStatus(dateStr);
+            // 2. DESPACHO DE MEDICAMENTOS (farmacia4.html)
+            if (isSuper || roles.includes('Despacho de Medicamentos')) {
+                grid.innerHTML += createCard('Despacho', 'Cola de impresión y entrega de paquetes a operaciones.', 'farmacia4.html', 'fa-box-open', 'text-emerald-600', 'bg-emerald-50');
+                linkDisp.classList.remove('hidden');
+                modulesCount++;
             }
-        }
-        async function checkDayStatus(dateStr) {
-            const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'shipments'), where('date', '==', dateStr));
-            const snap = await getDocs(q);
-            if(snap.empty) return;
-            let total = snap.size; let ready = 0;
-            snap.forEach(d => { if(d.data().printStatus || d.data().status === 'Listo Despacho') ready++; });
-            const el = document.getElementById(`day-${dateStr}`);
-            if (ready === total && total > 0) el.classList.add('status-green'); else el.classList.add('status-yellow');
-            document.getElementById(`stats-${dateStr}`).innerHTML = `<div class="text-[9px] font-bold text-slate-500">${ready}/${total} Procesados</div>`;
-        }
-        
-        window.openDayDetail = async (dateStr) => {
-            document.getElementById('modalDateDisplay').innerText = dateStr;
-            document.getElementById('dayDetailModal').classList.remove('hidden');
-            window.switchTab('route');
-            const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'shipments'), where('date', '==', dateStr));
-            const snap = await getDocs(q);
-            const cr = document.getElementById('content-route'), cp = document.getElementById('content-pickup');
-            cr.innerHTML = ''; cp.innerHTML = '';
-            snap.forEach(d => {
-                const s = d.data();
-                // LÓGICA DE BOTONES SEGÚN ESTADO
-                let btn = '';
-                if(s.status === 'Nuevo') {
-                     btn = `<span class="text-xs text-slate-400 italic">En borrador</span>`; 
-                } else if(s.status === 'Confirmacion CC') {
-                     btn = `<span class="bg-slate-100 text-slate-500 px-3 py-1 rounded text-xs font-bold flex items-center"><i class="fa-solid fa-hourglass-half mr-2"></i> Esperando CC</span>`;
-                } else if(s.status === 'Retorno Farmacia' || s.status === 'Pendiente Ventanilla') {
-                     btn = `<button onclick="openPrint('${d.id}', '${encodeURIComponent(JSON.stringify(s))}')" class="bg-brand-clinical text-white px-3 py-1 rounded text-xs font-bold hover:bg-emerald-600 shadow-sm"><i class="fa-solid fa-print mr-1"></i> Imprimir</button>`;
-                } else {
-                     btn = `<span class="text-xs text-emerald-600 font-bold"><i class="fa-solid fa-check-circle"></i> Enviado</span>`;
-                }
 
-                const h = `<div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex justify-between items-center"><div><h4 class="font-bold text-brand-dark">${s.beneficiaryName}</h4><p class="text-xs text-slate-400">${s.status}</p></div>${btn}</div>`;
-                if(s.pickupCounter) cp.innerHTML += h; else cr.innerHTML += h;
-            });
-        };
+            // 3. GESTIÓN DE INVENTARIO (farmacia2.html)
+            if (isSuper || roles.includes('Gestión de Inventario')) {
+                grid.innerHTML += createCard('Inventario', 'Control de stock, grupos y existencias de farmacia.', 'farmacia2.html', 'fa-pills', 'text-purple-600', 'bg-purple-50');
+                linkInv.classList.remove('hidden');
+                modulesCount++;
+            }
 
-        window.switchTab = (tab) => {
-            const br = document.getElementById('tab-route'), bp = document.getElementById('tab-pickup');
-            const cr = document.getElementById('content-route'), cp = document.getElementById('content-pickup');
-            if(tab === 'route') { br.classList.add('bg-slate-50', 'text-brand-dark'); bp.classList.remove('bg-slate-50', 'text-brand-dark'); cr.classList.remove('hidden'); cp.classList.add('hidden'); } 
-            else { bp.classList.add('bg-slate-50', 'text-brand-dark'); br.classList.remove('bg-slate-50', 'text-brand-dark'); cp.classList.remove('hidden'); cr.classList.add('hidden'); }
-        };
+            // 4. REPORTES (farmacia1.html) - Solo Supervisor
+            if (isSuper) {
+                grid.innerHTML += createCard('Reportes Gerenciales', 'Métricas de rendimiento y auditoría de procesos.', 'farmacia1.html', 'fa-chart-pie', 'text-orange-600', 'bg-orange-50');
+                linkRep.classList.remove('hidden');
+                modulesCount++;
+            }
 
-        // --- CREAR NUEVA LÍNEA ---
-        let selectedBenId = '';
-        let selectedBenName = '';
-        window.prepareShipment = (id, name) => {
-            selectedBenId = id; selectedBenName = name;
-            document.getElementById('linePatientName').innerText = `${name} (${id})`;
-            document.querySelector('input[name="deliveryType"][value="route"]').checked = true;
-            document.getElementById('lineDateInput').value = new Date().toISOString().split('T')[0]; 
-            toggleDeliveryType(); 
-            document.getElementById('medSelectionList').innerHTML = '<tr><td colspan="3" class="text-center text-xs py-4">Cargando inventario...</td></tr>';
-            document.getElementById('createLineModal').classList.remove('hidden');
+            // Mostrar interfaz
+            document.getElementById('loader').classList.add('hidden');
+            document.getElementById('main-layout').classList.remove('hidden');
             
-            getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'inventory_items')).then(snap => {
-                const l = document.getElementById('medSelectionList'); l.innerHTML = '';
-                snap.forEach(d => { const m = d.data(); l.innerHTML += `<tr class="hover:bg-slate-50 group"><td class="p-3 text-center"><input type="checkbox" class="med-cb w-4 h-4 text-brand-clinical rounded" value="${m.name}" checked></td><td class="p-3 text-xs font-medium">${m.name}</td><td class="p-3"><input type="text" class="med-obs w-full border rounded p-1 text-xs bg-white" placeholder="Observación..."></td></tr>`; });
-                updateMedCounter();
-            });
-        };
-        
-        window.updateMedCounter = () => { document.getElementById('medCounter').innerText = `${document.querySelectorAll('.med-cb:checked').length}/${document.querySelectorAll('.med-cb').length} Asignados`; };
+            if (modulesCount === 0) document.getElementById('no-access-msg').classList.remove('hidden');
+        }
 
-        window.toggleDeliveryType = () => {
-            const isRoute = document.querySelector('input[name="deliveryType"]:checked').value === 'route';
-            if(isRoute) {
-                document.getElementById('printConfirmationBox').classList.add('hidden');
-                document.getElementById('routeConfirmationBox').classList.remove('hidden');
-            } else {
-                document.getElementById('printConfirmationBox').classList.remove('hidden');
-                document.getElementById('routeConfirmationBox').classList.add('hidden');
+        function createCard(title, desc, url, icon, colorText, colorBg) {
+            return `
+            <div onclick="window.location.href='${url}'" class="menu-card bg-white p-8 rounded-3xl shadow-sm cursor-pointer group relative overflow-hidden flex flex-col justify-between h-64">
+                <div class="absolute top-0 right-0 w-32 h-32 ${colorBg} rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-150 opacity-50 z-0"></div>
+                <div class="relative z-10">
+                    <div class="w-16 h-16 ${colorBg} ${colorText} rounded-2xl flex items-center justify-center text-3xl mb-6 shadow-sm group-hover:rotate-12 transition-transform duration-300">
+                        <i class="fa-solid ${icon}"></i>
+                    </div>
+                    <h3 class="font-bold text-slate-800 text-xl group-hover:${colorText} transition-colors">${title}</h3>
+                    <p class="text-sm text-slate-400 mt-2 leading-relaxed">${desc}</p>
+                </div>
+                <div class="relative z-10 mt-4 pt-4 border-t border-slate-50 flex items-center text-xs font-bold ${colorText} opacity-60 group-hover:opacity-100 transition-opacity">
+                    ACCEDER <i class="fa-solid fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+                </div>
+            </div>`;
+        }
+
+        window.logout = async () => {
+            if(confirm("¿Cerrar sesión?")) {
+                if(auth.currentUser) await updateDoc(doc(db,'artifacts',appId,'users',auth.currentUser.uid,'profile','data'), {status:'offline'});
+                signOut(auth).then(() => safeNavigate('index.html'));
             }
         };
-
-        window.saveShipmentLine = async () => {
-            const isRoute = document.querySelector('input[name="deliveryType"]:checked').value === 'route';
-            const date = document.getElementById('lineDateInput').value;
-            if(!date) return alert("Seleccione una fecha.");
-            
-            if(!isRoute && !document.getElementById('printCheck').checked) return alert("Confirme que ha impreso la receta.");
-
-            const meds = []; let count = 0;
-            document.querySelectorAll('#medSelectionList tr').forEach(row => {
-                const cb = row.querySelector('.med-cb');
-                if(!cb) return;
-                if(cb.checked) count++;
-                meds.push({ name: cb.value, send: cb.checked, obs: row.querySelector('.med-obs').value });
-            });
-
-            const nextStatus = isRoute ? 'Confirmacion CC' : 'Pendiente Ventanilla'; 
-            
-            try {
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'shipments'), {
-                    beneficiaryId: selectedBenId, beneficiaryName: selectedBenName,
-                    date: date,
-                    status: nextStatus,
-                    pickupCounter: !isRoute,
-                    medicationLine: meds, medsCount: `${count}/${meds.length}`,
-                    assignedPharma: { uid: currentUserId, name: document.getElementById('user-role-display').innerText }, 
-                    createdAt: new Date().toISOString(),
-                    printStatus: !isRoute 
-                });
-                
-                alert(`Línea creada. ${isRoute ? 'Enviada a Call Center.' : 'Disponible en Pestaña Ventanilla.'}`);
-                document.getElementById('createLineModal').classList.add('hidden');
-                
-                if(!isRoute) {
-                    switchSubView('rev-calendar');
-                }
-            } catch(e) { alert(e.message); }
-        };
-
-        // --- IMPRESIÓN Y PASE A DESPACHO ---
-        window.openPrint = (id, sJson) => {
-            const d = JSON.parse(decodeURIComponent(sJson));
-            document.getElementById('printName').innerText = d.beneficiaryName;
-            document.getElementById('printAddress').innerText = d.pickupCounter ? "VENTANILLA" : "Ruta Domiciliaria";
-            document.getElementById('printMeds').innerText = d.medicationLine.filter(m=>m.send).map(m=>m.name).join('\n');
-            document.getElementById('printId').value = id;
-            document.getElementById('modalPrint').classList.remove('hidden');
-        };
-        window.sendToPacking = async () => {
-            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shipments', document.getElementById('printId').value), {
-                status: 'Listo Despacho', printStatus: true 
-            });
-            alert("Enviado a Despacho."); document.getElementById('modalPrint').classList.add('hidden');
-            const d = document.getElementById('modalDateDisplay').innerText;
-            checkDayStatus(d); window.openDayDetail(d);
-        };
-
-        /* === MÓDULO 2: DESPACHO === */
-        function loadDispatchList() {
-             const c = document.getElementById('dispatch-list');
-             onSnapshot(query(collection(db,'artifacts',appId,'public','data','shipments'), where('status','==','Listo Despacho')), s=>{
-                 c.innerHTML = '';
-                 if(s.empty) { c.innerHTML='<p class="text-center text-slate-400 col-span-3">No hay pendientes.</p>'; return; }
-                 s.forEach(d => {
-                     const data = d.data();
-                     c.innerHTML += `<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm"><h4 class="font-bold">${data.beneficiaryName}</h4><div class="text-xs text-slate-500 mt-2">${data.medsCount} Meds</div><button onclick="dispatchFinal('${d.id}')" class="mt-4 w-full bg-emerald-600 text-white text-xs py-2 rounded font-bold shadow hover:bg-emerald-700">Entregar a Operaciones</button></div>`;
-                 });
-             });
-        }
-        window.dispatchFinal = async (id) => { await updateDoc(doc(db,'artifacts',appId,'public','data','shipments',id), { status: 'Operaciones', dispatchedAt: new Date().toISOString() }); };
-
-        /* === MÓDULO 3: INVENTARIO === */
-        function loadInventory() { document.getElementById('inventory-container').innerHTML = '<p class="text-center text-xs text-slate-400">Inventario cargado.</p>'; }
-        window.openAddGroupModal = () => document.getElementById('groupModal').classList.remove('hidden');
-        window.saveGroup = async () => { const name = document.getElementById('newGroupName').value; if(name) { await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'inventory_groups'), { name }); document.getElementById('groupModal').classList.add('hidden'); } };
-        window.closeModals = () => { document.querySelectorAll('.fixed').forEach(m => { if(m.id !== 'auth-lock') m.classList.add('hidden'); }); };
-
     </script>
-    
-    <div id="groupModal" class="fixed inset-0 modal-backdrop hidden z-[120] flex items-center justify-center p-4"><div class="bg-white rounded-2xl p-6"><h3 class="font-bold">Nuevo Grupo</h3><input id="newGroupName" class="w-full border p-2 rounded-lg mb-4" placeholder="Nombre..."><div class="flex justify-end gap-2"><button onclick="document.getElementById('groupModal').classList.add('hidden')" class="mr-2">Cancelar</button><button onclick="saveGroup()" class="bg-purple-600 text-white px-4 py-2 rounded">Crear</button></div></div></div>
-
 </body>
 </html>
