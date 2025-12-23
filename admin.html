@@ -91,10 +91,10 @@
                 <i class="fa-solid fa-house w-5 text-center"></i><span class="font-medium text-sm">Inicio</span>
             </button>
             <div class="pt-4 pb-2 px-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">Gestión</div>
-            <button onclick="switchView('users')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-users">
+            <button onclick="switchView('users')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-users">
                 <i class="fa-solid fa-users-gear w-5 text-center"></i><span class="font-medium text-sm">Personal</span>
             </button>
-            <button onclick="switchView('beneficiaries')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-beneficiaries">
+            <button onclick="switchView('beneficiaries')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-beneficiaries">
                 <i class="fa-solid fa-hospital-user w-5 text-center"></i><span class="font-medium text-sm">Derechohabientes</span>
             </button>
             <button onclick="switchView('geographic')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-geographic">
@@ -102,10 +102,10 @@
             </button>
 
             <div class="pt-4 pb-2 px-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">Operaciones</div>
-            <button onclick="switchView('shipments')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-shipments">
+            <button onclick="switchView('shipments')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-shipments">
                 <i class="fa-solid fa-truck-fast w-5 text-center"></i><span class="font-medium text-sm">Gestión de Envíos</span>
             </button>
-            <button onclick="switchView('reports')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-reports">
+            <button onclick="switchView('reports')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-reports">
                 <i class="fa-solid fa-chart-pie w-5 text-center"></i><span class="font-medium text-sm">Reportes</span>
             </button>
         </nav>
@@ -183,7 +183,7 @@
             </header>
             <div class="flex-1 overflow-y-auto p-6 md:p-8 custom-scroll">
                  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead class="bg-slate-50 text-[11px] uppercase text-slate-500 font-semibold tracking-wider"><tr><th class="p-5 pl-6">Identidad / Nombre</th><th class="p-5">Ubicación (Municipio)</th><th class="p-5">Zona Asignada</th><th class="p-5">Gestores</th><th class="p-5 text-right">Acciones</th></tr></thead><tbody id="ben-list" class="divide-y divide-slate-100 text-sm text-slate-600"></tbody></table></div>
+                    <div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead class="bg-slate-50 text-[11px] uppercase text-slate-500 font-semibold tracking-wider"><tr><th class="p-5 pl-6">Identidad / Prioridad</th><th class="p-5">Tipo</th><th class="p-5">Ubicación</th><th class="p-5">Gestores</th><th class="p-5 text-right">Acciones</th></tr></thead><tbody id="ben-list" class="divide-y divide-slate-100 text-sm text-slate-600"></tbody></table></div>
                 </div>
             </div>
         </div>
@@ -349,7 +349,7 @@
 
                     <div class="grid grid-cols-3 gap-5">
                         <div><label class="text-xs font-bold text-slate-400 uppercase ml-1">Tipo de Afiliado</label><select id="benType" class="w-full border p-2.5 rounded-xl bg-white outline-none"><option>Afiliado Directo</option><option>Jubilado</option><option>Pensionado</option><option>Beneficiaria Padre</option><option>Beneficiaria(o) Compañera(o)</option><option>Beneficiaria(o) Esposa(o)</option><option>Beneficiaria Hijo(a)</option></select></div>
-                        <div><label class="text-xs font-bold text-emerald-600 uppercase ml-1">Gestor Farmacia</label><select id="benAssignPharma" class="w-full border p-2.5 rounded-xl bg-white outline-none border-emerald-200 focus:border-emerald-500"></select></div>
+                        <div><label class="text-xs font-bold text-emerald-600 uppercase ml-1">Gestor Farmacia</label><select id="benAssignPharma" class="w-full border p-2.5 rounded-xl bg-white outline-none border-emerald-200 focus:border-emerald-500"><option value="">-- Seleccionar (Solo Admin) --</option></select></div>
                         <div><label class="text-xs font-bold text-blue-600 uppercase ml-1">Gestor CC</label><select id="benAssignCC" class="w-full border p-2.5 rounded-xl bg-white outline-none border-blue-200 focus:border-blue-500"><option value="">-- Seleccionar (Solo Admin) --</option></select></div>
                     </div>
                 </form>
@@ -637,7 +637,15 @@
                 // Cargar Tipo de Afiliado (Corrección: Selección Programática)
                 const typeSelect = document.getElementById('benType');
                 const savedType = benData.type || 'Afiliado Directo';
-                [...typeSelect.options].forEach(opt => { opt.selected = opt.value === savedType; });
+                let found = false;
+                for(let opt of typeSelect.options) {
+                    if(opt.value === savedType) { opt.selected = true; found = true; break; }
+                }
+                if(!found) {
+                    for(let opt of typeSelect.options) {
+                        if(opt.value.toLowerCase() === savedType.toLowerCase()) { opt.selected = true; break; }
+                    }
+                }
 
                 document.getElementById('benLastDispense').value = benData.lastDispense || ''; 
                 document.getElementById('benNextShipment').value = benData.nextShipment || ''; 
@@ -833,7 +841,7 @@
             }
         };
 
-        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries'), (s) => { const l = document.getElementById('ben-list'); if(!l) return; l.innerHTML = ''; s.forEach(d => { const b=d.data(); const j = encodeURIComponent(JSON.stringify(b)); l.innerHTML += `<tr class="hover:bg-slate-50 border-b"><td class="p-4 pl-6 font-bold">${b.name}<br><span class="text-[10px] text-slate-400 font-mono">${b.id}</span></td><td class="p-4 text-xs font-bold ${b.pickupCounter?'text-orange-500':'text-emerald-500'}">${b.pickupCounter?'Ventanilla':'Ruta'}</td><td class="p-4 text-xs">${b.municipality || 'S/D'}</td><td class="p-4 text-[10px] font-bold text-slate-400">P: ${b.assignedPharma?.name||'?'}<br>CC: ${b.assignedCC?.name||'?'}</td><td class="p-4 text-right"><div class="flex justify-end gap-2"><button onclick="openHistory('${b.id}','${b.name}')" class="text-slate-400 hover:text-blue-500"><i class="fa-solid fa-history"></i></button><button onclick="window.openGeoAssign('${b.id}', '${b.name}')" class="text-orange-500 hover:text-orange-700" title="Mapa"><i class="fa-solid fa-map-location-dot"></i></button><button onclick="editBeneficiary('${j}')" class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-pen"></i></button></div></td></tr>`; }); });
+        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries'), (s) => { const l = document.getElementById('ben-list'); if(!l) return; l.innerHTML = ''; s.forEach(d => { const b=d.data(); const j = encodeURIComponent(JSON.stringify(b)); l.innerHTML += `<tr class="hover:bg-slate-50 border-b"><td class="p-4 pl-6 font-bold">${b.name}<br><span class="text-[10px] text-slate-400 font-mono">${b.id}</span></td><td class="p-4 text-xs font-bold ${b.pickupCounter?'text-orange-500':'text-emerald-500'}">${b.pickupCounter?'Ventanilla':'Ruta'}</td><td class="p-4 text-xs">IHSS</td><td class="p-4 text-[10px] font-bold text-slate-400">P: ${b.assignedPharma?.name||'?'}<br>CC: ${b.assignedCC?.name||'?'}</td><td class="p-4 text-right"><div class="flex justify-end gap-2"><button onclick="openHistory('${b.id}','${b.name}')" class="text-slate-400 hover:text-blue-500"><i class="fa-solid fa-history"></i></button><button onclick="window.openGeoAssign('${b.id}', '${b.name}')" class="text-orange-500 hover:text-orange-700" title="Mapa"><i class="fa-solid fa-map-location-dot"></i></button><button onclick="editBeneficiary('${j}')" class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-pen"></i></button></div></td></tr>`; }); });
 
         /* --- BLOQUE: LOGÍSTICA --- */
         window.openYear = (y) => { currentYear=y; document.getElementById('ship-years').classList.add('hidden'); document.getElementById('ship-months').classList.remove('hidden'); const c = document.getElementById('ship-months'); c.innerHTML = ''; monthNames.forEach((m, i) => { c.innerHTML += `<div onclick="openMonth(${i})" class="bg-white p-6 rounded-2xl shadow-sm border hover:border-brand-cyan cursor-pointer text-center font-bold text-slate-700 transition-all">${m}</div>`; }); window.updateBreadcrumb(); };
