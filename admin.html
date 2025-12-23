@@ -13,8 +13,6 @@
     <!-- Librerías de Datos -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <!-- Markdown Parser -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     
     <script>
         tailwind.config = {
@@ -22,8 +20,7 @@
                 extend: {
                     colors: {
                         brand: {
-                            dark: '#003366', teal: '#0e7490', cyan: '#06b6d4', clinical: '#10b981', danger: '#ef4444', light: '#f8fafc',
-                            purple: '#7c3aed', orange: '#f97316'
+                            dark: '#003366', teal: '#0e7490', cyan: '#06b6d4', clinical: '#10b981', danger: '#ef4444', light: '#f8fafc'
                         }
                     }
                 }
@@ -47,8 +44,6 @@
         .dash-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1); }
         .calendar-day { min-height: 110px; transition: all 0.2s; border-radius: 12px; border: 1px solid #e2e8f0; position: relative; }
         .calendar-day:hover { background-color: #f0f9ff; border-color: #06b6d4; }
-        .geo-card { transition: all 0.3s ease; }
-        .geo-card:hover { transform: scale(1.02); border-color: #06b6d4; }
         
         /* Timeline Styles */
         .timeline-step { position: relative; z-index: 1; min-width: 50px; }
@@ -58,9 +53,13 @@
         .timeline-active::before { background: #10b981; }
         .tab-btn.active { border-bottom: 3px solid #003366; color: #003366; font-weight: 700; background-color: #f1f5f9; }
         .tab-btn { color: #64748b; transition: all 0.2s; }
-        /* Progreso */
-        .progress-bar-container { background-color: #e2e8f0; border-radius: 9999px; height: 12px; overflow: hidden; }
-        .progress-bar-fill { background: linear-gradient(90deg, #06b6d4, #10b981); height: 100%; width: 0%; transition: width 0.3s ease; }
+        
+        /* Sidebar Transition */
+        #sidebar { transition: width 0.3s ease-in-out; }
+        .sidebar-text { transition: opacity 0.2s ease-in-out; white-space: nowrap; overflow: hidden; }
+        .collapsed .sidebar-text { opacity: 0; width: 0; display: none; }
+        .collapsed .sidebar-header-text { display: none; }
+        .collapsed #sidebar-logo { width: 40px; height: 40px; margin-bottom: 10px; }
     </style>
 </head>
 <body class="flex flex-col md:flex-row h-screen overflow-hidden text-slate-700 bg-slate-50">
@@ -77,44 +76,60 @@
         </button>
     </div>
 
-    <!-- BLOQUE 1: SIDEBAR -->
-    <aside class="w-full md:w-72 bg-brand-dark text-white flex flex-col shadow-2xl z-20 shrink-0 relative">
-        <div class="p-6 border-b border-blue-900/50 flex flex-col items-center text-center">
-            <div class="bg-white p-1 rounded-full shadow-lg mb-3 w-16 h-16 flex items-center justify-center ring-2 ring-brand-cyan/50 cursor-pointer hover:scale-105 transition-transform" onclick="switchView('dashboard')">
+    <!-- BLOQUE 1: SIDEBAR (CONTRÁCTIL) -->
+    <aside id="sidebar" class="w-72 bg-brand-dark text-white flex flex-col shadow-2xl z-20 shrink-0 relative transition-all duration-300">
+        <!-- Botón Toggle -->
+        <button onclick="toggleSidebar()" class="absolute -right-3 top-8 bg-brand-cyan text-white w-6 h-6 rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition z-50 border border-white">
+            <i class="fa-solid fa-chevron-left text-[10px]" id="sidebar-toggle-icon"></i>
+        </button>
+
+        <div class="p-6 border-b border-blue-900/50 flex flex-col items-center text-center overflow-hidden">
+            <div id="sidebar-logo" class="bg-white p-1 rounded-full shadow-lg mb-3 w-16 h-16 flex items-center justify-center ring-2 ring-brand-cyan/50 cursor-pointer hover:scale-105 transition-transform" onclick="switchView('dashboard')">
                 <img src="https://portal.ihss.hn/cronicos/assets/dist/img/Recurso%201.png" class="object-contain h-full w-full p-1">
             </div>
-            <h2 class="font-bold text-lg tracking-wide uppercase">Administración</h2>
-            <div class="flex items-center bg-black/20 px-3 py-1 rounded-full border border-white/10 mt-2">
-                <span id="status-dot" class="w-2 h-2 rounded-full bg-brand-clinical animate-pulse mr-2"></span>
-                <span id="status-text" class="text-[10px] font-bold text-emerald-300 uppercase">Sistema Online</span>
+            <div class="sidebar-header-text">
+                <h2 class="font-bold text-lg tracking-wide uppercase">IHSS</h2>
+                <p class="text-[10px] text-brand-cyan uppercase tracking-widest font-bold">Administrador</p>
             </div>
         </div>
-        <nav class="flex-1 p-4 space-y-2 overflow-y-auto custom-scroll">
-            <button onclick="switchView('dashboard')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-dashboard">
-                <i class="fa-solid fa-house w-5 text-center"></i><span class="font-medium text-sm">Inicio</span>
+        
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto custom-scroll overflow-x-hidden">
+            <button onclick="switchView('dashboard')" class="w-full flex items-center p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition group" id="btn-view-dashboard">
+                <i class="fa-solid fa-house w-6 text-center text-lg"></i>
+                <span class="font-medium text-sm ml-3 sidebar-text">Inicio</span>
             </button>
-            <div class="pt-4 pb-2 px-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">Gestión</div>
-            <button onclick="switchView('users')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-users">
-                <i class="fa-solid fa-users-gear w-5 text-center"></i><span class="font-medium text-sm">Personal</span>
+            
+            <div class="pt-4 pb-2 px-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider sidebar-text">Gestión</div>
+            
+            <button onclick="switchView('users')" class="w-full flex items-center p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition group" id="btn-view-users">
+                <i class="fa-solid fa-users-gear w-6 text-center text-lg"></i>
+                <span class="font-medium text-sm ml-3 sidebar-text">Personal</span>
             </button>
-            <button onclick="switchView('beneficiaries')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-beneficiaries">
-                <i class="fa-solid fa-hospital-user w-5 text-center"></i><span class="font-medium text-sm">Derechohabientes</span>
+            <button onclick="switchView('beneficiaries')" class="w-full flex items-center p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition group" id="btn-view-beneficiaries">
+                <i class="fa-solid fa-hospital-user w-6 text-center text-lg"></i>
+                <span class="font-medium text-sm ml-3 sidebar-text">Derechohabientes</span>
             </button>
-            <button onclick="switchView('geographic')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-geographic">
-                <i class="fa-solid fa-map-location-dot w-5 text-center"></i><span class="font-medium text-sm">Gestión Geográfica</span>
+            <button onclick="switchView('geographic')" class="w-full flex items-center p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition group" id="btn-view-geographic">
+                <i class="fa-solid fa-map-location-dot w-6 text-center text-lg"></i>
+                <span class="font-medium text-sm ml-3 sidebar-text">Geografía</span>
             </button>
 
-            <div class="pt-4 pb-2 px-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">Operaciones</div>
-            <button onclick="switchView('shipments')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-shipments">
-                <i class="fa-solid fa-truck-fast w-5 text-center"></i><span class="font-medium text-sm">Gestión de Envíos</span>
+            <div class="pt-4 pb-2 px-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider sidebar-text">Operaciones</div>
+            
+            <button onclick="switchView('shipments')" class="w-full flex items-center p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition group" id="btn-view-shipments">
+                <i class="fa-solid fa-truck-fast w-6 text-center text-lg"></i>
+                <span class="font-medium text-sm ml-3 sidebar-text">Envíos</span>
             </button>
-            <button onclick="switchView('reports')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-reports">
-                <i class="fa-solid fa-chart-pie w-5 text-center"></i><span class="font-medium text-sm">Reportes</span>
+            <button onclick="switchView('reports')" class="w-full flex items-center p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition group" id="btn-view-reports">
+                <i class="fa-solid fa-chart-pie w-6 text-center text-lg"></i>
+                <span class="font-medium text-sm ml-3 sidebar-text">Reportes</span>
             </button>
         </nav>
+        
         <div class="p-4 bg-black/20 border-t border-white/5">
-            <button onclick="logout()" class="w-full bg-red-500/20 hover:bg-red-600 text-red-100 py-2.5 rounded-lg text-xs font-bold uppercase transition flex items-center justify-center group">
-                <i class="fa-solid fa-power-off mr-2 group-hover:scale-110 transition-transform"></i> Cerrar Sesión
+            <button onclick="logout()" class="w-full bg-red-500/20 hover:bg-red-600 text-red-100 py-2.5 rounded-lg text-xs font-bold uppercase transition flex items-center justify-center group" title="Cerrar Sesión">
+                <i class="fa-solid fa-power-off text-lg group-hover:scale-110 transition-transform"></i>
+                <span class="ml-2 sidebar-text">Salir</span>
             </button>
         </div>
     </aside>
@@ -133,7 +148,7 @@
                     <div onclick="switchView('users')" class="dash-card bg-white rounded-3xl p-8 border border-slate-100 shadow-sm cursor-pointer group">
                         <div class="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-user-shield"></i></div>
                         <h3 class="font-bold text-slate-700 text-lg">Personal</h3>
-                        <p class="text-xs text-slate-400">Directorio y seguridad</p>
+                        <p class="text-xs text-slate-400">Directorio y seguridad de acceso</p>
                     </div>
                     <div onclick="switchView('beneficiaries')" class="dash-card bg-white rounded-3xl p-8 border border-slate-100 shadow-sm cursor-pointer group">
                         <div class="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-hospital-user"></i></div>
@@ -174,7 +189,7 @@
             </div>
         </div>
 
-        <!-- GESTIÓN DERECHOHABIENTES -->
+        <!-- GESTIÓN DERECHOHABIENTES (VISUALIZACIÓN MEJORADA) -->
         <div id="view-beneficiaries" class="hidden-view flex-1 flex flex-col h-full overflow-hidden fade-in">
             <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center shrink-0">
                 <h1 class="text-2xl font-bold text-brand-dark tracking-tight">Gestión de Derechohabientes</h1>
@@ -186,7 +201,7 @@
             </header>
             <div class="flex-1 overflow-y-auto p-6 md:p-8 custom-scroll">
                  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead class="bg-slate-50 text-[11px] uppercase text-slate-500 font-semibold tracking-wider"><tr><th class="p-5 pl-6">Identidad / Prioridad</th><th class="p-5">Tipo</th><th class="p-5">Ubicación</th><th class="p-5">Gestores</th><th class="p-5 text-right">Acciones</th></tr></thead><tbody id="ben-list" class="divide-y divide-slate-100 text-sm text-slate-600"></tbody></table></div>
+                    <div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead class="bg-slate-50 text-[11px] uppercase text-slate-500 font-semibold tracking-wider"><tr><th class="p-5 pl-6">Paciente (Identidad / Tipo)</th><th class="p-5">Ubicación (Municipio)</th><th class="p-5">Zona Asignada</th><th class="p-5">Gestores</th><th class="p-5 text-right">Acciones</th></tr></thead><tbody id="ben-list" class="divide-y divide-slate-100 text-sm text-slate-600"></tbody></table></div>
                 </div>
             </div>
         </div>
@@ -477,7 +492,42 @@
                 if(btn) btn.classList.replace('text-white','text-slate-300');
             });
             document.getElementById(`view-${viewId}`).classList.remove('hidden-view');
-            document.getElementById(`btn-view-${viewId}`).classList.replace('text-slate-300','text-white');
+            const toggle = document.getElementById('sidebar-toggle-icon');
+            if(toggle && !toggle.classList.contains('fa-chevron-right')) { // Solo resetear si no está colapsado
+                document.getElementById(`btn-view-${viewId}`).classList.replace('text-slate-300','text-white');
+            }
+        };
+
+        // Sidebar Toggle Logic
+        let isSidebarExpanded = true;
+        window.toggleSidebar = () => {
+            const sidebar = document.getElementById('sidebar');
+            const icon = document.getElementById('sidebar-toggle-icon');
+            const texts = document.querySelectorAll('.sidebar-text');
+            const logoText = document.querySelector('.sidebar-header-text');
+            const logo = document.getElementById('sidebar-logo');
+            
+            isSidebarExpanded = !isSidebarExpanded;
+
+            if (isSidebarExpanded) {
+                sidebar.classList.remove('w-20');
+                sidebar.classList.add('w-72');
+                icon.classList.remove('fa-chevron-right');
+                icon.classList.add('fa-chevron-left');
+                sidebar.classList.remove('collapsed');
+                setTimeout(() => {
+                    texts.forEach(t => { t.style.display = 'inline'; setTimeout(()=>t.style.opacity=1, 50) });
+                    if(logoText) logoText.style.display = 'block';
+                }, 150);
+            } else {
+                sidebar.classList.remove('w-72');
+                sidebar.classList.add('w-20');
+                icon.classList.remove('fa-chevron-left');
+                icon.classList.add('fa-chevron-right');
+                sidebar.classList.add('collapsed');
+                texts.forEach(t => { t.style.opacity = 0; setTimeout(()=>t.style.display='none', 200) });
+                if(logoText) logoText.style.display = 'none';
+            }
         };
 
         window.forceNavigateLogin = () => safeNavigate('index.html');
@@ -844,7 +894,7 @@
             }
         };
 
-        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries'), (s) => { const l = document.getElementById('ben-list'); if(!l) return; l.innerHTML = ''; s.forEach(d => { const b=d.data(); const j = encodeURIComponent(JSON.stringify(b)); l.innerHTML += `<tr class="hover:bg-slate-50 border-b"><td class="p-4 pl-6 font-bold">${b.name}<br><span class="text-[10px] text-slate-400 font-mono">${b.id}</span></td><td class="p-4 text-xs font-bold ${b.pickupCounter?'text-orange-500':'text-emerald-500'}">${b.pickupCounter?'Ventanilla':'Ruta'}</td><td class="p-4 text-xs">IHSS</td><td class="p-4 text-[10px] font-bold text-slate-400">P: ${b.assignedPharma?.name||'?'}<br>CC: ${b.assignedCC?.name||'?'}</td><td class="p-4 text-right"><div class="flex justify-end gap-2"><button onclick="openHistory('${b.id}','${b.name}')" class="text-slate-400 hover:text-blue-500"><i class="fa-solid fa-history"></i></button><button onclick="window.openGeoAssign('${b.id}', '${b.name}')" class="text-orange-500 hover:text-orange-700" title="Mapa"><i class="fa-solid fa-map-location-dot"></i></button><button onclick="editBeneficiary('${j}')" class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-pen"></i></button></div></td></tr>`; }); });
+        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries'), (s) => { const l = document.getElementById('ben-list'); if(!l) return; l.innerHTML = ''; s.forEach(d => { const b=d.data(); const j = encodeURIComponent(JSON.stringify(b)); l.innerHTML += `<tr class="hover:bg-slate-50 border-b"><td class="p-4 pl-6"><div class="font-bold text-slate-700">${b.name}</div><div class="text-[10px] text-slate-400 font-mono">${b.id}</div><span class="bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase mt-1 inline-block">${b.type || 'Afiliado'}</span></td><td class="p-4 text-xs font-medium text-slate-600"><i class="fa-solid fa-map-pin text-brand-cyan mr-1"></i>${b.municipality || 'Sin Registro'}</td><td class="p-4 text-xs font-bold text-center ${b.pickupCounter?'text-orange-600':'text-emerald-600'}">${b.pickupCounter?'Ventanilla':'Domicilio'}</td><td class="p-4 text-[10px] font-bold text-slate-400">P: ${b.assignedPharma?.name||'?'}<br>CC: ${b.assignedCC?.name||'?'}</td><td class="p-4 text-right"><div class="flex justify-end gap-2"><button onclick="openHistory('${b.id}','${b.name}')" class="text-slate-400 hover:text-blue-500"><i class="fa-solid fa-history"></i></button><button onclick="window.openGeoAssign('${b.id}', '${b.name}')" class="text-orange-500 hover:text-orange-700" title="Mapa"><i class="fa-solid fa-map-location-dot"></i></button><button onclick="editBeneficiary('${j}')" class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-pen"></i></button></div></td></tr>`; }); });
 
         /* --- BLOQUE: LOGÍSTICA --- */
         window.openYear = (y) => { currentYear=y; document.getElementById('ship-years').classList.add('hidden'); document.getElementById('ship-months').classList.remove('hidden'); const c = document.getElementById('ship-months'); c.innerHTML = ''; monthNames.forEach((m, i) => { c.innerHTML += `<div onclick="openMonth(${i})" class="bg-white p-6 rounded-2xl shadow-sm border hover:border-brand-cyan cursor-pointer text-center font-bold text-slate-700 transition-all">${m}</div>`; }); window.updateBreadcrumb(); };
