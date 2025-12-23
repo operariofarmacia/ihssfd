@@ -13,8 +13,6 @@
     <!-- Librerías de Datos -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <!-- Markdown Parser para respuesta de IA -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     
     <script>
         tailwind.config = {
@@ -22,7 +20,7 @@
                 extend: {
                     colors: {
                         brand: {
-                            dark: '#003366', teal: '#0e7490', cyan: '#06b6d4', clinical: '#10b981', danger: '#ef4444', light: '#f8fafc', ai: '#8b5cf6'
+                            dark: '#003366', teal: '#0e7490', cyan: '#06b6d4', clinical: '#10b981', danger: '#ef4444', light: '#f8fafc'
                         }
                     }
                 }
@@ -53,13 +51,11 @@
         .timeline-step:first-child::before { display: none; }
         .timeline-active .step-dot { background-color: #10b981; color: white; border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); }
         .timeline-active::before { background: #10b981; }
-        
-        /* Tabs Styles */
         .tab-btn.active { border-bottom: 3px solid #003366; color: #003366; font-weight: 700; background-color: #f1f5f9; }
         .tab-btn { color: #64748b; transition: all 0.2s; }
-
-        /* AI Glow */
-        .ai-glow { box-shadow: 0 0 15px rgba(139, 92, 246, 0.3); border: 1px solid rgba(139, 92, 246, 0.5); }
+        /* Progreso */
+        .progress-bar-container { background-color: #e2e8f0; border-radius: 9999px; height: 12px; overflow: hidden; }
+        .progress-bar-fill { background: linear-gradient(90deg, #06b6d4, #10b981); height: 100%; width: 0%; transition: width 0.3s ease; }
     </style>
 </head>
 <body class="flex flex-col md:flex-row h-screen overflow-hidden text-slate-700 bg-slate-50">
@@ -71,7 +67,7 @@
         </div>
         <h2 class="text-3xl font-bold mb-2 tracking-tight">Sesión Finalizada</h2>
         <p class="text-blue-200 text-sm mb-8 max-w-xs text-center leading-relaxed" id="lock-msg">Tu sesión ha expirado.</p>
-        <button onclick="forceNavigateLogin()" class="bg-brand-cyan hover:bg-brand-teal text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-transform transform active:scale-95 flex items-center mb-4">
+        <button onclick="forceNavigateLogin()" class="bg-brand-cyan hover:bg-brand-teal text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg transform hover:scale-105 flex items-center mb-4">
             <i class="fa-solid fa-arrow-left mr-3"></i> Ir al Login
         </button>
     </div>
@@ -93,17 +89,17 @@
                 <i class="fa-solid fa-house w-5 text-center"></i><span class="font-medium text-sm">Inicio</span>
             </button>
             <div class="pt-4 pb-2 px-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">Gestión</div>
-            <button onclick="switchView('users')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-users">
+            <button onclick="switchView('users')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-users">
                 <i class="fa-solid fa-users-gear w-5 text-center"></i><span class="font-medium text-sm">Personal</span>
             </button>
-            <button onclick="switchView('beneficiaries')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-beneficiaries">
+            <button onclick="switchView('beneficiaries')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-beneficiaries">
                 <i class="fa-solid fa-hospital-user w-5 text-center"></i><span class="font-medium text-sm">Derechohabientes</span>
             </button>
             <div class="pt-4 pb-2 px-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">Operaciones</div>
-            <button onclick="switchView('shipments')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-shipments">
+            <button onclick="switchView('shipments')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-shipments">
                 <i class="fa-solid fa-truck-fast w-5 text-center"></i><span class="font-medium text-sm">Gestión de Envíos</span>
             </button>
-            <button onclick="switchView('reports')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition" id="btn-view-reports">
+            <button onclick="switchView('reports')" class="w-full flex items-center space-x-3 p-3 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition border-l-4 border-transparent" id="btn-view-reports">
                 <i class="fa-solid fa-chart-pie w-5 text-center"></i><span class="font-medium text-sm">Reportes</span>
             </button>
         </nav>
@@ -169,18 +165,11 @@
             <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center shrink-0">
                 <h1 class="text-2xl font-bold text-brand-dark tracking-tight">Gestión de Derechohabientes</h1>
                 <div class="flex gap-3">
-                    <!-- BOTÓN CONFIG IA -->
-                    <button onclick="toggleAIKeyInput()" class="text-brand-ai hover:text-purple-700 p-2" title="Configurar Gemini API"><i class="fa-solid fa-robot"></i></button>
-                    
+                    <div id="csvStatus" class="hidden flex items-center text-xs font-bold text-brand-clinical animate-pulse mr-2"><i class="fa-solid fa-sync fa-spin mr-1"></i> Cargando...</div>
                     <label class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg cursor-pointer flex items-center text-sm"><i class="fa-solid fa-file-excel mr-2"></i> Importar BD<input type="file" id="csvInput" accept=".csv, .xlsx, .xls" class="hidden" onchange="handleCSVUpload(this)"></label>
                     <button onclick="openBeneficiaryModal()" class="bg-brand-dark hover:bg-brand-cyan text-white px-5 py-2.5 rounded-xl font-bold shadow-lg flex items-center text-sm"><i class="fa-solid fa-plus mr-2"></i> Crear Manual</button>
                 </div>
             </header>
-            <div id="ai-key-container" class="hidden bg-purple-50 p-3 border-b border-purple-100 flex items-center justify-end gap-2 px-6">
-                <span class="text-xs text-purple-700 font-bold">API Key Gemini:</span>
-                <input type="password" id="geminiKeyInput" class="border p-1 rounded text-xs w-64" placeholder="Pegar API Key aquí...">
-                <button onclick="saveGeminiKey()" class="bg-purple-600 text-white px-3 py-1 rounded text-xs font-bold">Guardar</button>
-            </div>
             <div class="flex-1 overflow-y-auto p-6 md:p-8 custom-scroll">
                  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                     <div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead class="bg-slate-50 text-[11px] uppercase text-slate-500 font-semibold tracking-wider"><tr><th class="p-5 pl-6">Identidad / Prioridad</th><th class="p-5">Tipo</th><th class="p-5">Ubicación</th><th class="p-5">Gestores</th><th class="p-5 text-right">Acciones</th></tr></thead><tbody id="ben-list" class="divide-y divide-slate-100 text-sm text-slate-600"></tbody></table></div>
@@ -202,8 +191,8 @@
             </div>
             <aside class="w-full md:w-80 bg-white border-l border-slate-200 shadow-xl flex flex-col z-20">
                 <div class="p-5 border-b border-slate-100 bg-brand-light">
-                    <h3 class="font-bold text-brand-ai flex items-center text-sm uppercase tracking-wider"><i class="fa-solid fa-robot mr-2"></i> Gemini IA</h3>
-                    <p class="text-[10px] text-slate-500 mt-1">Asistente Inteligente.</p>
+                    <h3 class="font-bold text-brand-teal flex items-center text-sm uppercase tracking-wider"><i class="fa-solid fa-robot mr-2 text-brand-cyan"></i> Planificador IA</h3>
+                    <p class="text-[10px] text-slate-500 mt-1">Detección de ciclos de recetas.</p>
                 </div>
                 <div class="flex-1 overflow-y-auto p-4 custom-scroll" id="ai-suggestions-list">
                     <div class="text-center py-10 px-4">
@@ -225,20 +214,15 @@
 
     <!-- BLOQUE 3: MODALES Y FORMULARIOS -->
     
-    <!-- MODAL CSV PROGRESS + IA RESULT -->
+    <!-- MODAL CSV PROGRESS -->
     <div id="csvProgressModal" class="fixed inset-0 modal-backdrop hidden z-[200] flex items-center justify-center p-4 fade-in">
-        <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-lg w-full text-center relative overflow-hidden">
+        <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full text-center relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-2 bg-slate-100"><div id="uploadBarTop" class="h-full bg-brand-cyan transition-all duration-300" style="width: 0%"></div></div>
             <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600 text-2xl animate-bounce"><i class="fa-solid fa-cloud-arrow-up"></i></div>
-            <h3 class="text-xl font-bold text-brand-dark mb-1" id="uploadTitle">Sincronizando Base de Datos</h3>
-            <p class="text-sm text-slate-500 mb-6" id="uploadStatus">Iniciando conexión...</p>
-            <div id="progressContainer">
-                <div class="bg-slate-100 rounded-full h-4 w-full overflow-hidden mb-2"><div id="uploadBar" class="bg-gradient-to-r from-blue-500 to-cyan-400 h-full rounded-full transition-all duration-300" style="width: 0%"></div></div>
-                <p class="text-xs font-bold text-slate-400" id="uploadCount">0%</p>
-            </div>
-            <!-- ÁREA RESULTADO IA -->
-            <div id="aiResultArea" class="hidden mt-4 text-left bg-purple-50 p-4 rounded-xl border border-purple-100 text-xs text-slate-700 max-h-60 overflow-y-auto custom-scroll"></div>
-            <button id="btnCloseUpload" onclick="document.getElementById('csvProgressModal').classList.add('hidden')" class="hidden mt-4 bg-slate-200 hover:bg-slate-300 text-slate-600 px-6 py-2 rounded-lg text-sm font-bold">Cerrar</button>
+            <h3 class="text-xl font-bold text-brand-dark mb-1">Sincronizando Base de Datos</h3>
+            <p class="text-sm text-slate-500 mb-6" id="uploadStatus">Preparando carga masiva...</p>
+            <div class="bg-slate-100 rounded-full h-4 w-full overflow-hidden mb-2"><div id="uploadBar" class="bg-gradient-to-r from-blue-500 to-cyan-400 h-full rounded-full transition-all duration-300" style="width: 0%"></div></div>
+            <p class="text-xs font-bold text-slate-400" id="uploadCount">0%</p>
         </div>
     </div>
 
@@ -589,7 +573,7 @@
             s.forEach(d => l.innerHTML += window.renderUserRow(d.data(), d.id));
         });
 
-        /* --- BLOQUE: DERECHOHABIENTES Y CSV (OPTIMIZADO IA GEMINI) --- */
+        /* --- BLOQUE: DERECHOHABIENTES Y CSV (ACTUALIZADO: PROGRESO VISUAL) --- */
         window.calculateNextDate = () => { const last = document.getElementById('benLastDispense').value; if(last) { const date = new Date(last); date.setDate(date.getDate() + 30); document.getElementById('benNextShipment').value = date.toISOString().split('T')[0]; } };
         window.toggleCCAssign = () => { const p = document.getElementById('benPickup').checked; document.getElementById('benAssignCC').disabled = p; };
         async function loadAssignableLists(phU, ccU){ const phS = document.getElementById('benAssignPharma'), ccS = document.getElementById('benAssignCC'); phS.innerHTML = '<option value="">Farmacia...</option>'; ccS.innerHTML = '<option value="">CC...</option>'; const q = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'users_directory')); q.forEach(d => { const u = d.data(); const opt = `<option value="${u.uid}|${u.name}" ${u.uid==phU||u.uid==ccU?'selected':''}>${u.name}</option>`; if(u.role === 'farmacia') phS.innerHTML += opt; if(u.role === 'contact_center') ccS.innerHTML += opt; }); }
@@ -600,8 +584,6 @@
         window.handleCSVUpload = async (input) => { 
             const file = input.files[0]; if(!file) return;
             const modal = document.getElementById('csvProgressModal');
-            
-            // CORRECCIÓN DE IDs
             const bar = document.getElementById('uploadBar');
             const text = document.getElementById('uploadStatus');
             const count = document.getElementById('uploadCount');
@@ -609,6 +591,7 @@
             modal.classList.remove('hidden');
             text.innerText = "Analizando archivo...";
             
+            // Función Helper para obtener columnas
             const getColValue = (row, possibleNames) => {
                 const keys = Object.keys(row);
                 for (const name of possibleNames) {
@@ -618,10 +601,11 @@
                 return null;
             };
 
+            // Función de procesamiento común para CSV y Excel
             const processData = async (data) => {
                 const total = data.length;
                 let processed = 0;
-                const chunkSize = 300; // AJUSTE DE LOTE A 300
+                const chunkSize = 300; // Batch Seguro
 
                 if (total === 0) {
                     alert("El archivo parece vacío o no se pudo leer.");
@@ -629,6 +613,7 @@
                     return;
                 }
 
+                // Pre-cargar agentes
                 const qAgents = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'users_directory'));
                 const pharmas = [], ccs = [];
                 qAgents.forEach(d => { const u = d.data(); if(u.role === 'farmacia') pharmas.push({uid: u.uid, name: u.name}); if(u.role === 'contact_center') ccs.push({uid: u.uid, name: u.name}); });
@@ -640,8 +625,9 @@
                     chunk.forEach(row => {
                         const id = getColValue(row, ['DNI', 'ID', 'IDENTIDAD', 'CÉDULA']);
                         const name = getColValue(row, ['NOMBRE', 'PACIENTE', 'NAME']);
-                        if(!id) return; 
+                        if(!id) return; // Saltar filas vacías
 
+                        // Datos Opcionales
                         const phone = getColValue(row, ['TELEFONO', 'TEL']) || "";
                         const addr = getColValue(row, ['DIRECCION', 'DIR', 'DOMICILIO']) || "";
                         const famName = getColValue(row, ['FAMILIAR', 'CONTACTO']) || "";
@@ -649,6 +635,7 @@
                         const muni = getColValue(row, ['DESCRIPCION_MUNICIPIO', 'MUNICIPIO']) || "";
                         const type = getColValue(row, ['TIPO_AFILIADO', 'TIPO']) || "Afiliado Directo";
 
+                        // Asignación Automática de Carga
                         let aPharma = { uid: "", name: "Sin asignar" };
                         let aCC = { uid: "", name: "Sin asignar" };
                         
@@ -671,17 +658,23 @@
                         
                         batch.set(doc(db, 'artifacts', appId, 'public', 'data', 'beneficiaries', id.toString().trim()), benData, { merge: true });
                     });
-
-                    await batch.commit();
-                    processed += chunk.length;
-                    const pct = Math.min(Math.round((processed/total)*100), 100);
                     
-                    // ACTUALIZACIÓN VISUAL
-                    bar.style.width = pct + "%";
-                    count.innerText = pct + "%";
-                    text.innerText = `Sincronizando ${processed}/${total}`;
-                    
-                    await new Promise(r => setTimeout(r, 50));
+                    try {
+                        await batch.commit();
+                        processed += chunk.length;
+                        const pct = Math.min(Math.round((processed/total)*100), 100);
+                        
+                        // Actualización Visual
+                        bar.style.width = pct + "%";
+                        count.innerText = pct + "%";
+                        text.innerText = `Sincronizando ${processed}/${total}`;
+                        
+                        await new Promise(r => setTimeout(r, 50));
+                    } catch (e) {
+                        console.error("Error batch:", e);
+                        alert("Error de conexión. Intente nuevamente.");
+                        break;
+                    }
                 }
                 
                 setTimeout(() => { 
@@ -696,14 +689,8 @@
                     header: true, 
                     skipEmptyLines: true, 
                     complete: async (res) => {
-                        try {
-                            await processData(res.data);
-                        } catch (e) {
-                            console.error("ERROR CARGA:", e);
-                            alert("Error en carga: " + e.message);
-                            modal.classList.add('hidden');
-                            input.value = "";
-                        }
+                        try { await processData(res.data); } 
+                        catch (e) { console.error("ERROR CARGA:", e); alert("Error en carga: " + e.message); modal.classList.add('hidden'); input.value = ""; }
                     } 
                 });
             } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
@@ -724,7 +711,7 @@
                 };
                 reader.readAsArrayBuffer(file);
             } else {
-                alert("Formato no soportado. Use CSV o Excel.");
+                alert("Formato no soportado. Use CSV o Excel (.xlsx).");
                 modal.classList.add('hidden');
                 input.value = "";
             }
