@@ -20,7 +20,8 @@
                 extend: {
                     colors: {
                         brand: {
-                            dark: '#003366', teal: '#0e7490', cyan: '#06b6d4', clinical: '#10b981', danger: '#ef4444', light: '#f8fafc'
+                            dark: '#003366', teal: '#0e7490', cyan: '#06b6d4', clinical: '#10b981', danger: '#ef4444', light: '#f8fafc',
+                            purple: '#7c3aed', orange: '#f97316'
                         }
                     }
                 }
@@ -44,6 +45,8 @@
         .dash-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1); }
         .calendar-day { min-height: 110px; transition: all 0.2s; border-radius: 12px; border: 1px solid #e2e8f0; position: relative; }
         .calendar-day:hover { background-color: #f0f9ff; border-color: #06b6d4; }
+        .geo-card { transition: all 0.3s ease; }
+        .geo-card:hover { transform: scale(1.02); border-color: #06b6d4; }
         
         /* Timeline Styles */
         .timeline-step { position: relative; z-index: 1; min-width: 50px; }
@@ -60,11 +63,15 @@
         .collapsed .sidebar-text { opacity: 0; width: 0; display: none; }
         .collapsed .sidebar-header-text { display: none; }
         .collapsed #sidebar-logo { width: 40px; height: 40px; margin-bottom: 10px; }
+        
+        /* Progreso de Carga */
+        .progress-bar-container { background-color: #e2e8f0; border-radius: 9999px; height: 12px; overflow: hidden; }
+        .progress-bar-fill { background: linear-gradient(90deg, #06b6d4, #10b981); height: 100%; width: 0%; transition: width 0.3s ease; }
     </style>
 </head>
 <body class="flex flex-col md:flex-row h-screen overflow-hidden text-slate-700 bg-slate-50">
 
-    <!-- BLOQUE 0: PANTALLA DE BLOQUEO -->
+    <!-- BLOQUE 0: PANTALLA DE BLOQUEO Y RECUPERACIÓN DE SESIÓN -->
     <div id="auth-lock" class="fixed inset-0 z-[200] bg-[#003366] flex flex-col items-center justify-center text-white hidden fade-in">
         <div class="bg-white p-3 rounded-full mb-5 shadow-2xl ring-4 ring-white/10">
             <img src="https://portal.ihss.hn/cronicos/assets/dist/img/Recurso%201.png" class="h-20 w-20 object-contain">
@@ -189,7 +196,7 @@
             </div>
         </div>
 
-        <!-- GESTIÓN DERECHOHABIENTES (VISUALIZACIÓN MEJORADA) -->
+        <!-- GESTIÓN DERECHOHABIENTES -->
         <div id="view-beneficiaries" class="hidden-view flex-1 flex flex-col h-full overflow-hidden fade-in">
             <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center shrink-0">
                 <h1 class="text-2xl font-bold text-brand-dark tracking-tight">Gestión de Derechohabientes</h1>
@@ -367,8 +374,8 @@
 
                     <div class="grid grid-cols-3 gap-5">
                         <div><label class="text-xs font-bold text-slate-400 uppercase ml-1">Tipo de Afiliado</label><select id="benType" class="w-full border p-2.5 rounded-xl bg-white outline-none"><option>Afiliado Directo</option><option>Jubilado</option><option>Pensionado</option><option>Beneficiaria Padre</option><option>Beneficiaria(o) Compañera(o)</option><option>Beneficiaria(o) Esposa(o)</option><option>Beneficiaria Hijo(a)</option></select></div>
-                        <div><label class="text-xs font-bold text-emerald-600 uppercase ml-1">Gestor Farmacia</label><select id="benAssignPharma" class="w-full border p-2.5 rounded-xl bg-white outline-none border-emerald-200 focus:border-emerald-500"><option value="">-- Seleccionar (Solo Admin) --</option></select></div>
-                        <div><label class="text-xs font-bold text-blue-600 uppercase ml-1">Gestor CC</label><select id="benAssignCC" class="w-full border p-2.5 rounded-xl bg-white outline-none border-blue-200 focus:border-blue-500"><option value="">-- Seleccionar (Solo Admin) --</option></select></div>
+                        <div><label class="text-xs font-bold text-emerald-600 uppercase ml-1">Gestor Farmacia</label><select id="benAssignPharma" class="w-full border p-2.5 rounded-xl bg-white outline-none border-emerald-200 focus:border-emerald-500"></select></div>
+                        <div><label class="text-xs font-bold text-blue-600 uppercase ml-1">Gestor CC</label><select id="benAssignCC" class="w-full border p-2.5 rounded-xl bg-white outline-none border-blue-200 focus:border-blue-500"></select></div>
                     </div>
                 </form>
             </div>
@@ -546,9 +553,11 @@
              onSnapshot(doc(db, 'artifacts', appId, 'users', u.uid, 'profile', 'data'), (snap) => {
                  if(snap.exists()) {
                      const data = snap.data();
+                     // VERIFICACIÓN DE SESIÓN (SOLO SI SE ACTIVÓ "REQUIRE IP APPROVAL")
                      if (data.requireIpApproval && data.activeSessionId && data.activeSessionId !== deviceId) {
                          showLockScreen("Sesión iniciada en otro dispositivo.");
-                         signOut(auth); return;
+                         // NO HACER SIGNOUT AUTOMÁTICO PARA EVITAR BUCLE SI LA BD ESTÁ DESINCRONIZADA
+                         return;
                      }
                      if (data.role !== 'admin') showLockScreen("Acceso Denegado.");
                      else document.getElementById('auth-lock').classList.add('hidden');
@@ -670,8 +679,48 @@
         /* --- BLOQUE: DERECHOHABIENTES Y CSV (ACTUALIZADO: PROGRESO VISUAL) --- */
         window.calculateNextDate = () => { const last = document.getElementById('benLastDispense').value; if(last) { const date = new Date(last); date.setDate(date.getDate() + 30); document.getElementById('benNextShipment').value = date.toISOString().split('T')[0]; } };
         window.toggleCCAssign = () => { const p = document.getElementById('benPickup').checked; document.getElementById('benAssignCC').disabled = p; };
-        async function loadAssignableLists(phU, ccU){ const phS = document.getElementById('benAssignPharma'), ccS = document.getElementById('benAssignCC'); phS.innerHTML = '<option value="">Farmacia...</option>'; ccS.innerHTML = '<option value="">CC...</option>'; const q = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'users_directory')); q.forEach(d => { const u = d.data(); const opt = `<option value="${u.uid}|${u.name}" ${u.uid==phU||u.uid==ccU?'selected':''}>${u.name}</option>`; if(u.role === 'farmacia') phS.innerHTML += opt; if(u.role === 'contact_center') ccS.innerHTML += opt; }); }
         
+        async function loadAssignableLists(phU = null, ccU = null) {
+          const phS = document.getElementById('benAssignPharma');
+          const ccS = document.getElementById('benAssignCC');
+        
+          phS.innerHTML = '<option value="">-- Seleccionar Farmacia --</option>';
+          ccS.innerHTML = '<option value="">-- Seleccionar CC --</option>';
+        
+          const snap = await getDocs(
+            collection(db, 'artifacts', appId, 'public', 'data', 'users_directory')
+          );
+        
+          snap.forEach(docSnap => {
+            const u = docSnap.data();
+            const jobs = Array.isArray(u.jobTitle) ? u.jobTitle : [];
+        
+            /** FARMACIA → SOLO REVISIÓN Y ASIGNACIÓN **/
+            if (
+              u.role === 'farmacia' &&
+              jobs.includes('Revisión y Asignación')
+            ) {
+              const opt = document.createElement('option');
+              opt.value = `${u.uid}|${u.name}`;
+              opt.textContent = u.name;
+              if (u.uid === phU) opt.selected = true;
+              phS.appendChild(opt);
+            }
+        
+            /** CONTACT CENTER → SOLO AGENTE **/
+            if (
+              u.role === 'contact_center' &&
+              jobs.includes('Agente Contact Center')
+            ) {
+              const opt = document.createElement('option');
+              opt.value = `${u.uid}|${u.name}`;
+              opt.textContent = u.name;
+              if (u.uid === ccU) opt.selected = true;
+              ccS.appendChild(opt);
+            }
+          });
+        }
+
         window.openBeneficiaryModal = (isEdit = false, benData = null) => { 
             document.getElementById('benForm').reset(); 
             document.getElementById('benModalTitle').innerText = isEdit ? "Editar Derechohabiente" : "Nuevo Derechohabiente"; 
@@ -713,51 +762,8 @@
             } 
             document.getElementById('benModal').classList.remove('hidden'); 
         };
-        
         window.editBeneficiary = (s) => window.openBeneficiaryModal(true, JSON.parse(decodeURIComponent(s)));
-        
-        window.saveBeneficiary = async () => { 
-            const id = document.getElementById('benId').value; 
-            const name = document.getElementById('benName').value; 
-            if(!id || !name) return alert("Faltan datos."); 
-            
-            const valP = document.getElementById('benAssignPharma').value; 
-            const valC = document.getElementById('benAssignCC').value; 
-            const isPickup = document.getElementById('benPickup').checked;
-            const nextDate = document.getElementById('benNextShipment').value;
-            
-            let ph = { uid: "", name: "Sin asignar" }; 
-            let cc = { uid: "", name: "Sin asignar" }; 
-            
-            if(valP) { const [u,n]=valP.split("|"); ph={uid:u, name:n}; } 
-            if(!isPickup && valC) { const [u,n]=valC.split("|"); cc={uid:u, name:n}; } 
-            else if(isPickup) cc={uid:"ventanilla", name:"VENTANILLA"}; 
-            
-            try{ 
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'beneficiaries', id), { 
-                    id, name, 
-                    phone: document.getElementById('benPhone').value, 
-                    address: document.getElementById('benAddr').value, 
-                    municipality: document.getElementById('benMuni').value, 
-                    family: { name: document.getElementById('benFamName').value, phone: document.getElementById('benFamPhone').value }, 
-                    type: document.getElementById('benType').value, 
-                    pickupCounter: isPickup, 
-                    assignedPharma: ph, 
-                    assignedCC: cc, 
-                    nextShipment: nextDate, 
-                    lastDispense: document.getElementById('benLastDispense').value,
-                    updatedAt: new Date().toISOString(),
-                    status: 'Activo'
-                }, {merge:true}); 
-                
-                if(nextDate) { 
-                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shipments', `${id}_${nextDate}`), { date: nextDate, beneficiaryId: id, beneficiaryName: name, status: 'Nuevo', assignedPharma: ph, assignedCC: cc, pickupCounter: isPickup, createdAt: new Date().toISOString() }); 
-                } 
-                alert("Guardado."); 
-                document.getElementById('benModal').classList.add('hidden'); 
-            } catch(e) { alert("Error."); } 
-        };
-        
+        window.saveBeneficiary = async () => { const id = document.getElementById('benId').value; const name = document.getElementById('benName').value; const nextDate = document.getElementById('benNextShipment').value; const isPickup = document.getElementById('benPickup').checked; if(!id || !name) return alert("Faltan datos."); const valP = document.getElementById('benAssignPharma').value; const valC = document.getElementById('benAssignCC').value; let ph = { uid: "", name: "Sin asignar" }; let cc = { uid: "", name: "Sin asignar" }; if(valP) { const [u,n]=valP.split("|"); ph={uid:u, name:n}; } if(!isPickup && valC) { const [u,n]=valC.split("|"); cc={uid:u, name:n}; } else if(isPickup) cc={uid:"ventanilla", name:"VENTANILLA"}; try{ await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'beneficiaries', id), { id, name, phone: document.getElementById('benPhone').value, address: document.getElementById('benAddr').value, municipality: document.getElementById('benMuni').value, family: { name: document.getElementById('benFamName').value, phone: document.getElementById('benFamPhone').value }, type: document.getElementById('benType').value, pickupCounter: isPickup, assignedPharma: ph, assignedCC: cc, nextShipment: nextDate, updatedAt: new Date().toISOString() }, {merge:true}); if(nextDate) { await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shipments', `${id}_${nextDate}`), { date: nextDate, beneficiaryId: id, beneficiaryName: name, status: 'Nuevo', assignedPharma: ph, assignedCC: cc, pickupCounter: isPickup, createdAt: new Date().toISOString() }); } alert("Guardado."); document.getElementById('benModal').classList.add('hidden'); } catch(e) { alert("Error."); } };
         window.handleCSVUpload = async (input) => { 
             const file = input.files[0]; if(!file) return;
             const modal = document.getElementById('csvProgressModal');
@@ -793,7 +799,26 @@
                 // Pre-cargar agentes
                 const qAgents = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'users_directory'));
                 const pharmas = [], ccs = [];
-                qAgents.forEach(d => { const u = d.data(); if(u.role === 'farmacia') pharmas.push({uid: u.uid, name: u.name}); if(u.role === 'contact_center') ccs.push({uid: u.uid, name: u.name}); });
+                
+                qAgents.forEach(d => { 
+                    const u = d.data(); 
+                    // FILTRO DE CARGOS CORREGIDO
+                    if (
+                      u.role === 'farmacia' &&
+                      Array.isArray(u.jobTitle) &&
+                      u.jobTitle.includes('Revisión y Asignación')
+                    ) {
+                      pharmas.push({ uid: u.uid, name: u.name });
+                    }
+                    
+                    if (
+                      u.role === 'contact_center' &&
+                      Array.isArray(u.jobTitle) &&
+                      u.jobTitle.includes('Agente Contact Center')
+                    ) {
+                      ccs.push({ uid: u.uid, name: u.name });
+                    }
+                });
 
                 for (let i = 0; i < total; i += chunkSize) {
                     const chunk = data.slice(i, i + chunkSize);
@@ -894,7 +919,7 @@
             }
         };
 
-        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries'), (s) => { const l = document.getElementById('ben-list'); if(!l) return; l.innerHTML = ''; s.forEach(d => { const b=d.data(); const j = encodeURIComponent(JSON.stringify(b)); l.innerHTML += `<tr class="hover:bg-slate-50 border-b"><td class="p-4 pl-6"><div class="font-bold text-slate-700">${b.name}</div><div class="text-[10px] text-slate-400 font-mono">${b.id}</div><span class="bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase mt-1 inline-block">${b.type || 'Afiliado'}</span></td><td class="p-4 text-xs font-medium text-slate-600"><i class="fa-solid fa-map-pin text-brand-cyan mr-1"></i>${b.municipality || 'Sin Registro'}</td><td class="p-4 text-xs font-bold text-center ${b.pickupCounter?'text-orange-600':'text-emerald-600'}">${b.pickupCounter?'Ventanilla':'Domicilio'}</td><td class="p-4 text-[10px] font-bold text-slate-400">P: ${b.assignedPharma?.name||'?'}<br>CC: ${b.assignedCC?.name||'?'}</td><td class="p-4 text-right"><div class="flex justify-end gap-2"><button onclick="openHistory('${b.id}','${b.name}')" class="text-slate-400 hover:text-blue-500"><i class="fa-solid fa-history"></i></button><button onclick="window.openGeoAssign('${b.id}', '${b.name}')" class="text-orange-500 hover:text-orange-700" title="Mapa"><i class="fa-solid fa-map-location-dot"></i></button><button onclick="editBeneficiary('${j}')" class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-pen"></i></button></div></td></tr>`; }); });
+        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries'), (s) => { const l = document.getElementById('ben-list'); if(!l) return; l.innerHTML = ''; s.forEach(d => { const b=d.data(); const j = encodeURIComponent(JSON.stringify(b)); l.innerHTML += `<tr class="hover:bg-slate-50 border-b"><td class="p-4 pl-6 font-bold">${b.name}<br><span class="text-[10px] text-slate-400 font-mono">${b.id}</span></td><td class="p-4 text-xs font-bold ${b.pickupCounter?'text-orange-500':'text-emerald-500'}">${b.pickupCounter?'Ventanilla':'Ruta'}</td><td class="p-4 text-xs">${b.municipality || 'S/D'}</td><td class="p-4 text-[10px] font-bold text-slate-400">P: ${b.assignedPharma?.name||'?'}<br>CC: ${b.assignedCC?.name||'?'}</td><td class="p-4 text-right"><div class="flex justify-end gap-2"><button onclick="openHistory('${b.id}','${b.name}')" class="text-slate-400 hover:text-blue-500"><i class="fa-solid fa-history"></i></button><button onclick="window.openGeoAssign('${b.id}', '${b.name}')" class="text-orange-500 hover:text-orange-700" title="Mapa"><i class="fa-solid fa-map-location-dot"></i></button><button onclick="editBeneficiary('${j}')" class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-pen"></i></button></div></td></tr>`; }); });
 
         /* --- BLOQUE: LOGÍSTICA --- */
         window.openYear = (y) => { currentYear=y; document.getElementById('ship-years').classList.add('hidden'); document.getElementById('ship-months').classList.remove('hidden'); const c = document.getElementById('ship-months'); c.innerHTML = ''; monthNames.forEach((m, i) => { c.innerHTML += `<div onclick="openMonth(${i})" class="bg-white p-6 rounded-2xl shadow-sm border hover:border-brand-cyan cursor-pointer text-center font-bold text-slate-700 transition-all">${m}</div>`; }); window.updateBreadcrumb(); };
