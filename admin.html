@@ -20,8 +20,7 @@
                 extend: {
                     colors: {
                         brand: {
-                            dark: '#003366', teal: '#0e7490', cyan: '#06b6d4', clinical: '#10b981', danger: '#ef4444', light: '#f8fafc',
-                            purple: '#7c3aed', orange: '#f97316'
+                            dark: '#003366', teal: '#0e7490', cyan: '#06b6d4', clinical: '#10b981', danger: '#ef4444', light: '#f8fafc'
                         }
                     }
                 }
@@ -181,7 +180,9 @@
             <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center shrink-0">
                 <h1 class="text-2xl font-bold text-brand-dark">Directorio de Personal</h1>
                 <div class="flex gap-2">
-                    <button onclick="balanceWorkload()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-200 px-4 py-2 rounded-xl font-bold text-xs shadow-sm transition-all">⚖️ Equilibrar Cargas</button>
+                    <button onclick="balanceWorkload()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-200 px-4 py-2 rounded-xl font-bold text-xs shadow-sm transition-all flex items-center">
+                        <i class="fa-solid fa-scale-balanced mr-2"></i> Equilibrar Cargas
+                    </button>
                     <button onclick="openUserModal()" class="bg-brand-dark hover:bg-brand-cyan text-white px-6 py-2.5 rounded-xl font-bold shadow-lg transition-all flex items-center text-sm"><i class="fa-solid fa-user-plus mr-2"></i> Nuevo Usuario</button>
                 </div>
             </header>
@@ -553,11 +554,9 @@
              onSnapshot(doc(db, 'artifacts', appId, 'users', u.uid, 'profile', 'data'), (snap) => {
                  if(snap.exists()) {
                      const data = snap.data();
-                     // VERIFICACIÓN DE SESIÓN (SOLO SI SE ACTIVÓ "REQUIRE IP APPROVAL")
                      if (data.requireIpApproval && data.activeSessionId && data.activeSessionId !== deviceId) {
                          showLockScreen("Sesión iniciada en otro dispositivo.");
-                         // NO HACER SIGNOUT AUTOMÁTICO PARA EVITAR BUCLE SI LA BD ESTÁ DESINCRONIZADA
-                         return;
+                         signOut(auth); return;
                      }
                      if (data.role !== 'admin') showLockScreen("Acceso Denegado.");
                      else document.getElementById('auth-lock').classList.add('hidden');
@@ -675,6 +674,17 @@
             const l = document.getElementById('user-list'); if(!l) return; l.innerHTML = '';
             s.forEach(d => l.innerHTML += window.renderUserRow(d.data(), d.id));
         });
+
+        /* --- BLOQUE: ROUND ROBIN HELPER --- */
+        function getNextAssignee(type, users) {
+            if (!users.length) return null;
+            const key = `last_${type}_index`;
+            let index = parseInt(localStorage.getItem(key) || '0');
+            const selected = users[index % users.length];
+            index = (index + 1) % users.length;
+            localStorage.setItem(key, index);
+            return selected;
+        }
 
         /* --- BLOQUE: DERECHOHABIENTES Y CSV (ACTUALIZADO: PROGRESO VISUAL) --- */
         window.calculateNextDate = () => { const last = document.getElementById('benLastDispense').value; if(last) { const date = new Date(last); date.setDate(date.getDate() + 30); document.getElementById('benNextShipment').value = date.toISOString().split('T')[0]; } };
@@ -802,7 +812,6 @@
                 
                 qAgents.forEach(d => { 
                     const u = d.data(); 
-                    // FILTRO DE CARGOS CORREGIDO
                     if (
                       u.role === 'farmacia' &&
                       Array.isArray(u.jobTitle) &&
@@ -841,8 +850,15 @@
                         let aPharma = { uid: "", name: "Sin asignar" };
                         let aCC = { uid: "", name: "Sin asignar" };
                         
-                        if (pharmas.length > 0) { const p = pharmas[Math.floor(Math.random() * pharmas.length)]; aPharma = { uid: p.uid, name: p.name }; }
-                        if (ccs.length > 0) { const c = ccs[Math.floor(Math.random() * ccs.length)]; aCC = { uid: c.uid, name: c.name }; }
+                        const nextPharma = getNextAssignee('pharma', pharmas);
+                        if (nextPharma) {
+                            aPharma = { uid: nextPharma.uid, name: nextPharma.name };
+                        }
+
+                        const nextCC = getNextAssignee('cc', ccs);
+                        if (nextCC) {
+                            aCC = { uid: nextCC.uid, name: nextCC.name };
+                        }
 
                         const benData = { 
                             id: id.toString().trim(), 
@@ -918,8 +934,57 @@
                 input.value = "";
             }
         };
+        
+        window.balanceWorkload = async () => {
+            if(!confirm("¿Reasignar cargas de trabajo equitativamente a todos los pacientes activos?")) return;
 
-        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries'), (s) => { const l = document.getElementById('ben-list'); if(!l) return; l.innerHTML = ''; s.forEach(d => { const b=d.data(); const j = encodeURIComponent(JSON.stringify(b)); l.innerHTML += `<tr class="hover:bg-slate-50 border-b"><td class="p-4 pl-6 font-bold">${b.name}<br><span class="text-[10px] text-slate-400 font-mono">${b.id}</span></td><td class="p-4 text-xs font-bold ${b.pickupCounter?'text-orange-500':'text-emerald-500'}">${b.pickupCounter?'Ventanilla':'Ruta'}</td><td class="p-4 text-xs">${b.municipality || 'S/D'}</td><td class="p-4 text-[10px] font-bold text-slate-400">P: ${b.assignedPharma?.name||'?'}<br>CC: ${b.assignedCC?.name||'?'}</td><td class="p-4 text-right"><div class="flex justify-end gap-2"><button onclick="openHistory('${b.id}','${b.name}')" class="text-slate-400 hover:text-blue-500"><i class="fa-solid fa-history"></i></button><button onclick="window.openGeoAssign('${b.id}', '${b.name}')" class="text-orange-500 hover:text-orange-700" title="Mapa"><i class="fa-solid fa-map-location-dot"></i></button><button onclick="editBeneficiary('${j}')" class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-pen"></i></button></div></td></tr>`; }); });
+            // 1. Get Agents
+            const qAgents = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'users_directory'));
+            const pharmas = [], ccs = [];
+            qAgents.forEach(d => {
+                const u = d.data();
+                if (u.role === 'farmacia' && Array.isArray(u.jobTitle) && u.jobTitle.includes('Revisión y Asignación')) {
+                    pharmas.push({ uid: u.uid, name: u.name });
+                }
+                if (u.role === 'contact_center' && Array.isArray(u.jobTitle) && u.jobTitle.includes('Agente Contact Center')) {
+                    ccs.push({ uid: u.uid, name: u.name });
+                }
+            });
+
+            if(pharmas.length === 0 && ccs.length === 0) return alert("No hay agentes disponibles.");
+
+            // 2. Get Beneficiaries
+            // Ideally processing in batches if too many, but for now getting all active ones.
+            const qBen = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries'));
+            const batch = writeBatch(db);
+            let count = 0;
+
+            qBen.forEach(docSnap => {
+                const ben = docSnap.data();
+                const benRef = doc(db, 'artifacts', appId, 'public', 'data', 'beneficiaries', docSnap.id);
+                let updates = {};
+
+                // Reassign Pharma
+                const nextPharma = getNextAssignee('pharma', pharmas);
+                if (nextPharma) updates.assignedPharma = { uid: nextPharma.uid, name: nextPharma.name };
+
+                // Reassign CC (only if not pickup)
+                if (!ben.pickupCounter) {
+                     const nextCC = getNextAssignee('cc', ccs);
+                     if (nextCC) updates.assignedCC = { uid: nextCC.uid, name: nextCC.name };
+                }
+
+                if(Object.keys(updates).length > 0) {
+                    batch.update(benRef, updates);
+                    count++;
+                }
+            });
+
+            await batch.commit();
+            alert(`Cargas equilibradas para ${count} pacientes.`);
+        };
+
+        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries'), (s) => { const l = document.getElementById('ben-list'); if(!l) return; l.innerHTML = ''; s.forEach(d => { const b=d.data(); const j = encodeURIComponent(JSON.stringify(b)); l.innerHTML += `<tr class="hover:bg-slate-50 border-b"><td class="p-4 pl-6 font-bold">${b.name}<br><span class="text-[10px] text-slate-400 font-mono">${b.id}</span></td><td class="p-4 text-xs font-medium text-slate-600"><i class="fa-solid fa-map-pin text-brand-cyan mr-1"></i>${b.municipality || 'Sin Registro'}</td><td class="p-4 text-xs font-bold text-center ${b.pickupCounter?'text-orange-600':'text-emerald-600'}">${b.pickupCounter?'Ventanilla':'Domicilio'}</td><td class="p-4 text-[10px] font-bold text-slate-400">P: ${b.assignedPharma?.name||'?'}<br>CC: ${b.assignedCC?.name||'?'}</td><td class="p-4 text-right"><div class="flex justify-end gap-2"><button onclick="openHistory('${b.id}','${b.name}')" class="text-slate-400 hover:text-blue-500"><i class="fa-solid fa-history"></i></button><button onclick="window.openGeoAssign('${b.id}', '${b.name}')" class="text-orange-500 hover:text-orange-700" title="Mapa"><i class="fa-solid fa-map-location-dot"></i></button><button onclick="editBeneficiary('${j}')" class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-pen"></i></button></div></td></tr>`; }); });
 
         /* --- BLOQUE: LOGÍSTICA --- */
         window.openYear = (y) => { currentYear=y; document.getElementById('ship-years').classList.add('hidden'); document.getElementById('ship-months').classList.remove('hidden'); const c = document.getElementById('ship-months'); c.innerHTML = ''; monthNames.forEach((m, i) => { c.innerHTML += `<div onclick="openMonth(${i})" class="bg-white p-6 rounded-2xl shadow-sm border hover:border-brand-cyan cursor-pointer text-center font-bold text-slate-700 transition-all">${m}</div>`; }); window.updateBreadcrumb(); };
