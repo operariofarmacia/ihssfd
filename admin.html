@@ -20,7 +20,8 @@
                 extend: {
                     colors: {
                         brand: {
-                            dark: '#003366', teal: '#0e7490', cyan: '#06b6d4', clinical: '#10b981', danger: '#ef4444', light: '#f8fafc'
+                            dark: '#003366', teal: '#0e7490', cyan: '#06b6d4', clinical: '#10b981', danger: '#ef4444', light: '#f8fafc',
+                            purple: '#7c3aed', orange: '#f97316'
                         }
                     }
                 }
@@ -31,30 +32,29 @@
     <style>
         body { font-family: 'Poppins', sans-serif; background-color: #f8fafc; }
         .fade-in { animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
-        .modal-backdrop { background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
-        .toggle-checkbox:checked { right: 0; border-color: #10b981; }
-        .toggle-checkbox:checked + .toggle-label { background-color: #10b981; }
-        .job-check { accent-color: #06b6d4; width: 16px; height: 16px; cursor: pointer; }
-        select { -webkit-appearance: none; -moz-appearance: none; appearance: none; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .modal-backdrop { background-color: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); }
         .custom-scroll::-webkit-scrollbar { width: 6px; }
         .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .hidden-view { display: none !important; }
-        .dash-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1); }
+        
+        /* Dashboard Menu Cards */
+        .menu-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid transparent; }
+        .menu-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); border-color: #e2e8f0; }
+
+        /* Calendar Styles */
         .calendar-day { min-height: 110px; transition: all 0.2s; border-radius: 12px; border: 1px solid #e2e8f0; position: relative; }
         .calendar-day:hover { background-color: #f0f9ff; border-color: #06b6d4; }
         .geo-card { transition: all 0.3s ease; }
         .geo-card:hover { transform: scale(1.02); border-color: #06b6d4; }
         
-        /* Timeline Styles */
+        /* Timeline */
         .timeline-step { position: relative; z-index: 1; min-width: 50px; }
         .timeline-step::before { content: ''; position: absolute; top: 9px; left: -50%; width: 100%; height: 2px; background: #e2e8f0; z-index: -1; }
         .timeline-step:first-child::before { display: none; }
         .timeline-active .step-dot { background-color: #10b981; color: white; border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); }
         .timeline-active::before { background: #10b981; }
-        .tab-btn.active { border-bottom: 3px solid #003366; color: #003366; font-weight: 700; background-color: #f1f5f9; }
-        .tab-btn { color: #64748b; transition: all 0.2s; }
         
         /* Sidebar Transition */
         #sidebar { transition: width 0.3s ease-in-out; }
@@ -63,14 +63,14 @@
         .collapsed .sidebar-header-text { display: none; }
         .collapsed #sidebar-logo { width: 40px; height: 40px; margin-bottom: 10px; }
         
-        /* Progreso de Carga */
+        /* Progress Bar */
         .progress-bar-container { background-color: #e2e8f0; border-radius: 9999px; height: 12px; overflow: hidden; }
         .progress-bar-fill { background: linear-gradient(90deg, #06b6d4, #10b981); height: 100%; width: 0%; transition: width 0.3s ease; }
     </style>
 </head>
 <body class="flex flex-col md:flex-row h-screen overflow-hidden text-slate-700 bg-slate-50">
 
-    <!-- BLOQUE 0: PANTALLA DE BLOQUEO Y RECUPERACIÓN DE SESIÓN -->
+    <!-- BLOQUE 0: PANTALLA DE BLOQUEO -->
     <div id="auth-lock" class="fixed inset-0 z-[200] bg-[#003366] flex flex-col items-center justify-center text-white hidden fade-in">
         <div class="bg-white p-3 rounded-full mb-5 shadow-2xl ring-4 ring-white/10">
             <img src="https://portal.ihss.hn/cronicos/assets/dist/img/Recurso%201.png" class="h-20 w-20 object-contain">
@@ -84,7 +84,6 @@
 
     <!-- BLOQUE 1: SIDEBAR (CONTRÁCTIL) -->
     <aside id="sidebar" class="w-72 bg-brand-dark text-white flex flex-col shadow-2xl z-20 shrink-0 relative transition-all duration-300">
-        <!-- Botón Toggle -->
         <button onclick="toggleSidebar()" class="absolute -right-3 top-8 bg-brand-cyan text-white w-6 h-6 rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition z-50 border border-white">
             <i class="fa-solid fa-chevron-left text-[10px]" id="sidebar-toggle-icon"></i>
         </button>
@@ -143,34 +142,76 @@
     <!-- BLOQUE 2: CONTENIDO PRINCIPAL -->
     <main class="flex-1 overflow-hidden flex flex-col bg-slate-50 relative">
         
-        <!-- DASHBOARD -->
-        <div id="view-dashboard" class="flex-1 flex flex-col h-full overflow-hidden fade-in">
-            <header class="bg-white shadow-sm border-b border-slate-200 p-8 shrink-0">
-                <h1 class="text-3xl font-bold text-brand-dark mb-1 tracking-tight">Panel de Control</h1>
-                <p class="text-slate-500 text-sm">Gestión integral del sistema de dispensación IHSS.</p>
+        <!-- DASHBOARD (VISTA DE PUENTE/MENÚ) -->
+        <div id="view-dashboard" class="flex-1 flex flex-col h-full overflow-hidden fade-in bg-slate-50">
+            <header class="p-8 pb-0 text-center">
+                <h1 class="text-3xl font-bold text-brand-dark mb-2">Panel Administrativo</h1>
+                <p class="text-slate-500">Seleccione un módulo de gestión para comenzar.</p>
             </header>
-            <div class="flex-1 overflow-y-auto p-8 custom-scroll">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div onclick="switchView('users')" class="dash-card bg-white rounded-3xl p-8 border border-slate-100 shadow-sm cursor-pointer group">
-                        <div class="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-user-shield"></i></div>
-                        <h3 class="font-bold text-slate-700 text-lg">Personal</h3>
-                        <p class="text-xs text-slate-400">Directorio y seguridad de acceso</p>
+            
+            <div class="flex-1 overflow-y-auto p-8 custom-scroll flex items-center justify-center">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 max-w-7xl w-full">
+                    
+                    <!-- Tarjeta Personal -->
+                    <div onclick="switchView('users')" class="menu-card bg-white p-8 rounded-3xl shadow-sm cursor-pointer group flex flex-col justify-between h-64 border border-blue-100 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-150 opacity-50 z-0"></div>
+                        <div class="relative z-10">
+                            <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-3xl mb-6 shadow-sm group-hover:rotate-12 transition-transform duration-300">
+                                <i class="fa-solid fa-users-gear"></i>
+                            </div>
+                            <h3 class="font-bold text-slate-800 text-xl group-hover:text-blue-600 transition-colors">Personal</h3>
+                            <p class="text-sm text-slate-400 mt-2 leading-relaxed">Directorio, roles y permisos de acceso.</p>
+                        </div>
+                        <div class="relative z-10 mt-4 pt-4 border-t border-slate-50 flex items-center text-xs font-bold text-blue-600 opacity-60 group-hover:opacity-100 transition-opacity">
+                            ACCEDER <i class="fa-solid fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+                        </div>
                     </div>
-                    <div onclick="switchView('beneficiaries')" class="dash-card bg-white rounded-3xl p-8 border border-slate-100 shadow-sm cursor-pointer group">
-                        <div class="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-hospital-user"></i></div>
-                        <h3 class="font-bold text-slate-700 text-lg">Pacientes</h3>
-                        <p class="text-xs text-slate-400">Expedientes y asignaciones</p>
+
+                    <!-- Tarjeta Pacientes -->
+                    <div onclick="switchView('beneficiaries')" class="menu-card bg-white p-8 rounded-3xl shadow-sm cursor-pointer group flex flex-col justify-between h-64 border border-emerald-100 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-150 opacity-50 z-0"></div>
+                        <div class="relative z-10">
+                            <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-3xl mb-6 shadow-sm group-hover:rotate-12 transition-transform duration-300">
+                                <i class="fa-solid fa-hospital-user"></i>
+                            </div>
+                            <h3 class="font-bold text-slate-800 text-xl group-hover:text-emerald-600 transition-colors">Pacientes</h3>
+                            <p class="text-sm text-slate-400 mt-2 leading-relaxed">Expedientes y carga masiva de derechohabientes.</p>
+                        </div>
+                        <div class="relative z-10 mt-4 pt-4 border-t border-slate-50 flex items-center text-xs font-bold text-emerald-600 opacity-60 group-hover:opacity-100 transition-opacity">
+                            ACCEDER <i class="fa-solid fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+                        </div>
                     </div>
-                    <div onclick="switchView('geographic')" class="dash-card bg-white rounded-3xl p-8 border border-slate-100 shadow-sm cursor-pointer group">
-                        <div class="w-16 h-16 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-map-location-dot"></i></div>
-                        <h3 class="font-bold text-slate-700 text-lg">Geografía</h3>
-                        <p class="text-xs text-slate-400">Zonas y Cobertura</p>
+
+                    <!-- Tarjeta Geografía -->
+                    <div onclick="switchView('geographic')" class="menu-card bg-white p-8 rounded-3xl shadow-sm cursor-pointer group flex flex-col justify-between h-64 border border-orange-100 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-orange-50 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-150 opacity-50 z-0"></div>
+                        <div class="relative z-10">
+                            <div class="w-16 h-16 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center text-3xl mb-6 shadow-sm group-hover:rotate-12 transition-transform duration-300">
+                                <i class="fa-solid fa-map-location-dot"></i>
+                            </div>
+                            <h3 class="font-bold text-slate-800 text-xl group-hover:text-orange-600 transition-colors">Geografía</h3>
+                            <p class="text-sm text-slate-400 mt-2 leading-relaxed">Zonas de cobertura y distribución.</p>
+                        </div>
+                        <div class="relative z-10 mt-4 pt-4 border-t border-slate-50 flex items-center text-xs font-bold text-orange-600 opacity-60 group-hover:opacity-100 transition-opacity">
+                            ACCEDER <i class="fa-solid fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+                        </div>
                     </div>
-                    <div onclick="switchView('shipments')" class="dash-card bg-white rounded-3xl p-8 border border-slate-100 shadow-sm cursor-pointer group">
-                        <div class="w-16 h-16 rounded-2xl bg-cyan-50 text-brand-cyan flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-truck-fast"></i></div>
-                        <h3 class="font-bold text-slate-700 text-lg">Logística</h3>
-                        <p class="text-xs text-slate-400">Monitoreo de rutas</p>
+
+                    <!-- Tarjeta Logística -->
+                    <div onclick="switchView('shipments')" class="menu-card bg-white p-8 rounded-3xl shadow-sm cursor-pointer group flex flex-col justify-between h-64 border border-cyan-100 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-cyan-50 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-150 opacity-50 z-0"></div>
+                        <div class="relative z-10">
+                            <div class="w-16 h-16 bg-cyan-50 text-brand-cyan rounded-2xl flex items-center justify-center text-3xl mb-6 shadow-sm group-hover:rotate-12 transition-transform duration-300">
+                                <i class="fa-solid fa-truck-fast"></i>
+                            </div>
+                            <h3 class="font-bold text-slate-800 text-xl group-hover:text-brand-cyan transition-colors">Logística</h3>
+                            <p class="text-sm text-slate-400 mt-2 leading-relaxed">Calendario de envíos y monitoreo de rutas.</p>
+                        </div>
+                        <div class="relative z-10 mt-4 pt-4 border-t border-slate-50 flex items-center text-xs font-bold text-brand-cyan opacity-60 group-hover:opacity-100 transition-opacity">
+                            ACCEDER <i class="fa-solid fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+                        </div>
                     </div>
+                    
                 </div>
             </div>
         </div>
@@ -180,9 +221,7 @@
             <header class="bg-white shadow-sm border-b border-slate-200 p-6 flex justify-between items-center shrink-0">
                 <h1 class="text-2xl font-bold text-brand-dark">Directorio de Personal</h1>
                 <div class="flex gap-2">
-                    <button onclick="balanceWorkload()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-200 px-4 py-2 rounded-xl font-bold text-xs shadow-sm transition-all flex items-center">
-                        <i class="fa-solid fa-scale-balanced mr-2"></i> Equilibrar Cargas
-                    </button>
+                    <button onclick="balanceWorkload()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-200 px-4 py-2 rounded-xl font-bold text-xs shadow-sm transition-all">⚖️ Equilibrar Cargas</button>
                     <button onclick="openUserModal()" class="bg-brand-dark hover:bg-brand-cyan text-white px-6 py-2.5 rounded-xl font-bold shadow-lg transition-all flex items-center text-sm"><i class="fa-solid fa-user-plus mr-2"></i> Nuevo Usuario</button>
                 </div>
             </header>
@@ -209,7 +248,7 @@
             </header>
             <div class="flex-1 overflow-y-auto p-6 md:p-8 custom-scroll">
                  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead class="bg-slate-50 text-[11px] uppercase text-slate-500 font-semibold tracking-wider"><tr><th class="p-5 pl-6">Paciente (Identidad / Tipo)</th><th class="p-5">Ubicación (Municipio)</th><th class="p-5">Zona Asignada</th><th class="p-5">Gestores</th><th class="p-5 text-right">Acciones</th></tr></thead><tbody id="ben-list" class="divide-y divide-slate-100 text-sm text-slate-600"></tbody></table></div>
+                    <div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead class="bg-slate-50 text-[11px] uppercase text-slate-500 font-semibold tracking-wider"><tr><th class="p-5 pl-6">Identidad / Prioridad</th><th class="p-5">Tipo</th><th class="p-5">Ubicación</th><th class="p-5">Gestores</th><th class="p-5 text-right">Acciones</th></tr></thead><tbody id="ben-list" class="divide-y divide-slate-100 text-sm text-slate-600"></tbody></table></div>
                 </div>
             </div>
         </div>
@@ -262,7 +301,7 @@
         </div>
     </main>
 
-    <!-- BLOQUE 3: MODALES Y FORMULARIOS -->
+    <!-- BLOQUE 3: MODALES Y FORMULARIOS (Mismos que la versión anterior, asegurando la carga CSV) -->
     
     <!-- MODAL CSV PROGRESS (INTERACTIVO Y RÁPIDO) -->
     <div id="csvProgressModal" class="fixed inset-0 modal-backdrop hidden z-[200] flex items-center justify-center p-4 fade-in">
@@ -375,31 +414,14 @@
 
                     <div class="grid grid-cols-3 gap-5">
                         <div><label class="text-xs font-bold text-slate-400 uppercase ml-1">Tipo de Afiliado</label><select id="benType" class="w-full border p-2.5 rounded-xl bg-white outline-none"><option>Afiliado Directo</option><option>Jubilado</option><option>Pensionado</option><option>Beneficiaria Padre</option><option>Beneficiaria(o) Compañera(o)</option><option>Beneficiaria(o) Esposa(o)</option><option>Beneficiaria Hijo(a)</option></select></div>
-                        <div><label class="text-xs font-bold text-emerald-600 uppercase ml-1">Gestor Farmacia</label><select id="benAssignPharma" class="w-full border p-2.5 rounded-xl bg-white outline-none border-emerald-200 focus:border-emerald-500"></select></div>
-                        <div><label class="text-xs font-bold text-blue-600 uppercase ml-1">Gestor CC</label><select id="benAssignCC" class="w-full border p-2.5 rounded-xl bg-white outline-none border-blue-200 focus:border-blue-500"></select></div>
+                        <div><label class="text-xs font-bold text-emerald-600 uppercase ml-1">Gestor Farmacia</label><select id="benAssignPharma" class="w-full border p-2.5 rounded-xl bg-white outline-none border-emerald-200 focus:border-emerald-500"><option value="">-- Seleccionar (Solo Admin) --</option></select></div>
+                        <div><label class="text-xs font-bold text-blue-600 uppercase ml-1">Gestor CC</label><select id="benAssignCC" class="w-full border p-2.5 rounded-xl bg-white outline-none border-blue-200 focus:border-blue-500"><option value="">-- Seleccionar (Solo Admin) --</option></select></div>
                     </div>
                 </form>
             </div>
             <div class="p-5 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 shrink-0">
                 <button type="button" onclick="document.getElementById('benModal').classList.add('hidden')" class="px-5 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-700">Cancelar</button>
                 <button type="button" onclick="saveBeneficiary()" id="btnSaveBen" class="bg-brand-dark hover:bg-brand-cyan text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg">Guardar</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- MODAL DE ASIGNACIÓN GEOGRÁFICA RÁPIDA -->
-    <div id="geoAssignModal" class="fixed inset-0 modal-backdrop hidden z-[120] flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl w-full max-w-sm shadow-xl border border-slate-100 p-6">
-            <h3 class="text-lg font-bold text-slate-700 mb-2">Asignar Zona</h3>
-            <p class="text-xs text-slate-400 mb-4" id="geoAssignBenName">...</p>
-            <input type="hidden" id="geoAssignBenId">
-            <select id="geoAssignSelect" class="w-full border p-2 rounded-xl mb-4 bg-slate-50 text-sm outline-none focus:border-brand-cyan">
-                <option value="" disabled selected>Seleccione Zona...</option>
-                <!-- Se llenará dinámicamente -->
-            </select>
-            <div class="flex justify-end gap-2">
-                <button onclick="document.getElementById('geoAssignModal').classList.add('hidden')" class="px-4 py-2 text-xs font-bold text-slate-500">Cancelar</button>
-                <button onclick="saveGeoAssignment()" class="bg-brand-cyan text-white px-4 py-2 rounded-lg text-xs font-bold shadow-lg">Guardar</button>
             </div>
         </div>
     </div>
@@ -675,62 +697,10 @@
             s.forEach(d => l.innerHTML += window.renderUserRow(d.data(), d.id));
         });
 
-        /* --- BLOQUE: ROUND ROBIN HELPER --- */
-        function getNextAssignee(type, users) {
-            if (!users.length) return null;
-            const key = `last_${type}_index`;
-            let index = parseInt(localStorage.getItem(key) || '0');
-            const selected = users[index % users.length];
-            index = (index + 1) % users.length;
-            localStorage.setItem(key, index);
-            return selected;
-        }
-
         /* --- BLOQUE: DERECHOHABIENTES Y CSV (ACTUALIZADO: PROGRESO VISUAL) --- */
         window.calculateNextDate = () => { const last = document.getElementById('benLastDispense').value; if(last) { const date = new Date(last); date.setDate(date.getDate() + 30); document.getElementById('benNextShipment').value = date.toISOString().split('T')[0]; } };
         window.toggleCCAssign = () => { const p = document.getElementById('benPickup').checked; document.getElementById('benAssignCC').disabled = p; };
-        
-        async function loadAssignableLists(phU = null, ccU = null) {
-          const phS = document.getElementById('benAssignPharma');
-          const ccS = document.getElementById('benAssignCC');
-        
-          phS.innerHTML = '<option value="">-- Seleccionar Farmacia --</option>';
-          ccS.innerHTML = '<option value="">-- Seleccionar CC --</option>';
-        
-          const snap = await getDocs(
-            collection(db, 'artifacts', appId, 'public', 'data', 'users_directory')
-          );
-        
-          snap.forEach(docSnap => {
-            const u = docSnap.data();
-            const jobs = Array.isArray(u.jobTitle) ? u.jobTitle : [];
-        
-            /** FARMACIA → SOLO REVISIÓN Y ASIGNACIÓN **/
-            if (
-              u.role === 'farmacia' &&
-              jobs.includes('Revisión y Asignación')
-            ) {
-              const opt = document.createElement('option');
-              opt.value = `${u.uid}|${u.name}`;
-              opt.textContent = u.name;
-              if (u.uid === phU) opt.selected = true;
-              phS.appendChild(opt);
-            }
-        
-            /** CONTACT CENTER → SOLO AGENTE **/
-            if (
-              u.role === 'contact_center' &&
-              jobs.includes('Agente Contact Center')
-            ) {
-              const opt = document.createElement('option');
-              opt.value = `${u.uid}|${u.name}`;
-              opt.textContent = u.name;
-              if (u.uid === ccU) opt.selected = true;
-              ccS.appendChild(opt);
-            }
-          });
-        }
-
+        async function loadAssignableLists(phU, ccU){ const phS = document.getElementById('benAssignPharma'), ccS = document.getElementById('benAssignCC'); phS.innerHTML = '<option value="">Farmacia...</option>'; ccS.innerHTML = '<option value="">CC...</option>'; const q = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'users_directory')); q.forEach(d => { const u = d.data(); const opt = `<option value="${u.uid}|${u.name}" ${u.uid==phU||u.uid==ccU?'selected':''}>${u.name}</option>`; if(u.role === 'farmacia') phS.innerHTML += opt; if(u.role === 'contact_center') ccS.innerHTML += opt; }); }
         window.openBeneficiaryModal = (isEdit = false, benData = null) => { 
             document.getElementById('benForm').reset(); 
             document.getElementById('benModalTitle').innerText = isEdit ? "Editar Derechohabiente" : "Nuevo Derechohabiente"; 
@@ -774,6 +744,7 @@
         };
         window.editBeneficiary = (s) => window.openBeneficiaryModal(true, JSON.parse(decodeURIComponent(s)));
         window.saveBeneficiary = async () => { const id = document.getElementById('benId').value; const name = document.getElementById('benName').value; const nextDate = document.getElementById('benNextShipment').value; const isPickup = document.getElementById('benPickup').checked; if(!id || !name) return alert("Faltan datos."); const valP = document.getElementById('benAssignPharma').value; const valC = document.getElementById('benAssignCC').value; let ph = { uid: "", name: "Sin asignar" }; let cc = { uid: "", name: "Sin asignar" }; if(valP) { const [u,n]=valP.split("|"); ph={uid:u, name:n}; } if(!isPickup && valC) { const [u,n]=valC.split("|"); cc={uid:u, name:n}; } else if(isPickup) cc={uid:"ventanilla", name:"VENTANILLA"}; try{ await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'beneficiaries', id), { id, name, phone: document.getElementById('benPhone').value, address: document.getElementById('benAddr').value, municipality: document.getElementById('benMuni').value, family: { name: document.getElementById('benFamName').value, phone: document.getElementById('benFamPhone').value }, type: document.getElementById('benType').value, pickupCounter: isPickup, assignedPharma: ph, assignedCC: cc, nextShipment: nextDate, updatedAt: new Date().toISOString() }, {merge:true}); if(nextDate) { await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shipments', `${id}_${nextDate}`), { date: nextDate, beneficiaryId: id, beneficiaryName: name, status: 'Nuevo', assignedPharma: ph, assignedCC: cc, pickupCounter: isPickup, createdAt: new Date().toISOString() }); } alert("Guardado."); document.getElementById('benModal').classList.add('hidden'); } catch(e) { alert("Error."); } };
+        
         window.handleCSVUpload = async (input) => { 
             const file = input.files[0]; if(!file) return;
             const modal = document.getElementById('csvProgressModal');
@@ -809,25 +780,7 @@
                 // Pre-cargar agentes
                 const qAgents = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'users_directory'));
                 const pharmas = [], ccs = [];
-                
-                qAgents.forEach(d => { 
-                    const u = d.data(); 
-                    if (
-                      u.role === 'farmacia' &&
-                      Array.isArray(u.jobTitle) &&
-                      u.jobTitle.includes('Revisión y Asignación')
-                    ) {
-                      pharmas.push({ uid: u.uid, name: u.name });
-                    }
-                    
-                    if (
-                      u.role === 'contact_center' &&
-                      Array.isArray(u.jobTitle) &&
-                      u.jobTitle.includes('Agente Contact Center')
-                    ) {
-                      ccs.push({ uid: u.uid, name: u.name });
-                    }
-                });
+                qAgents.forEach(d => { const u = d.data(); if(u.role === 'farmacia') pharmas.push({uid: u.uid, name: u.name}); if(u.role === 'contact_center') ccs.push({uid: u.uid, name: u.name}); });
 
                 for (let i = 0; i < total; i += chunkSize) {
                     const chunk = data.slice(i, i + chunkSize);
@@ -850,15 +803,8 @@
                         let aPharma = { uid: "", name: "Sin asignar" };
                         let aCC = { uid: "", name: "Sin asignar" };
                         
-                        const nextPharma = getNextAssignee('pharma', pharmas);
-                        if (nextPharma) {
-                            aPharma = { uid: nextPharma.uid, name: nextPharma.name };
-                        }
-
-                        const nextCC = getNextAssignee('cc', ccs);
-                        if (nextCC) {
-                            aCC = { uid: nextCC.uid, name: nextCC.name };
-                        }
+                        if (pharmas.length > 0) { const p = pharmas[Math.floor(Math.random() * pharmas.length)]; aPharma = { uid: p.uid, name: p.name }; }
+                        if (ccs.length > 0) { const c = ccs[Math.floor(Math.random() * ccs.length)]; aCC = { uid: c.uid, name: c.name }; }
 
                         const benData = { 
                             id: id.toString().trim(), 
@@ -934,57 +880,8 @@
                 input.value = "";
             }
         };
-        
-        window.balanceWorkload = async () => {
-            if(!confirm("¿Reasignar cargas de trabajo equitativamente a todos los pacientes activos?")) return;
 
-            // 1. Get Agents
-            const qAgents = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'users_directory'));
-            const pharmas = [], ccs = [];
-            qAgents.forEach(d => {
-                const u = d.data();
-                if (u.role === 'farmacia' && Array.isArray(u.jobTitle) && u.jobTitle.includes('Revisión y Asignación')) {
-                    pharmas.push({ uid: u.uid, name: u.name });
-                }
-                if (u.role === 'contact_center' && Array.isArray(u.jobTitle) && u.jobTitle.includes('Agente Contact Center')) {
-                    ccs.push({ uid: u.uid, name: u.name });
-                }
-            });
-
-            if(pharmas.length === 0 && ccs.length === 0) return alert("No hay agentes disponibles.");
-
-            // 2. Get Beneficiaries
-            // Ideally processing in batches if too many, but for now getting all active ones.
-            const qBen = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries'));
-            const batch = writeBatch(db);
-            let count = 0;
-
-            qBen.forEach(docSnap => {
-                const ben = docSnap.data();
-                const benRef = doc(db, 'artifacts', appId, 'public', 'data', 'beneficiaries', docSnap.id);
-                let updates = {};
-
-                // Reassign Pharma
-                const nextPharma = getNextAssignee('pharma', pharmas);
-                if (nextPharma) updates.assignedPharma = { uid: nextPharma.uid, name: nextPharma.name };
-
-                // Reassign CC (only if not pickup)
-                if (!ben.pickupCounter) {
-                     const nextCC = getNextAssignee('cc', ccs);
-                     if (nextCC) updates.assignedCC = { uid: nextCC.uid, name: nextCC.name };
-                }
-
-                if(Object.keys(updates).length > 0) {
-                    batch.update(benRef, updates);
-                    count++;
-                }
-            });
-
-            await batch.commit();
-            alert(`Cargas equilibradas para ${count} pacientes.`);
-        };
-
-        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries'), (s) => { const l = document.getElementById('ben-list'); if(!l) return; l.innerHTML = ''; s.forEach(d => { const b=d.data(); const j = encodeURIComponent(JSON.stringify(b)); l.innerHTML += `<tr class="hover:bg-slate-50 border-b"><td class="p-4 pl-6 font-bold">${b.name}<br><span class="text-[10px] text-slate-400 font-mono">${b.id}</span></td><td class="p-4 text-xs font-medium text-slate-600"><i class="fa-solid fa-map-pin text-brand-cyan mr-1"></i>${b.municipality || 'Sin Registro'}</td><td class="p-4 text-xs font-bold text-center ${b.pickupCounter?'text-orange-600':'text-emerald-600'}">${b.pickupCounter?'Ventanilla':'Domicilio'}</td><td class="p-4 text-[10px] font-bold text-slate-400">P: ${b.assignedPharma?.name||'?'}<br>CC: ${b.assignedCC?.name||'?'}</td><td class="p-4 text-right"><div class="flex justify-end gap-2"><button onclick="openHistory('${b.id}','${b.name}')" class="text-slate-400 hover:text-blue-500"><i class="fa-solid fa-history"></i></button><button onclick="window.openGeoAssign('${b.id}', '${b.name}')" class="text-orange-500 hover:text-orange-700" title="Mapa"><i class="fa-solid fa-map-location-dot"></i></button><button onclick="editBeneficiary('${j}')" class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-pen"></i></button></div></td></tr>`; }); });
+        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'beneficiaries'), (s) => { const l = document.getElementById('ben-list'); if(!l) return; l.innerHTML = ''; s.forEach(d => { const b=d.data(); const j = encodeURIComponent(JSON.stringify(b)); l.innerHTML += `<tr class="hover:bg-slate-50 border-b"><td class="p-4 pl-6"><div class="font-bold text-slate-700">${b.name}</div><div class="text-[10px] text-slate-400 font-mono">${b.id}</div><span class="bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase mt-1 inline-block">${b.type || 'Afiliado'}</span></td><td class="p-4 text-xs font-medium text-slate-600"><i class="fa-solid fa-map-pin text-brand-cyan mr-1"></i>${b.municipality || 'Sin Registro'}</td><td class="p-4 text-xs font-bold text-center ${b.pickupCounter?'text-orange-600':'text-emerald-600'}">${b.pickupCounter?'Ventanilla':'Domicilio'}</td><td class="p-4 text-[10px] font-bold text-slate-400">P: ${b.assignedPharma?.name||'?'}<br>CC: ${b.assignedCC?.name||'?'}</td><td class="p-4 text-right"><div class="flex justify-end gap-2"><button onclick="openHistory('${b.id}','${b.name}')" class="text-slate-400 hover:text-blue-500"><i class="fa-solid fa-history"></i></button><button onclick="window.openGeoAssign('${b.id}', '${b.name}')" class="text-orange-500 hover:text-orange-700" title="Mapa"><i class="fa-solid fa-map-location-dot"></i></button><button onclick="editBeneficiary('${j}')" class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-pen"></i></button></div></td></tr>`; }); });
 
         /* --- BLOQUE: LOGÍSTICA --- */
         window.openYear = (y) => { currentYear=y; document.getElementById('ship-years').classList.add('hidden'); document.getElementById('ship-months').classList.remove('hidden'); const c = document.getElementById('ship-months'); c.innerHTML = ''; monthNames.forEach((m, i) => { c.innerHTML += `<div onclick="openMonth(${i})" class="bg-white p-6 rounded-2xl shadow-sm border hover:border-brand-cyan cursor-pointer text-center font-bold text-slate-700 transition-all">${m}</div>`; }); window.updateBreadcrumb(); };
